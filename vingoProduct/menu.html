@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Card</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css?v=1.1">
+    <link rel="stylesheet" href="menu.css">
+</head>
+
+<body class="menu-body">
+    <div class="menu-container">
+        <img src="../assets/menu-card-cover.jpg" class="banner" alt="Menu Cover">
+
+        <div class="menu-content-wrapper">
+            <header class="menu-header">
+                <h1>John's Kitchen</h1>
+                <div class="menu-subtitle">A curated collection of authentic flavors and modern culinary delights.</div>
+            </header>
+
+            <!-- Filters -->
+            <div class="filters-container">
+                <div class="filter-group">
+                    <button class="filter-btn active" data-type="all">All</button>
+                    <button class="filter-btn" data-type="veg"><span class="veg-icon"></span> Veg</button>
+                    <button class="filter-btn" data-type="non-veg"><span class="non-veg-icon"></span> Non-Veg</button>
+                </div>
+                <div class="filter-group">
+                    <label for="price-range">Max Price: <span id="price-value">500</span></label>
+                    <input type="range" id="price-range" min="0" max="500" step="10" value="500">
+                </div>
+            </div>
+
+            <!-- Category: Shawarma -->
+            <div class="menu-section">
+                <h2 class="category-title">Shawarma</h2>
+                <div class="menu-grid">
+                    <div class="menu-item" data-type="non-veg" data-price="70">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Normal Shawarma <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>70</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="80">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Chicken Shawarma <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>80</div>
+                    </div>
+                    <div class="menu-item" data-type="veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Panner Shawarma <span class="veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Cheese Shawarma <span class="veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Spicy Shawarma <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="90">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Piri Piri Shawarma <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>90</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="90">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Shezwan Shawarma <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>90</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="90">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Mexican Shawarma <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>90</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="90">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Pepper Shawarma <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>90</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="90">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Cheese Shawarma <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>90</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Kebab Shawarma <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="110">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Special Shawarma <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>110</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="130">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Plate Shawarma <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>130</div>
+                    </div>
+                </div>
+            </div>
+
+            <!--Category: plate-->
+            <div class="menu-section">
+                <h2 class="category-title">Plate</h2>
+                <div class="menu-grid">
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Normal Plate <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Flavour Plate <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Special Plate <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                </div>
+            </div>
+
+            <!--Category: Nuggets-->
+            <div class="menu-section">
+                <h2 class="category-title">Nuggets</h2>
+                <div class="menu-grid">
+                    <div class="menu-item" data-type="veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Nuggets(5Nos)<span class="veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>90</div>
+                    </div>
+                    <div class="menu-item" data-type="veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Cheese Nuggets(5Nos) <span class="veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Chicken Nuggets(5Nos) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category: Kebab -->
+            <div class="menu-section">
+                <h2 class="category-title">Kebab</h2>
+                <div class="menu-grid">
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Chicken Kebab <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Lemon Kebab <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Hariyali Kebab <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Leg Kebab <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Malai Kebab <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category: Chicken-->
+            <div class="menu-section">
+                <h2 class="category-title">Chicken</h2>
+                <div class="menu-grid">
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Lollipop(3Nos) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Wings(5Nos) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Chicken Strips(5Nos) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category: Fish -->
+            <div class="menu-section">
+                <h2 class="category-title">Fish</h2>
+                <div class="menu-grid">
+                    <div class="menu-item" data-type="non-veg" data-price="110">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Fish Finger(5Nos) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>110</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category: Momos -->
+            <div class="menu-section">
+                <h2 class="category-title">Momos</h2>
+                <div class="menu-grid">
+                    <div class="menu-item" data-type="veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Veg Momos(5Nos) <span class="veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>70</div>
+                    </div>
+                    <div class="menu-item" data-type="veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Cheese Momos(5Nos) <span class="veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>90</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Chicken Momos <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>100</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category: Snacks -->
+            <div class="menu-section">
+                <h2 class="category-title">Snacks</h2>
+                <div class="menu-grid">
+                    <div class="menu-item" data-type="veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">French Fries <span class="veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>80</div>
+                    </div>
+                    <div class="menu-item" data-type="veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Spring Roll <span class="veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>70</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="100">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Chicken Fry(2Nos) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>150</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category: Barbeques -->
+            <div class="menu-section">
+                <h2 class="category-title">Barbeques</h2>
+                <div class="menu-grid">
+                    <div class="menu-item" data-type="non-veg" data-price="200">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Chicken Alfaham (Half) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>200</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="400">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Chicken Alfaham (Full) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>400</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="200">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Spicy Alfaham (Half) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>200</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="400">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Spicy Alfaham (Full) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>400</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="200">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Piri Piri Alfaham (Half) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>200</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="410">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Piri Piri Alfaham (Full) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>410</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="200">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Hariyali Alfaham (Half) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>200</div>
+                    </div>
+                    <div class="menu-item" data-type="non-veg" data-price="410">
+                        <img src="assets/dummyImageFoodProfile.png" class="item-image" alt="Item">
+                        <div class="item-info">
+                            <div class="item-name">Hariyali Alfaham (Full) <span class="non-veg-icon"></span></div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>410</div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- End menu-content-wrapper -->
+    </div>
+
+    <script>
+        const typeButtons = document.querySelectorAll('.filter-btn');
+        const priceRange = document.getElementById('price-range');
+        const priceValue = document.getElementById('price-value');
+        const menuItems = document.querySelectorAll('.menu-item');
+        const menuSections = document.querySelectorAll('.menu-section');
+
+        let activeType = 'all';
+        let maxPrice = 500;
+
+        function filterMenu() {
+            menuItems.forEach(item => {
+                const itemType = item.getAttribute('data-type');
+                const itemPrice = parseInt(item.getAttribute('data-price'));
+
+                const typeMatch = (activeType === 'all' || itemType === activeType);
+                const priceMatch = (itemPrice <= maxPrice);
+
+                if (typeMatch && priceMatch) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            // Hide sections if no items are visible
+            menuSections.forEach(section => {
+                const visibleItems = section.querySelectorAll('.menu-item:not(.hidden)');
+                if (visibleItems.length === 0) {
+                    section.classList.add('hidden');
+                } else {
+                    section.classList.remove('hidden');
+                }
+            });
+        }
+
+        typeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                typeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeType = btn.getAttribute('data-type');
+                filterMenu();
+            });
+        });
+
+        priceRange.addEventListener('input', (e) => {
+            maxPrice = parseInt(e.target.value);
+            priceValue.textContent = maxPrice;
+            filterMenu();
+        });
+    </script>
+</body>
+
+</html>

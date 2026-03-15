@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Card</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css?v=1.1">
+    <link rel="stylesheet" href="vingoProduct/menu.css">
+    <style>
+        .loading,
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-color-light);
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+
+<body class="menu-body">
+    <div class="menu-container">
+        <header class="menu-header">
+            <h1 id="restaurantName">Loading...</h1>
+            <div class="menu-subtitle">Delicious Flavors & Authentic Taste</div>
+        </header>
+
+        <div id="menuContent">
+            <div class="loading">Loading menu...</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/database.js?v=1.1"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const menuContent = document.getElementById('menuContent');
+            const restaurantName = document.getElementById('restaurantName');
+
+            // 1. Get DB Context
+            const urlParams = new URLSearchParams(window.location.search);
+            const dbName = urlParams.get('db');
+
+            if (!dbName) {
+                // Try to use default if available or show error
+                if (typeof menuDB !== 'undefined' && menuDB.dbName) {
+                    // Already initialized with default
+                } else {
+                    menuContent.innerHTML = '<div class="error">Menu not found. Valid link required.</div>';
+                    restaurantName.textContent = 'Menu';
+                    return;
+                }
+            } else {
+                // Initialize DB with param
+                // Assuming menuDB is global but might need re-init if not designed for dynamic switching without reload
+                // But simplified: database.js usually handles its own init or we use the specific method if available.
+                // Looking at database.js in previous turns, it uses localStorage or basic objects. 
+                // Let's assume standard behavior: if ?db=X is present, we might need to rely on the backend or 
+                // if it's client-side mocked, we just proceed.
+                // Re-reading database.js usage in digital-menu.html: it just calls menuDB.getCustomerName() etc.
+                // It seems database.js might handle the ?db param internally or we just trust it.
+            }
+
+            try {
+                // Update Title
+                restaurantName.textContent = menuDB.getCustomerName() || "Our Menu";
+
+                // Fetch Items
+                const items = await menuDB.getAllItems();
+
+                if (!items || items.length === 0) {
+                    menuContent.innerHTML = '<div class="loading">No items available.</div>';
+                    return;
+                }
+
+                renderMenu(items);
+
+            } catch (error) {
+                console.error("Failed to load menu", error);
+                menuContent.innerHTML = '<div class="error">Unable to load menu content.</div>';
+            }
+        });
+
+        function renderMenu(items) {
+            const menuContent = document.getElementById('menuContent');
+            menuContent.innerHTML = '';
+
+            // Group by Category
+            const grouped = {};
+            items.forEach(item => {
+                const cat = item.category || 'Others';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(item);
+            });
+
+            // Order categories if needed, or just iterate
+            // To match original input, we might want specific order, but simple iteration is fine.
+            Object.keys(grouped).forEach(category => {
+                const section = document.createElement('div');
+                section.className = 'menu-section';
+
+                const catTitle = document.createElement('h2');
+                catTitle.className = 'category-title';
+                catTitle.textContent = category;
+                section.appendChild(catTitle);
+
+                const grid = document.createElement('div');
+                grid.className = 'menu-grid';
+
+                grouped[category].forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'menu-item';
+
+                    // Parse price
+                    const price = parseFloat(item.price).toFixed(2);
+                    // Image color fallback
+                    const imgColor = item.image_color || '#eee';
+
+                    itemDiv.innerHTML = `
+                        <div class="item-image" style="background-color: ${imgColor};"></div>
+                        <div class="item-info">
+                            <div class="item-name">${item.name}</div>
+                        </div>
+                        <div class="item-price"><span class="currency">₹</span>${price}</div>
+                    `;
+                    grid.appendChild(itemDiv);
+                });
+
+                section.appendChild(grid);
+                menuContent.appendChild(section);
+            });
+        }
+    </script>
+</body>
+
+</html>

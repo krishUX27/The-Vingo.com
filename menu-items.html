@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vingo Admin | Menu Items</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/database.js?v=1.1"></script>
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <a href="dashboard.html" class="logo">VINGO<span class="dot">.</span></a>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="dashboard.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Overview
+                </a>
+                <a href="menu-items.html" class="sidebar-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Menu Items
+                </a>
+                <a href="seasonal-offers.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    Seasonal Offers
+                </a>
+                <a href="settings.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                    Settings
+                </a>
+                <a href="login.html" class="sidebar-link logout-link" style="margin-top: auto;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Log Out
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="user-avatar">AD</div>
+                <div class="user-info">
+                    <span class="user-name">Admin User</span>
+                    <span class="user-role">Super Admin</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <h1 class="dashboard-title">Menu Items</h1>
+                <div class="top-actions">
+                    <a href="vingoProduct/print_menu.html" target="_blank" class="btn btn-secondary"
+                        style="background: white; color: var(--text-color); border: 1px solid var(--border-color); display: flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9V2h12v7"></path>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <path d="M6 14h12v8H6z"></path>
+                        </svg>
+                        Print Menu
+                    </a>
+                    <button id="generateLinkBtn" class="btn btn-secondary"
+                        style="background: white; color: var(--text-color); border: 1px solid var(--border-color);">Get
+                        Customer
+                        Link</button>
+                    <button id="openModalBtn" class="btn btn-primary">+ Add New Item</button>
+                </div>
+            </div>
+
+            <!-- Link Modal or Alert -->
+            <div id="linkModal" class="modal" style="z-index: 1100;">
+                <div class="modal-content" style="max-width: 400px; text-align: center;">
+                    <span class="close"
+                        onclick="document.getElementById('linkModal').style.display='none'">&times;</span>
+                    <h2 class="card-title" style="margin-bottom: 1rem; color:white;">Your Digital Menu</h2>
+                    <p style="color: var(--text-color-light); margin-bottom: 1rem;">Share this link with your customers:
+                    </p>
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                        <input type="text" id="shareLinkInput" readonly
+                            style="flex:1; background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 0.5rem;">
+                        <button id="copyLinkBtn" class="btn btn-primary" style="padding: 0.5rem 1rem;">Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Table -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">All Items</h2>
+                    <div class="filters">
+                        <select class="filter-select">
+                            <option value="">All Categories</option>
+                            <option>Main Course</option>
+                            <option>Appetizers</option>
+                            <option>Beverages</option>
+                            <option>Desserts</option>
+                        </select>
+                        <select class="filter-select">
+                            <option value="">All Availability</option>
+                            <option>Breakfast</option>
+                            <option>Lunch</option>
+                            <option>Afternoon</option>
+                        </select>
+                        <div class="search-box">
+                            <input type="text" placeholder="Search items..."
+                                style="background: white; border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 0.5rem; color: var(--text-color);">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="menu-table">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Availability</th>
+                                <th>Seasonal</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menuTableBody">
+                            <!-- Items will be loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Item Modal -->
+    <div id="addItemModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle" class="card-title" style="margin-bottom: 1.5rem;">Add New Menu Item</h2>
+            <form id="addItemForm">
+                <div class="form-group">
+                    <label>Item Name</label>
+                    <input type="text" id="itemNameInput" placeholder="e.g. Spicy Ramen">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="itemCategoryInput">
+                        <option>Main Course</option>
+                        <option>Appetizers</option>
+                        <option>Beverages</option>
+                        <option>Desserts</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Price ($)</label>
+                    <input type="number" id="itemPriceInput" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Availability</label>
+                    <select id="itemAvailabilityInput">
+                        <option>Breakfast</option>
+                        <option>Lunch</option>
+                        <option>Afternoon</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Image</label>
+                    <input type="file" style="padding: 0.5rem;">
+                </div>
+                <button id="saveItemBtn" class="btn btn-primary" type="button"
+                    style="margin-top: 1rem; width: 100%;">Add Item</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/database.js?v=1.1"></script>
+    <script>
+        // DOM Elements
+        const modal = document.getElementById("addItemModal");
+        const btn = document.getElementById("openModalBtn");
+        const span = document.getElementsByClassName("close")[0];
+        const saveItemBtn = document.getElementById("saveItemBtn");
+        const addItemForm = document.getElementById("addItemForm");
+        const modalTitle = document.getElementById("modalTitle");
+        const menuTableBody = document.getElementById("menuTableBody");
+        const cardTitle = document.querySelector(".card-title");
+
+        let editingId = null;
+
+        // Initialize
+        function init() {
+            renderTable();
+            // Update title with customer name
+            if (cardTitle) {
+                cardTitle.textContent = "All Items - " + menuDB.getCustomerName();
+            }
+        }
+
+        // Render Table (Redirects to filterItems for consistent rendering)
+        async function renderTable() {
+            await filterItems();
+        }
+
+        // Modal Logic
+        function openModal(isEdit = false, item = null) {
+            modal.style.display = "block";
+            if (isEdit && item) {
+                modalTitle.textContent = "Edit Menu Item";
+                saveItemBtn.textContent = "Save Changes";
+                document.getElementById('itemNameInput').value = item.name;
+                document.getElementById('itemCategoryInput').value = item.category;
+                document.getElementById('itemPriceInput').value = item.price;
+                document.getElementById('itemAvailabilityInput').value = item.availability;
+                editingId = item.id;
+            } else {
+                modalTitle.textContent = "Add New Menu Item";
+                saveItemBtn.textContent = "Add Item";
+                addItemForm.reset();
+                editingId = null;
+            }
+        }
+
+        window.editItem = async function (id) {
+            const items = await menuDB.getAllItems();
+            const item = items.find(i => i.id == id);
+            if (item) {
+                openModal(true, item);
+            }
+        };
+
+        window.deleteItem = async function (id) {
+            if (confirm("Are you sure you want to delete this item?")) {
+                await menuDB.deleteItem(id);
+                await renderTable();
+            }
+        };
+
+        if (btn) {
+            btn.onclick = function () {
+                openModal(false);
+            }
+        }
+
+        if (span) {
+            span.onclick = function () {
+                modal.style.display = "none";
+            }
+        }
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Add/Edit Item Logic
+        if (saveItemBtn) {
+            saveItemBtn.onclick = async function () {
+                const name = document.getElementById('itemNameInput').value;
+                const category = document.getElementById('itemCategoryInput').value;
+                const price = document.getElementById('itemPriceInput').value;
+                const availability = document.getElementById('itemAvailabilityInput').value;
+
+                if (!name || !price) {
+                    alert("Please fill in Name and Price");
+                    return;
+                }
+
+                if (editingId) {
+                    await menuDB.updateItem(editingId, {
+                        name, category, price, availability
+                    });
+                } else {
+                    await menuDB.addItem({
+                        name, category, price, availability
+                    });
+                }
+
+                modal.style.display = "none";
+                addItemForm.reset();
+                await renderTable();
+            }
+        }
+
+        // Filtering
+        async function filterItems() {
+            const categorySelect = document.querySelector('.filters select:nth-of-type(1)');
+            const availabilitySelect = document.querySelector('.filters select:nth-of-type(2)');
+            const searchInput = document.querySelector('.search-box input');
+
+            const categoryValue = categorySelect ? categorySelect.value.toLowerCase() : '';
+            const availabilityValue = availabilitySelect ? availabilitySelect.value.toLowerCase() : '';
+            const searchValue = searchInput ? searchInput.value.toLowerCase() : '';
+
+            let items = await menuDB.getAllItems();
+
+            items = items.filter(item => {
+                const matchesCategory = categoryValue === '' || item.category.toLowerCase() === categoryValue;
+                const matchesAvailability = availabilityValue === '' || item.availability.toLowerCase() === availabilityValue;
+                const matchesSearch = item.name.toLowerCase().includes(searchValue);
+                return matchesCategory && matchesAvailability && matchesSearch;
+            });
+
+            renderTableInternal(items);
+        }
+
+        function renderTableInternal(items) {
+            menuTableBody.innerHTML = "";
+
+            if (!items || items.length === 0) {
+                menuTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No items found.</td></tr>`;
+                return;
+            }
+
+            items.forEach(item => {
+                const tr = document.createElement("tr");
+                const priceVal = parseFloat(item.price);
+                const displayPrice = isNaN(priceVal) ? "0.00" : priceVal.toFixed(2);
+
+                // Handle different boolean/string types from DB
+                const isSeasonal = item.seasonal == 1 || item.seasonal === '1' || item.seasonal === true;
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="item-info">
+                            <div class="item-img" style="background: ${item.image_color || item.imageColor || 'var(--tertiary-color)'};"></div>
+                            <span>${item.name}</span>
+                        </div>
+                    </td>
+                    <td>${item.category}</td>
+                    <td>
+                        <span class="price-text">$${displayPrice}</span>
+                    </td>
+                    <td>
+                        <span class="avail-text">${item.availability}</span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${isSeasonal ? 'status-active' : 'status-inactive'}">
+                            ${isSeasonal ? 'Yes' : 'No'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn edit-btn" onclick="editItem(${item.id})">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                        <button class="action-btn delete-btn" style="color: #F87171;" onclick="deleteItem(${item.id})">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2"></path>
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                menuTableBody.appendChild(tr);
+            });
+        }
+
+        // Override renderTable to use internal with full list, or just use filter
+
+
+        // Attach listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+
+            const categorySelect = document.querySelector('.filters select:nth-of-type(1)');
+            const availabilitySelect = document.querySelector('.filters select:nth-of-type(2)');
+            const searchInput = document.querySelector('.search-box input');
+
+            if (categorySelect) categorySelect.addEventListener('change', filterItems);
+            if (availabilitySelect) availabilitySelect.addEventListener('change', filterItems);
+            if (searchInput) searchInput.addEventListener('input', filterItems);
+
+            // Update Sidebar Links to persist DB param
+            const urlParams = new URLSearchParams(window.location.search);
+            const dbName = urlParams.get('db');
+            if (dbName) {
+                const sidebarLinks = document.querySelectorAll('.sidebar-link, .logo');
+                sidebarLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href !== '#' && !href.includes('?')) {
+                        link.href = `${href}?db=${dbName}`;
+                    } else if (href && href !== '#' && href.includes('?')) {
+                        link.href = `${href}&db=${dbName}`;
+                    }
+                });
+            }
+            // Share Menu Logic
+            const generateLinkBtn = document.getElementById('generateLinkBtn');
+            const linkModal = document.getElementById('linkModal');
+            const shareLinkInput = document.getElementById('shareLinkInput');
+            const copyLinkBtn = document.getElementById('copyLinkBtn');
+
+            if (generateLinkBtn) {
+                generateLinkBtn.onclick = () => {
+                    const currentPath = window.location.pathname;
+                    const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                    const db = urlParams.get('db');
+
+                    if (db) {
+                        const publicUrl = `${window.location.origin}${basePath}/public_menu.html?db=${db}`;
+                        shareLinkInput.value = publicUrl;
+                        linkModal.style.display = 'block';
+                    } else {
+                        alert("Database context missing. Please login again.");
+                    }
+                }
+            }
+
+            if (copyLinkBtn) {
+                copyLinkBtn.onclick = () => {
+                    shareLinkInput.select();
+                    document.execCommand('copy');
+                    copyLinkBtn.textContent = "Copied!";
+                    setTimeout(() => copyLinkBtn.textContent = "Copy", 2000);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

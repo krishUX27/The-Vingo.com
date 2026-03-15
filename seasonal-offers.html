@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vingo Admin | Seasonal Offers</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css?v=1.1">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <a href="dashboard.html" class="logo">VINGO<span class="dot">.</span></a>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="dashboard.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Overview
+                </a>
+                <a href="menu-items.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Menu Items
+                </a>
+                <a href="seasonal-offers.html" class="sidebar-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    Seasonal Offers
+                </a>
+                <a href="settings.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                    Settings
+                </a>
+                <a href="login.html" class="sidebar-link logout-link" style="margin-top: auto;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Log Out
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="user-avatar">AD</div>
+                <div class="user-info">
+                    <span class="user-name">Admin User</span>
+                    <span class="user-role">Super Admin</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <h1 class="dashboard-title">Seasonal Offers</h1>
+                <div class="top-actions">
+                    <button class="btn btn-primary">+ Create Offer</button>
+                </div>
+            </div>
+
+            <!-- Offers Table -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">Active Offers</h2>
+                    <div class="search-box">
+                        <input type="text" placeholder="Search offers...">
+                    </div>
+                </div>
+
+                <table class="menu-table">
+                    <thead>
+                        <tr>
+                            <th>Offer Name</th>
+                            <th>Discount</th>
+                            <th>Status</th>
+                            <th>Valid Until</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="offersTableBody">
+                        <!-- Dynamic Offers -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    <!-- Add/Edit Offer Modal -->
+    <div id="addOfferModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle" class="card-title">Create Seasonal Offer</h2>
+            <form id="addOfferForm">
+                <div class="form-group">
+                    <label>Offer Name</label>
+                    <input type="text" id="offerNameInput" placeholder="e.g. Summer Special">
+                </div>
+                <div class="form-group">
+                    <label>Discount Details</label>
+                    <input type="text" id="offerDiscountInput" placeholder="e.g. 20% Off">
+                </div>
+                <div class="form-group">
+                    <label>Valid Until</label>
+                    <input type="date" id="offerValidInput">
+                </div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center;">
+                        <input type="checkbox" id="offerActiveInput" checked style="width: auto; margin-right: 0.5rem;">
+                        Active Status
+                    </label>
+                </div>
+                <button id="saveOfferBtn" class="btn btn-primary" type="button"
+                    style="margin-top: 1rem; width: 100%;">Save Offer</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/database.js?v=1.1"></script>
+    <script>
+        // DOM Elements
+        const modal = document.getElementById("addOfferModal");
+        const btn = document.querySelector(".top-actions .btn"); // + Create Offer button
+        const span = document.getElementsByClassName("close")[0];
+        const saveBtn = document.getElementById("saveOfferBtn");
+        const modalTitle = document.getElementById("modalTitle");
+        const offerForm = document.getElementById("addOfferForm");
+        const tableBody = document.getElementById("offersTableBody");
+
+        let editingId = null;
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            renderOffers();
+            updateSidebar();
+        });
+
+        // 1. Sidebar DB Persistence
+        function updateSidebar() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dbName = urlParams.get('db');
+            if (dbName) {
+                const sidebarLinks = document.querySelectorAll('.sidebar-link, .logo');
+                sidebarLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href !== '#' && !href.includes('?')) {
+                        link.href = `${href}?db=${dbName}`;
+                    } else if (href && href !== '#' && href.includes('?')) {
+                        link.href = `${href}&db=${dbName}`;
+                    }
+                });
+            }
+        }
+
+        // 2. Render Offers
+        async function renderOffers() {
+            const offers = await menuDB.getOffers();
+            tableBody.innerHTML = '';
+
+            if (!offers || offers.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No active offers.</td></tr>';
+                return;
+            }
+
+            offers.forEach(offer => {
+                const tr = document.createElement('tr');
+                const isActive = offer.is_active == 1; // DB sends 1/0
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="item-info">
+                            <div class="item-img" style="background: ${offer.image_color || getRandomColor()};"></div>
+                            <span>${offer.name}</span>
+                        </div>
+                    </td>
+                    <td>${offer.discount_details}</td>
+                    <td>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleStatus(${offer.id}, this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </td>
+                    <td>${offer.valid_until || 'No Expiry'}</td>
+                    <td>
+                        <button class="action-btn" onclick="openEditModal(${offer.id})">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                        <button class="action-btn" style="color: #F87171;" onclick="deleteOffer(${offer.id})">
+                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2"></path>
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // 3. Status Toggle
+        window.toggleStatus = async function (id, status) {
+            await menuDB.updateOffer(id, { is_active: status ? 1 : 0 });
+            // renderOffers(); // Optional, status change is instant visually
+        }
+
+        // 4. Modal Open
+        if (btn) {
+            btn.onclick = () => {
+                editingId = null;
+                modalTitle.textContent = "Create Seasonal Offer";
+                saveBtn.textContent = "Save Offer";
+                offerForm.reset();
+                modal.style.display = "block";
+            }
+        }
+
+        if (span) {
+            span.onclick = () => { modal.style.display = "none"; }
+        }
+
+        window.onclick = (e) => {
+            if (e.target == modal) modal.style.display = "none";
+        }
+
+        window.openEditModal = async function (id) {
+            const offers = await menuDB.getOffers();
+            const offer = offers.find(o => o.id == id);
+            if (offer) {
+                editingId = offer.id;
+                modalTitle.textContent = "Edit Offer";
+                saveBtn.textContent = "Update Offer";
+                document.getElementById('offerNameInput').value = offer.name;
+                document.getElementById('offerDiscountInput').value = offer.discount_details;
+                document.getElementById('offerValidInput').value = offer.valid_until;
+                document.getElementById('offerActiveInput').checked = offer.is_active == 1;
+                modal.style.display = "block";
+            }
+        }
+
+        window.deleteOffer = async function (id) {
+            if (confirm('Delete this offer?')) {
+                await menuDB.deleteOffer(id);
+                renderOffers();
+            }
+        }
+
+        // 5. Save
+        saveBtn.onclick = async () => {
+            const name = document.getElementById('offerNameInput').value;
+            const discount = document.getElementById('offerDiscountInput').value;
+            const valid = document.getElementById('offerValidInput').value;
+            const active = document.getElementById('offerActiveInput').checked ? 1 : 0;
+
+            if (!name || !discount) {
+                alert('Name and Discount are required');
+                return;
+            }
+
+            if (editingId) {
+                await menuDB.updateOffer(editingId, {
+                    name,
+                    discount_details: discount,
+                    valid_until: valid,
+                    is_active: active
+                });
+            } else {
+                await menuDB.addOffer({
+                    name,
+                    discount_details: discount,
+                    valid_until: valid,
+                    is_active: active
+                });
+            }
+            modal.style.display = "none";
+            renderOffers();
+        }
+
+        function getRandomColor() {
+            const colors = [
+                "linear-gradient(45deg, #1dd1a1, #10ac84)",
+                "linear-gradient(45deg, #5f27cd, #341f97)",
+                "linear-gradient(45deg, #ff9f43, #ee5253)",
+                "linear-gradient(45deg, #00d2d3, #2e86de)"
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+    </script>
+</body>
+
+</html>

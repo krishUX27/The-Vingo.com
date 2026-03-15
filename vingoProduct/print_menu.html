@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>John's Kitchen - Menu Card</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #CD1C18;
+            --dark: #000000;
+            --gray: #6B7280;
+            --light-gray: #F3F4F6;
+            --border: #E5E7EB;
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--dark);
+            background: white;
+            margin: 0;
+            padding: 0;
+            line-height: 1.4;
+        }
+
+        /* A4 Page Setup */
+        @page {
+            size: A4;
+            margin: 15mm;
+            /* Minimum margin on all 4 sides */
+        }
+
+        .page-container {
+            width: 100%;
+            max-width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            position: relative;
+            /* content padding handled by page margin in print, but useful for screen */
+            padding: 10mm;
+        }
+
+        /* For screen matching print */
+        @media screen {
+            body {
+                background: #f0f0f0;
+                padding: 2rem;
+                padding-top: 5rem;
+                /* Space for the fixed header */
+            }
+
+            .page-container {
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+                margin-bottom: 2rem;
+                padding: 15mm;
+                /* Visible padding on screen */
+            }
+
+            /* Print Controls */
+            .print-controls {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                background: white;
+                padding: 1rem 2rem;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                display: flex;
+                justify-content: flex-end;
+                z-index: 1000;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .btn-download {
+                background-color: var(--primary);
+                color: white;
+                border: none;
+                padding: 0.75rem 1.5rem;
+                border-radius: 6px;
+                font-family: var(--font-heading);
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-size: 1rem;
+            }
+
+            .btn-download:hover {
+                background-color: #a51613;
+            }
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* Header / Banner Design */
+        .menu-header {
+            margin-bottom: 2rem;
+            position: relative;
+            height: 180px;
+            /* specific height for banner */
+            overflow: hidden;
+            border-radius: 8px;
+            /* Optional rounded corners */
+            color: white;
+            text-align: center;
+        }
+
+        .banner-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* Dark overlay to ensure text readability */
+        .banner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: 3rem;
+            color: white;
+            /* White text for overlay */
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            font-family: var(--font-heading);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Menu Content with Multi-column support */
+        .menu-content {
+            column-count: 2;
+            column-gap: 2rem;
+            column-fill: auto;
+            /* Balances height or fills sequentially */
+            width: 100%;
+        }
+
+        /* Category Section */
+        .menu-category {
+            break-inside: avoid;
+            /* Keeps category together */
+            margin-bottom: 2.5rem;
+            display: block;
+            width: 100%;
+        }
+
+        .category-title {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            color: var(--dark);
+            border-bottom: 2px solid var(--dark);
+            padding-bottom: 0.25rem;
+            margin-bottom: 1rem;
+            margin-top: 0;
+            /* Align top of columns */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+
+
+        /* Menu Items */
+        .menu-items-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            /* Aligns top in case of wrapping */
+            margin-bottom: 1.8rem;
+            position: relative;
+            break-inside: avoid;
+        }
+
+        .item-details {
+            flex: 1;
+            padding-right: 1rem;
+        }
+
+        .item-name {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 1rem;
+            margin-bottom: 0.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .item-desc {
+            font-size: 0.85rem;
+            color: var(--gray);
+            font-style: italic;
+            line-height: 1.2;
+        }
+
+        .item-price {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.1rem;
+            white-space: nowrap;
+        }
+
+        .dots {
+            flex: 1;
+            border-bottom: 1px dotted var(--gray);
+            margin: 0 0.5rem;
+            position: relative;
+            top: -5px;
+            display: none;
+            /* Can enable for a different look */
+        }
+
+        /* Footer/Decorations */
+        .page-footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--gray);
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+            break-inside: avoid;
+        }
+
+        /* Labels */
+        .badge {
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 700;
+            vertical-align: middle;
+        }
+
+        .badge-new {
+            background: var(--primary);
+            color: white;
+        }
+
+        .badge-veg {
+            border: 1px solid #10B981;
+            color: #10B981;
+        }
+
+        .badge-spicy {
+            color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Print Controls (Screen Only) -->
+    <div class="print-controls no-print">
+        <span style="margin-right: auto; font-weight: 500; color: var(--gray);">
+            Pro Tip: Select "Save as PDF" in the destination to download.
+        </span>
+        <button class="btn-download" onclick="window.print()">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Download / Print
+        </button>
+    </div>
+
+    <div class="page-container">
+        <header class="menu-header">
+            <img src="../assets/menu-card-cover.jpg" alt="Delicious Food" class="banner-img"
+                onerror="this.style.backgroundColor='#CD1C18'">
+            <div class="banner-overlay">
+                <h1>John's Kitchen</h1>
+                <div class="subtitle">Feast and Taste</div>
+            </div>
+        </header>
+
+        <div class="menu-content">
+
+            <!-- Shawarma Category -->
+            <div class="menu-category">
+                <h2 class="category-title">
+                    Shawarma
+                </h2>
+                <ul class="menu-items-list">
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Chicken Shawarma</div>
+                            <div class="item-desc">Classic roasted chicken with garlic sauce</div>
+                        </div>
+                        <div class="item-price">₹70</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Spicy Shawarma <span class="badge badge-spicy">Hot</span></div>
+                            <div class="item-desc">Marinated with special chili paste</div>
+                        </div>
+                        <div class="item-price">₹80</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Piri Piri Shawarma</div>
+                            <div class="item-desc">Portuguese style spicy chicken</div>
+                        </div>
+                        <div class="item-price">₹90</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Shezwan Shawarma</div>
+                        </div>
+                        <div class="item-price">₹90</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Mexican Shawarma</div>
+                        </div>
+                        <div class="item-price">₹90</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Pepper Shawarma</div>
+                        </div>
+                        <div class="item-price">₹90</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Cheese Shawarma</div>
+                            <div class="item-desc">Loaded with mozzarella cheese</div>
+                        </div>
+                        <div class="item-price">₹90</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Kebab Shawarma</div>
+                        </div>
+                        <div class="item-price">₹100</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Special Shawarma <span class="badge badge-new">New</span></div>
+                            <div class="item-desc">Chef's special mix with extra toppings</div>
+                        </div>
+                        <div class="item-price">₹110</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Plate Shawarma</div>
+                            <div class="item-desc">Served open on a plate with pita bread</div>
+                        </div>
+                        <div class="item-price">₹130</div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Kebab Category -->
+            <div class="menu-category">
+                <h2 class="category-title">
+                    Kebab
+                </h2>
+                <ul class="menu-items-list">
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Chicken Kebab</div>
+                            <div class="item-desc">Crispy fried spiced chicken</div>
+                        </div>
+                        <div class="item-price">₹100</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Lemon Kebab</div>
+                            <div class="item-desc">Tangy lemon zest marinade</div>
+                        </div>
+                        <div class="item-price">₹100</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Hariyali Kebab</div>
+                            <div class="item-desc">Green mint and coriander marinade</div>
+                        </div>
+                        <div class="item-price">₹100</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Leg Kebab</div>
+                            <div class="item-desc">Whole chicken leg quart</div>
+                        </div>
+                        <div class="item-price">₹100</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Malai Kebab</div>
+                            <div class="item-desc">Creamy and mild flavors</div>
+                        </div>
+                        <div class="item-price">₹100</div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Barbeque Category -->
+            <div class="menu-category">
+                <h2 class="category-title">
+                    Barbeques (Alfaham)
+                </h2>
+                <ul class="menu-items-list">
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Chicken Alfaham</div>
+                            <div class="item-desc">Selection of Half or Full portions</div>
+                        </div>
+                        <div class="item-price">
+                            <div>Half ₹200</div>
+                            <div>Full ₹400</div>
+                        </div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Spicy Alfaham</div>
+                        </div>
+                        <div class="item-price">
+                            <div>Half ₹200</div>
+                            <div>Full ₹400</div>
+                        </div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Piri Piri Alfaham</div>
+                        </div>
+                        <div class="item-price">
+                            <div>Half ₹200</div>
+                            <div>Full ₹410</div>
+                        </div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Hariyali Alfaham</div>
+                        </div>
+                        <div class="item-price">
+                            <div>Half ₹200</div>
+                            <div>Full ₹410</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Mock Extra Content to show scaling -->
+            <div class="menu-category">
+                <h2 class="category-title">
+                    Refreshments
+                </h2>
+                <ul class="menu-items-list">
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Soft Drinks</div>
+                        </div>
+                        <div class="item-price">₹40</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Fresh Lime Soda</div>
+                        </div>
+                        <div class="item-price">₹60</div>
+                    </li>
+                    <li class="menu-item">
+                        <div class="item-details">
+                            <div class="item-name">Mint Mojito</div>
+                        </div>
+                        <div class="item-price">₹90</div>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="page-footer">
+            Powered by Vingo
+        </div>
+    </div>
+
+</body>
+
+</html>

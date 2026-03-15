@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Menu | Vingo</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css?v=1.1">
+
+    <style>
+        /* Mobile First Menu Styles */
+        body {
+            background-color: var(--color-gray-50);
+            padding-bottom: 4rem;
+            /* Space for bottom nav or just aesthetics */
+        }
+
+        .menu-header {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            overflow: hidden;
+            background-color: var(--color-black);
+            margin-bottom: -2rem;
+            /* Overlap effect */
+            z-index: 1;
+        }
+
+        .menu-header-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            opacity: 0.9;
+        }
+
+        .menu-container {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+            /* Mobile focused max width */
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .restaurant-info {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .restaurant-logo {
+            width: 80px;
+            height: 80px;
+            margin: -3.5rem auto 1rem;
+            /* Pull up to overlap header */
+            background: white;
+            border-radius: 50%;
+            padding: 0.25rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .restaurant-logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .welcome-text {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            color: var(--title-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .sub-text {
+            color: var(--text-color-light);
+            font-size: 0.9rem;
+        }
+
+        /* Category Navigation - Horizontal Scroll */
+        .category-nav {
+            display: flex;
+            overflow-x: auto;
+            gap: 0.75rem;
+            padding: 0.5rem 0.25rem 1.5rem;
+            margin-bottom: 1rem;
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE and Edge */
+        }
+
+        .category-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cat-btn {
+            white-space: nowrap;
+            padding: 0.6rem 1.25rem;
+            border-radius: 50px;
+            background: white;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .cat-btn.active,
+        .cat-btn:active {
+            background: var(--color-black);
+            color: white;
+            border-color: var(--color-black);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Menu Grid */
+        .menu-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-header {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            color: var(--title-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+            margin-left: 1rem;
+        }
+
+        .menu-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .menu-item-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .menu-item-card:active {
+            transform: scale(0.98);
+        }
+
+        .item-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 0.75rem;
+            background-color: var(--color-gray-100);
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .item-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .item-name {
+            font-family: var(--font-heading);
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--title-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .item-avail {
+            font-size: 0.75rem;
+            color: var(--text-color-light);
+            margin-bottom: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .item-avail::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #10B981;
+            /* Green */
+        }
+
+        .item-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .item-price {
+            font-weight: 700;
+            color: var(--color-red);
+            font-size: 1.1rem;
+        }
+
+        .add-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--color-black);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .add-btn:hover {
+            transform: rotate(90deg);
+            background: var(--color-red);
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-color-light);
+        }
+
+        @media (min-width: 768px) {
+            .menu-container {
+                max-width: 800px;
+            }
+
+            .menu-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Hero Image from Sample Folder -->
+    <header class="menu-header">
+        <img src="menu%20sample/Johns%20kitchen.png" alt="Header Image" class="menu-header-img">
+        <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);">
+        </div>
+    </header>
+
+    <div class="menu-container">
+        <!-- Restaurant Info Card -->
+        <div class="restaurant-info">
+            <!-- Using a generic placeholder icon if logo isn't separate, or just using text -->
+            <!-- Since the sample image might be the logo itself, I'll use it in header and maybe put a logo wrapper here -->
+            <div class="welcome-text">John's Kitchen</div>
+            <p class="sub-text">Delicious meals delivered to your table</p>
+        </div>
+
+        <!-- Sticky Categories -->
+        <div style="position: sticky; top: 1rem; z-index: 10;">
+            <div class="category-nav" id="categoryNav">
+                <button class="cat-btn active" onclick="filterCategory('All')">All</button>
+                <!-- Generated dynamically -->
+            </div>
+        </div>
+
+        <!-- Menu Content -->
+        <div id="menuContent">
+            <div class="loading">
+                <svg style="animation: spin 1s linear infinite; width: 24px; height: 24px;" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                </svg>
+                <div style="margin-top: 0.5rem">Loading menu...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/database.js?v=1.1"></script>
+    <script>
+        // Use the db instance from database.js
+        console.log("Loading menu...");
+
+        const menuContent = document.getElementById('menuContent');
+        const categoryNav = document.getElementById('categoryNav');
+
+        let allItems = [];
+        let categories = new Set();
+
+        async function loadMenu() {
+            try {
+                // Set Restaurant Name
+                const welcomeText = document.querySelector('.welcome-text');
+                if (welcomeText) welcomeText.textContent = menuDB.getCustomerName();
+
+                allItems = await menuDB.getAllItems();
+
+                if (allItems.length === 0) {
+                    menuContent.innerHTML = '<div class="loading">No items available currently.</div>';
+                    return;
+                }
+
+                // Extract Categories
+                allItems.forEach(item => {
+                    if (item.category) categories.add(item.category);
+                });
+
+                // Render Categories
+                renderCategories();
+
+                // Render All Items
+                renderItems(allItems);
+
+            } catch (error) {
+                console.error("Error loading menu:", error);
+                menuContent.innerHTML = '<div class="loading">Failed to load menu. Please try again.</div>';
+            }
+        }
+
+        function renderCategories() {
+            // Keep "All" button
+            let html = '<button class="cat-btn active" onclick="filterCategory(\'All\', this)">All</button>';
+            categories.forEach(cat => {
+                html += `<button class="cat-btn" onclick="filterCategory('${cat}', this)">${cat}</button>`;
+            });
+            categoryNav.innerHTML = html;
+        }
+
+        window.filterCategory = function (category, btnElement) {
+            // Active state
+            if (btnElement) {
+                document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+                btnElement.classList.add('active');
+            }
+
+            if (category === 'All') {
+                renderItems(allItems);
+            } else {
+                const filtered = allItems.filter(item => item.category === category);
+                renderItems(filtered);
+            }
+        }
+
+        function renderItems(items) {
+            menuContent.innerHTML = '';
+
+            // Group by category for display
+            const grouped = {};
+            items.forEach(item => {
+                if (!grouped[item.category]) grouped[item.category] = [];
+                grouped[item.category].push(item);
+            });
+
+            // If flat list is needed, just loop through keys
+            Object.keys(grouped).forEach(catName => {
+                const section = document.createElement('div');
+                section.className = 'menu-section';
+
+                const groupItems = grouped[catName];
+
+                let itemsHtml = groupItems.map(item => `
+                    <div class="menu-item-card">
+                        <div class="item-image" style="background-color: ${item.image_color || '#eee'}"></div>
+                        <div class="item-details">
+                            <h3 class="item-name">${item.name}</h3>
+                            <div class="item-avail">${item.availability || 'Available'}</div>
+                            <div class="item-bottom">
+                                <span class="item-price">$${parseFloat(item.price).toFixed(2)}</span>
+                                <button class="add-btn">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                section.innerHTML = `
+                    <h2 class="section-header">${catName}</h2>
+                    <div class="menu-grid">
+                        ${itemsHtml}
+                    </div>
+                `;
+                menuContent.appendChild(section);
+            });
+        }
+
+        // Initialize
+        loadMenu();
+
+        // Keyframes for spinner
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes spin { 100% { transform: rotate(360deg); } }
+        `;
+        document.head.appendChild(styleSheet);
+
+    </script>
+</body>
+
+</html>
