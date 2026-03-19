@@ -23,6 +23,22 @@
             color: var(--text-color-light);
             font-size: 1.1rem;
         }
+        .menu-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+        }
+        .category-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+        }
     </style>
 </head>
 
@@ -125,11 +141,13 @@
                     const imgColor = item.image_color || '#eee';
 
                     itemDiv.innerHTML = `
-                        <div class="item-image" style="background-color: ${imgColor};"></div>
-                        <div class="item-info">
-                            <div class="item-name">${item.name}</div>
+                        <div class="item-display" style="display: flex; align-items: center; width: 100%; gap: 1rem;">
+                            <div class="item-image" style="background-color: ${imgColor}; width: 80px; height: 80px; border-radius: 0.5rem; flex-shrink: 0; background-image: url('${item.image_url || ''}'); background-size: cover; background-position: center;"></div>
+                            <div class="item-info" style="flex: 1;">
+                                <div class="item-name" style="font-weight: 600; font-size: 1.1rem; color: #1e293b;">${item.name}</div>
+                            </div>
+                            <div class="item-price" style="font-weight: 700; color: #b91c1c; font-size: 1.1rem;"><span class="currency">₹</span>${price}</div>
                         </div>
-                        <div class="item-price"><span class="currency">₹</span>${price}</div>
                     `;
                     grid.appendChild(itemDiv);
                 });

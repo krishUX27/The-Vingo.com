@@ -40,6 +40,39 @@ class MenuDatabase {
         return this.customerName;
     }
 
+    async addItemMultipart(formData) {
+        try {
+            if (this.dbName) formData.append('db', this.dbName);
+            const response = await fetch(this.getApiUrl(), {
+                method: 'POST',
+                body: formData 
+            });
+            const result = await response.json();
+            if (result.success === false) alert("Error: " + result.message);
+            return result;
+        } catch (error) {
+            console.error('Error adding item:', error);
+            alert("Network Error: Could not connect to API.");
+        }
+    }
+
+    async updateItemMultipart(formData) {
+        try {
+            if (this.dbName) formData.append('db', this.dbName);
+            const response = await fetch(this.getApiUrl(), {
+                method: 'POST',
+                headers: { 'X-HTTP-Method-Override': 'PUT' },
+                body: formData
+            });
+            const result = await response.json();
+            if (result.success === false) alert("Error: " + result.message);
+            return result;
+        } catch (error) {
+            console.error('Error updating item:', error);
+            alert("Network Error: Could not connect to API.");
+        }
+    }
+
     async addItem(item) {
         try {
             // Include db in item payload for db_connection to pick up if needed via POST reading, 

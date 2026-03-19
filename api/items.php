@@ -18,28 +18,68 @@ switch ($method) {
         break;
 
     case 'POST':
-        $data = json_decode(file_get_contents("php://input"));
-
-        if (!empty($data->name) && !empty($data->price)) {
-            $query = "INSERT INTO menu_items (name, category, price, availability, seasonal, image_color) VALUES (:name, :category, :price, :availability, :seasonal, :image_color)";
-            $stmt = $conn->prepare($query);
-
-            $seasonal = isset($data->seasonal) ? $data->seasonal : 0;
-            // Generate random color if not provided
-            $image_color = isset($data->image_color) ? $data->image_color : getRandomColor();
-
-            $stmt->bindParam(":name", $data->name);
-            $stmt->bindParam(":category", $data->category);
-            $stmt->bindParam(":price", $data->price);
-            $stmt->bindParam(":availability", $data->availability);
-            $stmt->bindParam(":seasonal", $seasonal);
-            $stmt->bindParam(":image_color", $image_color);
-
-            if ($stmt->execute()) {
-                $id = $conn->lastInsertId();
-                echo json_encode(["message" => "Item created", "id" => $id, "image_color" => $image_color]);
-            } else {
-                echo json_encode(["message" => "Unable to create item"]);
+        // Handle Multipart (FormData) or JSON
+        $isMultipart = strpos($_SERVER["CONTENT_TYPE"], "multipart/form-data") !== false;
+        
+        if ($isMultipart) {
+            try {
+                $name = $_POST['name'] ?? '';
+                $category = $_POST['category'] ?? '';
+                $price = $_POST['price'] ?? 0;
+                $availability = $_POST['availability'] ?? 'Available';
+                $seasonal = $_POST['seasonal'] ?? 0;
+                $id = $_POST['id'] ?? null; 
+                
+                $image_url = null;
+                if (isset($_FILES['food_image']) && $_FILES['food_image']['error'] == 0) {
+                    $image_url = handleUpload($_FILES['food_image']);
+                }
+                
+                if ($id) {
+                    $query = "UPDATE menu_items SET name=:name, category=:category, price=:price, availability=:availability" . ($image_url ? ", image_url=:img" : "") . " WHERE id=:id";
+                    $stmt = $conn->prepare($query);
+                    $stmt->bindParam(":id", $id);
+                    $stmt->bindParam(":name", $name);
+                    $stmt->bindParam(":category", $category);
+                    $stmt->bindParam(":price", $price);
+                    $stmt->bindParam(":availability", $availability);
+                    if ($image_url) $stmt->bindParam(":img", $image_url);
+                    if (!$stmt->execute()) throw new Exception("Update failed");
+                    echo json_encode(["success" => true, "message" => "Item updated"]);
+                } else {
+                    $query = "INSERT INTO menu_items (name, category, price, availability, seasonal, image_url, image_color) VALUES (:name, :category, :price, :availability, :seasonal, :image_url, :image_color)";
+                    $stmt = $conn->prepare($query);
+                    $img_color = getRandomColor();
+                    $stmt->bindParam(":name", $name);
+                    $stmt->bindParam(":category", $category);
+                    $stmt->bindParam(":price", $price);
+                    $stmt->bindParam(":availability", $availability);
+                    $stmt->bindParam(":seasonal", $seasonal);
+                    $stmt->bindParam(":image_url", $image_url);
+                    $stmt->bindParam(":image_color", $img_color);
+                    if (!$stmt->execute()) throw new Exception("Insert failed");
+                    echo json_encode(["success" => true, "message" => "Item created", "id" => $conn->lastInsertId()]);
+                }
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(["success" => false, "message" => $e->getMessage()]);
+            }
+        } else {
+            // Original JSON logic
+            $data = json_decode(file_get_contents("php://input"));
+            if (!empty($data->name) && !empty($data->price)) {
+                $query = "INSERT INTO menu_items (name, category, price, availability, seasonal, image_color) VALUES (:name, :category, :price, :availability, :seasonal, :image_color)";
+                $stmt = $conn->prepare($query);
+                $seasonal = isset($data->seasonal) ? $data->seasonal : 0;
+                $image_color = isset($data->image_color) ? $data->image_color : getRandomColor();
+                $stmt->bindParam(":name", $data->name);
+                $stmt->bindParam(":category", $data->category);
+                $stmt->bindParam(":price", $data->price);
+                $stmt->bindParam(":availability", $data->availability);
+                $stmt->bindParam(":seasonal", $seasonal);
+                $stmt->bindParam(":image_color", $image_color);
+                $stmt->execute();
+                echo json_encode(["message" => "Item created", "id" => $conn->lastInsertId()]);
             }
         }
         break;
@@ -112,5 +152,19 @@ function getRandomColor()
         "linear-gradient(45deg, #00d2d3, #2e86de)"
     ];
     return $colors[array_rand($colors)];
+}
+
+function handleUpload($file) {
+    $itemDir = "../uploads/";
+    if (!is_dir($itemDir)) mkdir($itemDir, 0777, true);
+    
+    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $newName = time() . "_" . uniqid() . "." . $ext;
+    $targetPath = $itemDir . $newName;
+    
+    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        return "uploads/" . $newName;
+    }
+    return null;
 }
 ?>
