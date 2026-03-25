@@ -1,0 +1,147 @@
+<?php
+// admin/add-category.php — Manage categories
+require_once __DIR__ . '/../includes/db.php';
+session_start();
+
+$flash  = $_SESSION['flash'] ?? null;
+unset($_SESSION['flash']);
+$errors = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+
+    /* ── Add ── */
+    if ($action === 'add') {
+        $name = trim($_POST['cat_name'] ?? '');
+        if ($name === '') {
+            $errors[] = 'Category name is required.';
+        } else {
+            $chk = $conn->prepare("SELECT id FROM categories WHERE name = ?");
+            $chk->bind_param('s', $name);
+            $chk->execute();
+            if ($chk->get_result()->num_rows > 0) {
+                $errors[] = "'{$name}' already exists.";
+            } else {
+                $ins = $conn->prepare("INSERT INTO categories (name) VALUES (?)");
+                $ins->bind_param('s', $name);
+                $ins->execute();
+                $ins->close();
+                $_SESSION['flash'] = ['type' => 'success', 'msg' => "Category '{$name}' added."];
+                header('Location: add-category.php');
+                exit;
+            }
+            $chk->close();
+        }
+    }
+
+    /* ── Delete ── */
+    if ($action === 'delete') {
+        $did = intval($_POST['cat_id'] ?? 0);
+        $used = $conn->prepare("SELECT COUNT(*) FROM dishes WHERE category_id = ?");
+        $used->bind_param('i', $did);
+        $used->execute();
+        $count = $used->get_result()->fetch_row()[0];
+        $used->close();
+
+        if ($count > 0) {
+            $errors[] = "Cannot delete — {$count} dish(es) belong to this category.";
+        } else {
+            $del = $conn->prepare("DELETE FROM categories WHERE id = ?");
+            $del->bind_param('i', $did);
+            $del->execute();
+            $del->close();
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Category deleted.'];
+            header('Location: add-category.php');
+            exit;
+        }
+    }
+}
+
+$categories = $conn->query(
+    "SELECT c.*, COUNT(d.id) AS dish_count
+     FROM categories c
+     LEFT JOIN dishes d ON d.category_id = c.id
+     GROUP BY c.id
+     ORDER BY c.name"
+)->fetch_all(MYSQLI_ASSOC);
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Categories — Menu Manager</title>
+  <link rel="stylesheet" href="../assets/css/menu-style.css">
+</head>
+<body>
+
+<?php include __DIR__ . '/partials/sidebar.php'; ?>
+
+<div class="main">
+  <div class="topbar"><h1>📂 Categories</h1></div>
+  <div class="content">
+
+    <?php if ($flash): ?>
+      <div class="flash flash-<?= $flash['type'] ?>">
+        <?= $flash['type']==='success' ? '✅' : '❌' ?> <?= htmlspecialchars($flash['msg']) ?>
+      </div>
+    <?php endif; ?>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+
+      <!-- Add Form -->
+      <div class="card">
+        <div class="card-title">➕ Add Category</div>
+        <?php foreach ($errors as $e): ?>
+          <div class="flash flash-danger">❌ <?= htmlspecialchars($e) ?></div>
+        <?php endforeach; ?>
+        <form method="POST">
+          <input type="hidden" name="action" value="add">
+          <div class="form-group" style="margin-bottom:14px">
+            <label for="cat_name">Category Name <span class="req">*</span></label>
+            <input type="text" id="cat_name" name="cat_name" placeholder="e.g. Soups" required>
+          </div>
+          <button type="submit" class="btn btn-primary">💾 Add</button>
+        </form>
+      </div>
+
+      <!-- List -->
+      <div class="card">
+        <div class="card-title">📋 All Categories (<?= count($categories) ?>)</div>
+        <?php if (empty($categories)): ?>
+          <div class="no-data"><span class="nd-icon">📂</span>No categories yet.</div>
+        <?php else: ?>
+          <ul class="cat-list">
+            <?php foreach ($categories as $c): ?>
+              <li>
+                <div>
+                  <strong><?= htmlspecialchars($c['name']) ?></strong>
+                  <span class="badge badge-info" style="margin-left:8px">
+                    <?= $c['dish_count'] ?> dish<?= $c['dish_count'] != 1 ? 'es' : '' ?>
+                  </span>
+                </div>
+
+                <?php if ($c['dish_count'] == 0): ?>
+                  <form method="POST" style="margin:0"
+                        onsubmit="return confirm('Delete \'<?= addslashes(htmlspecialchars($c['name'])) ?>\'?')">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="cat_id" value="<?= $c['id'] ?>">
+                    <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                  </form>
+                <?php else: ?>
+                  <span class="badge badge-danger" title="Cannot delete — dishes exist">🔒</span>
+                <?php endif; ?>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        <?php endif; ?>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
+

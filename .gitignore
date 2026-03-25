@@ -1,0 +1,20 @@
+# Dependencies
+/public_html/vendor/
+node_modules/
+
+# User Uploads & Generated Media
+/public_html/uploads/*
+!/public_html/uploads/.gitkeep
+/public_html/qr/*.png
+/public_html/qr/qr_url.txt
+
+# Local Config
+/public_html/includes/config.php
+.env
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
