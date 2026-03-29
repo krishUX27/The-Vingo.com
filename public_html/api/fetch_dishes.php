@@ -10,11 +10,15 @@ $sql = "SELECT d.id,
                d.price,
                d.image,
                d.availability,
-               c.id          AS category_id,
-               c.name        AS category_name
-        FROM   dishes     d
-        JOIN   categories c ON c.id = d.category_id
-        ORDER  BY c.name, d.name";
+        d.currency,
+        c.id          AS category_id,
+        c.name        AS category_name,
+        o.title       AS offer_title,
+        o.discount    AS offer_discount
+ FROM   dishes     d
+ JOIN   categories c ON c.id = d.category_id
+ LEFT JOIN seasonal_offers o ON o.id = d.offer_id
+ ORDER  BY c.name, d.name";
 
 $result = $conn->query($sql);
 
@@ -33,12 +37,15 @@ while ($row = $result->fetch_assoc()) {
         $grouped[$cat] = [];
     }
     $grouped[$cat][] = [
-        'id'           => (int) $row['id'],
-        'name'         => $row['dish_name'],
-        'price'        => (float) $row['price'],
-        'image'        => $row['image'],          // filename only; client prepends uploads path
-        'availability' => $row['availability'],
-        'category'     => $cat,
+        'id'             => (int) $row['id'],
+        'name'           => $row['dish_name'],
+        'price'          => (float) $row['price'],
+        'currency'       => $row['currency'],
+        'image'          => $row['image'],
+        'availability'   => $row['availability'],
+        'category'       => $cat,
+        'offer_title'    => $row['offer_title'],
+        'offer_discount' => $row['offer_discount'],
     ];
 }
 

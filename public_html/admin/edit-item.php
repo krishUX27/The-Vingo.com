@@ -1,7 +1,6 @@
 <?php
-// admin/edit-item.php — Edit existing dish
+require_once __DIR__ . '/partials/auth_check.php';
 require_once __DIR__ . '/../includes/db.php';
-session_start();
 
 $id = intval($_GET['id'] ?? 0);
 if (!$id) { header('Location: dashboard.php'); exit; }
@@ -25,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price        = $_POST['price']              ?? '';
     $cat_id       = intval($_POST['category_id'] ?? 0);
     $availability = $_POST['availability']       ?? 'Available';
+    $currency     = $_POST['currency']           ?? 'INR';
 
     if ($name === '')                                           $errors[] = 'Dish name is required.';
     if ($price === '' || !is_numeric($price) || $price < 0)    $errors[] = 'A valid price is required.';
@@ -53,10 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $upd = $conn->prepare(
-            "UPDATE dishes SET name=?,price=?,category_id=?,image=?,availability=? WHERE id=?"
-        );
-        $upd->bind_param('sdissi', $name, $price, $cat_id, $image_name, $availability, $id);
+        $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, image=?, availability=?, currency=? WHERE id=?");
+        $upd->bind_param('sdisssi', $name, $price, $cat_id, $image_name, $availability, $currency, $id);
         if ($upd->execute()) {
             $_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish '{$name}' updated."];
             header('Location: dashboard.php');
@@ -66,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $upd->close();
     }
     // Reflect changes
-    $dish = array_merge($dish, compact('name','price','availability'));
+    $dish = array_merge($dish, compact('name','price','availability', 'currency'));
     $dish['category_id'] = $cat_id;
 }
 
@@ -78,14 +76,28 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY name")->fetch_all(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Edit Dish — Menu Manager</title>
-  <link rel="stylesheet" href="../assets/css/menu-style.css">
+  <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
 </head>
 <body>
 
 <?php include __DIR__ . '/partials/sidebar.php'; ?>
 
 <div class="main">
-  <div class="topbar"><h1>✏️ Edit Dish</h1></div>
+  <div class="topbar">
+    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
+      <div class="menu-toggle" id="menuToggle">☰</div>
+      <div>
+        <h1>Edit Dish</h1>
+        <p class="meta">Update: <?= htmlspecialchars($dish['name']) ?></p>
+      </div>
+    </div>
+    <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
+      <a href="../menu.php" target="_blank" class="btn btn-outline btn-sm">
+        <span class="live-dot"></span> Live Menu View
+      </a>
+      <?php include __DIR__ . '/partials/topbar_user.php'; ?>
+    </div>
+  </div>
   <div class="content">
 
     <div class="card" style="max-width:720px">
@@ -104,9 +116,14 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY name")->fetch_all(
           </div>
 
           <div class="form-group">
-            <label for="price">Price (₹) <span class="req">*</span></label>
-            <input type="number" id="price" name="price" required min="0" step="0.01"
-                   value="<?= htmlspecialchars($dish['price']) ?>">
+            <label>Price *</label>
+            <div style="display:grid; grid-template-columns: 80px 1fr; gap: 10px">
+              <select name="currency" required>
+                <option value="INR" <?= $dish['currency'] === 'INR' ? 'selected' : '' ?>>INR (₹)</option>
+                <option value="USD" <?= $dish['currency'] === 'USD' ? 'selected' : '' ?>>USD ($)</option>
+              </select>
+              <input type="number" name="price" required min="0" step="0.01" value="<?= htmlspecialchars($dish['price']) ?>">
+            </div>
           </div>
 
           <div class="form-group">
@@ -155,7 +172,9 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY name")->fetch_all(
         </div>
 
         <div class="btn-grp" style="margin-top:22px">
-          <button type="submit" class="btn btn-primary">💾 Update Dish</button>
+          <button type="submit" class="btn btn-primary">
+            <span style="font-size:1rem">💾</span> Update Dish
+          </button>
           <a href="dashboard.php" class="btn btn-outline">Cancel</a>
         </div>
       </form>

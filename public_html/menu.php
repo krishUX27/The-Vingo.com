@@ -321,11 +321,23 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital m
     .dc-3{background:#e74c3c} .dc-4{background:#3498db} .dc-5{background:#9b59b6}
     .dc-6{background:#1abc9c} .dc-7{background:#f39c12}
 
+    @media(max-width:600px){
+      .filter-grid { 
+        grid-template-columns: 1fr !important; 
+        gap: 15px;
+      }
+      .filter-group.full-mobile { grid-column: span 1; }
+      .filter-actions { margin-top: 10px; }
+      .restaurant-card { width: 95%; padding: 20px 15px; }
+      .dish-row { gap: 12px; padding: 14px; }
+      .dish-img-wrap { width: 60px; height: 60px; }
+      .dish-name { font-size: 0.9rem; }
+      .dish-price { font-size: 0.9rem; }
+    }
+    
     @media(max-width:480px){
-      .restaurant-card { padding: 22px 20px; }
-      .restaurant-name { font-size: 1.35rem; }
-      .filter-grid { grid-template-columns: 1fr 1fr; }
-      .filter-group.full-mobile { grid-column: span 2; }
+      .restaurant-name { font-size: 1.25rem; }
+      .cat-title { font-size: 0.95rem; }
     }
   </style>
 </head>
@@ -428,7 +440,7 @@ function esc(s) {
 
 /* ── Build dish row ── */
 function dishRow(d, dotClass) {
-  const price = '₹' + parseFloat(d.price).toFixed(2);
+  const symbol = d.currency === 'USD' ? '$' : '₹';
   const avail = d.availability === 'Available';
   const imgUrl = d.image ? `uploads/${d.image}` : '';
   
@@ -440,6 +452,30 @@ function dishRow(d, dotClass) {
     ? `<button class="add-btn" title="Add ${esc(d.name)}">+</button>`
     : `<button class="add-btn na" disabled title="Not available">+</button>`;
 
+  let priceHtml = `<span class="dish-price" style="flex-shrink:0">${symbol}${parseFloat(d.price).toFixed(2)}</span>`;
+  
+  if (d.offer_discount) {
+    const origPrice = parseFloat(d.price);
+    let finalPrice = origPrice;
+    
+    // Parse discount (e.g. "20%")
+    if (d.offer_discount.includes('%')) {
+       const pct = parseFloat(d.offer_discount.replace('%',''));
+       finalPrice = origPrice * (1 - (pct/100));
+    } else {
+       const amt = parseFloat(d.offer_discount);
+       finalPrice = origPrice - amt;
+    }
+    if (finalPrice < 0) finalPrice = 0;
+
+    priceHtml = `
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex-shrink:0">
+        <span style="font-size:0.65rem; background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-weight:800">${esc(d.offer_discount)} OFF</span>
+        <span style="font-size:0.75rem; text-decoration:line-through; color:var(--muted)">${symbol}${origPrice.toFixed(2)}</span>
+        <span class="dish-price" style="color:#16a34a">${symbol}${finalPrice.toFixed(2)}</span>
+      </div>`;
+  }
+
   return `
     <div class="dish-row">
       <div class="dish-img-wrap">
@@ -450,8 +486,9 @@ function dishRow(d, dotClass) {
         <div class="dish-badge">
           <span class="bdot ${dotClass}"></span>${esc(d.category)}
         </div>
+        ${d.offer_title ? `<div style="font-size:0.7rem; color:#16a34a; font-weight:700; margin-top:2px">🎁 ${esc(d.offer_title)}</div>` : ''}
       </div>
-      <span class="dish-price">${price}</span>
+      ${priceHtml}
       ${btn}
     </div>`;
 }

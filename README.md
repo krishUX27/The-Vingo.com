@@ -40,3 +40,6 @@ If the page doesn't load on your phone:
 -   `/uploads`: Product dish images.
 -   `/qr`: Generated menu QR codes.
 -   `/vendor`: Composer dependencies (Dompdf, Endroid QR).
+
+
+http://localhost/vingo/public_html/admin/dashboard.php

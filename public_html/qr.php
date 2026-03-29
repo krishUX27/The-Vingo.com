@@ -1,5 +1,5 @@
 <?php
-// qr.php — Updated to use Reliable QR API with Composer Fallback
+require_once __DIR__ . '/admin/partials/auth_check.php';
 require_once __DIR__ . '/includes/db.php';
 
 $qr_dir  = __DIR__ . '/qr/';
@@ -80,59 +80,77 @@ if ($force || !file_exists($qr_file) || $cachedUrl !== $qr_url) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>QR Code — Menu Manager</title>
-  <link rel="stylesheet" href="assets/css/menu-style.css">
+  <link rel="stylesheet" href="assets/css/menu-style.css?v=<?= time() ?>">
+  <style>
+    body, html { height: 100vh; margin: 0; padding: 0; }
+    .main { min-height: 100vh; display: flex; flex-direction: column; }
+    .content { flex: 1; display: flex; align-items: start; justify-content: center; padding: 20px; overflow-y: auto; }
+    .qr-card { max-width: 560px; width: 100%; margin: 20px auto; }
+    .btn-md { padding: 12px 18px; font-size: 0.9rem; border-radius: 12px; }
+    @media (max-width: 600px) {
+      .btn-grp { flex-direction: column; width: 100%; }
+      .btn-grp .btn { width: 100%; justify-content: center; }
+      .qr-center img { width: 100% !important; height: auto !important; max-width: 250px; }
+    }
+  </style>
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="sidebar-brand"><span>🍴</span> Menu Manager</div>
-  <nav>
-    <a href="admin/dashboard.php"><span class="nav-icon">📊</span> Dashboard</a>
-    <a href="admin/add-item.php"><span class="nav-icon">➕</span> Add Dish</a>
-    <a href="admin/add-category.php"><span class="nav-icon">📂</span> Categories</a>
-    <a href="menu.php" target="_blank"><span class="nav-icon">🌐</span> Live Menu ↗</a>
-    <a href="print-menu.php" target="_blank"><span class="nav-icon">🖨️</span> Print Menu ↗</a>
-    <a href="qr.php" class="active"><span class="nav-icon">📱</span> QR Code</a>
-    <a href="generate_pdf.php" target="_blank"><span class="nav-icon">📄</span> Download PDF</a>
-  </nav>
-  <div class="sidebar-footer">Menu Manager v2</div>
-</aside>
+<?php 
+$cur = 'qr.php';
+include __DIR__ . '/admin/partials/sidebar.php'; 
+?>
 
 <div class="main">
-  <div class="topbar"><h1>📱 QR Code</h1></div>
+  <div class="topbar">
+    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
+      <div class="menu-toggle" id="menuToggle">☰</div>
+      <div>
+        <h1>QR Code</h1>
+        <p class="meta">Download or print your menu QR</p>
+      </div>
+    </div>
+    <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
+      <?php include __DIR__ . '/admin/partials/topbar_user.php'; ?>
+    </div>
+  </div>
   <div class="content">
 
-    <div class="card" style="max-width:500px;margin:0 auto">
+    <div class="card qr-card">
       <div class="card-title">Menu QR Code</div>
 
       <?php if ($error): ?>
         <div class="flash flash-danger" style="margin-bottom:16px">
           ❌ <?= htmlspecialchars($error) ?>
         </div>
+
       <?php endif; ?>
 
       <?php if ($generated && file_exists($qr_file)): ?>
 
         <div class="qr-center">
-          <img src="qr/menu_qr.png?v=<?= filemtime($qr_file) ?>" alt="Menu QR Code">
+          <div style="background:#fff; padding:20px; border-radius:24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom:24px">
+            <img src="qr/menu_qr.png?v=<?= filemtime($qr_file) ?>" alt="Menu QR Code" style="width:280px; height:280px; display:block">
+          </div>
 
           <div style="width:100%;text-align:center">
             <p style="font-size:.78rem;color:var(--muted);margin-bottom:4px;font-weight:600">
               Scans to:
             </p>
-            <p style="font-size:.82rem;color:var(--accent);word-break:break-all;padding:8px 12px;background:var(--bg);border-radius:8px;font-family:monospace">
+            <a href="<?= htmlspecialchars($qr_url) ?>" target="_blank" 
+               style="display:block; font-size:.82rem; color:var(--accent); word-break:break-all; padding:10px 14px; background:var(--bg); border-radius:10px; font-family:monospace; text-decoration:none; border:1px solid rgba(59,130,246,0.1); transition:var(--transition)">
               <?= htmlspecialchars($qr_url) ?>
-            </p>
+            </a>
           </div>
 
-          <div class="btn-grp" style="justify-content:center">
-            <a href="qr/menu_qr.png" download="menu_qr.png" class="btn btn-primary">
+          <div class="btn-grp" style="justify-content:center; margin-top:20px; gap:8px; flex-wrap:wrap">
+            <a href="qr/menu_qr.png" download="menu_qr.png" class="btn btn-primary btn-md">
               ⬇️ Download QR
             </a>
-            <a href="<?= htmlspecialchars($qr_url) ?>" target="_blank" class="btn btn-outline">
+            <a href="<?= htmlspecialchars($qr_url) ?>" target="_blank" class="btn btn-outline btn-md">
               🌐 Open Menu
             </a>
-            <a href="qr.php?regen=1" class="btn btn-warn"
+            <a href="qr.php?regen=1" class="btn btn-warn btn-md"
                onclick="return confirm('Regenerate QR code with current URL?')">
               🔄 Regenerate
             </a>

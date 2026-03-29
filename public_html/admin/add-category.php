@@ -1,7 +1,7 @@
 <?php
 // admin/add-category.php — Manage categories
+require_once __DIR__ . '/partials/auth_check.php';
 require_once __DIR__ . '/../includes/db.php';
-session_start();
 
 $flash  = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
@@ -71,14 +71,28 @@ $categories = $conn->query(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Categories — Menu Manager</title>
-  <link rel="stylesheet" href="../assets/css/menu-style.css">
+  <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
 </head>
 <body>
 
 <?php include __DIR__ . '/partials/sidebar.php'; ?>
 
 <div class="main">
-  <div class="topbar"><h1>📂 Categories</h1></div>
+  <div class="topbar">
+    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
+      <div class="menu-toggle" id="menuToggle">☰</div>
+      <div>
+        <h1>Categories</h1>
+        <p class="meta">Manage your menu sections</p>
+      </div>
+    </div>
+    <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
+      <a href="../menu.php" target="_blank" class="btn btn-outline btn-sm">
+        <span class="live-dot"></span> Live Menu View
+      </a>
+      <?php include __DIR__ . '/partials/topbar_user.php'; ?>
+    </div>
+  </div>
   <div class="content">
 
     <?php if ($flash): ?>
@@ -101,7 +115,9 @@ $categories = $conn->query(
             <label for="cat_name">Category Name <span class="req">*</span></label>
             <input type="text" id="cat_name" name="cat_name" placeholder="e.g. Soups" required>
           </div>
-          <button type="submit" class="btn btn-primary">💾 Add</button>
+          <button type="submit" class="btn btn-primary">
+            <span style="font-size:1rem">💾</span> Add Category
+          </button>
         </form>
       </div>
 
@@ -113,24 +129,27 @@ $categories = $conn->query(
         <?php else: ?>
           <ul class="cat-list">
             <?php foreach ($categories as $c): ?>
+              <?php
+                $cnt = $conn->query("SELECT COUNT(*) FROM dishes WHERE category_id = {$c['id']}")->fetch_row()[0];
+              ?>
               <li>
-                <div>
-                  <strong><?= htmlspecialchars($c['name']) ?></strong>
-                  <span class="badge badge-info" style="margin-left:8px">
-                    <?= $c['dish_count'] ?> dish<?= $c['dish_count'] != 1 ? 'es' : '' ?>
-                  </span>
+                <div class="cat-name-box">
+                  <span>📂</span> <?= htmlspecialchars($c['name']) ?>
                 </div>
-
-                <?php if ($c['dish_count'] == 0): ?>
-                  <form method="POST" style="margin:0"
-                        onsubmit="return confirm('Delete \'<?= addslashes(htmlspecialchars($c['name'])) ?>\'?')">
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="cat_id" value="<?= $c['id'] ?>">
-                    <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
-                  </form>
-                <?php else: ?>
-                  <span class="badge badge-danger" title="Cannot delete — dishes exist">🔒</span>
-                <?php endif; ?>
+                
+                <div class="cat-actions">
+                  <span class="badge badge-info"><?= $cnt ?> dishes</span>
+                  <?php if ($cnt > 0): ?>
+                    <span title="Contains dishes" style="cursor:help; opacity:.5">🔒</span>
+                  <?php else: ?>
+                    <a href="delete-category.php?id=<?= $c['id'] ?>" 
+                       class="btn btn-danger btn-sm"
+                       style="padding:6px 12px; border-radius:10px"
+                       onclick="return confirm('Delete \'<?= addslashes(htmlspecialchars($c['name'])) ?>\'?')">
+                      🗑️
+                    </a>
+                  <?php endif; ?>
+                </div>
               </li>
             <?php endforeach; ?>
           </ul>
