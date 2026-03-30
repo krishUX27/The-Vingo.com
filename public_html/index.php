@@ -17,6 +17,7 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="assets/css/style.css?v=1.1">
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
 </head>
 
 <body>

@@ -1,7 +1,6 @@
 <?php
-// print-menu.php — Print-ready menu (NO images)
-// Style: Johns Kitchen — bold orange category heading, 2-column name+price list
-require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/partials/auth_check.php';
+require_once __DIR__ . '/../includes/db.php';
 
 $restaurant_name = menu_get_setting('restaurant_name', 'My Restaurant');
 $tagline         = menu_get_setting('restaurant_sub',  'Delicious meals, crafted with love');
@@ -190,7 +189,7 @@ while ($row = $result->fetch_assoc()) {
 <div class="toolbar">
   <span>🖨️ Print Menu — <?= htmlspecialchars($restaurant_name) ?></span>
   <div class="t-btns">
-    <a href="menu.php" class="t-btn t-btn-back">← Live Menu</a>
+    <a href="../menu.php" class="t-btn t-btn-back">← Live Menu</a>
     <button class="t-btn t-btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
   </div>
 </div>

@@ -17,6 +17,7 @@ $cur = 'index.php';
   <title>Master Console | Vingo Platform</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
+  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
     :root { 
       --super-accent: #f59e0b; 
@@ -41,21 +42,7 @@ $cur = 'index.php';
 </head>
 <body>
 
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-header"><span>👑</span> Vingo Master</div>
-  <nav>
-    <a href="index.php" class="active"><span class="nav-icon">🛡️</span> Root Console</a>
-    <a href="#"><span class="nav-icon">👥</span> Manage Admins</a>
-    <a href="#"><span class="nav-icon">📊</span> Platform Stats</a>
-    <a href="#"><span class="nav-icon">🛠️</span> System Tools</a>
-    <div style="height:1px; background:rgba(255,255,255,0.05); margin:20px 0"></div>
-    <a href="../admin/index.php"><span class="nav-icon">🚪</span> Exit to Admin</a>
-    <a href="logout.php" onclick="return confirm('Sign out from Root Console?')">
-      <span class="nav-icon">🔒</span> Lock System
-    </a>
-  </nav>
-  <div class="sidebar-footer">Root Engine v1.0</div>
-</aside>
+<?php include __DIR__ . '/partials/super_sidebar.php'; ?>
 
 <div class="main">
   <div class="topbar">
@@ -134,7 +121,7 @@ $cur = 'index.php';
         <div style="display:flex; flex-direction:column; gap:12px">
           <a href="../admin/dashboard.php" class="btn btn-outline" style="justify-content:flex-start; width:100%">📊 Operator Dashboard</a>
           <a href="../menu.php" target="_blank" class="btn btn-outline" style="justify-content:flex-start; width:100%">🌐 Public Live Menu</a>
-          <a href="../qr.php" class="btn btn-outline" style="justify-content:flex-start; width:100%">📱 QR Manager</a>
+          <a href="../admin/qr.php" class="btn btn-outline" style="justify-content:flex-start; width:100%">📱 QR Manager</a>
           <div style="height:1px; background:var(--border); margin:10px 0"></div>
           <button class="btn btn-warn" style="justify-content:center; width:100%; border-radius:30px">⚡ Force System Sync</button>
         </div>
@@ -143,12 +130,7 @@ $cur = 'index.php';
   </div>
 </div>
 
-<script>
-// Sidebar Toggle Logic for superadmin
-document.getElementById('menuToggle')?.addEventListener('click', () => {
-  document.getElementById('sidebar').classList.add('open');
-});
-</script>
+
 
 </body>
 </html>

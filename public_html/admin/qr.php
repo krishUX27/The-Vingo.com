@@ -1,8 +1,8 @@
 <?php
-require_once __DIR__ . '/admin/partials/auth_check.php';
-require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/partials/auth_check.php';
+require_once __DIR__ . '/../includes/db.php';
 
-$qr_dir  = __DIR__ . '/qr/';
+$qr_dir  = __DIR__ . '/../qr/';
 $qr_file = $qr_dir . 'menu_qr.png';
 $url_file = $qr_dir . 'qr_url.txt';
 
@@ -14,7 +14,7 @@ $host     = $_SERVER['HTTP_HOST'];
 $base     = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $error = null;
 $generated = false;
-$qr_url = $proto . '://' . $host . $base . '/menu.php';
+$qr_url = $proto . '://' . $host . dirname($base) . '/menu.php';
 
 $force     = isset($_GET['regen']);
 $cachedUrl = file_exists($url_file) ? trim(file_get_contents($url_file)) : '';
@@ -26,7 +26,7 @@ if ($force || !file_exists($qr_file) || $cachedUrl !== $qr_url) {
     $error     = null;
 
     /* 1. Try Composer endroid/qr-code (Requires GD enabled + Apache Restart) */
-    $autoload = __DIR__ . '/vendor/autoload.php';
+    $autoload = __DIR__ . '/../vendor/autoload.php';
     if (file_exists($autoload)) {
         require_once $autoload;
         try {
@@ -80,7 +80,8 @@ if ($force || !file_exists($qr_file) || $cachedUrl !== $qr_url) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>QR Code — Menu Manager</title>
-  <link rel="stylesheet" href="assets/css/menu-style.css?v=<?= time() ?>">
+  <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
+  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
     body, html { height: 100vh; margin: 0; padding: 0; }
     .main { min-height: 100vh; display: flex; flex-direction: column; }
@@ -98,7 +99,7 @@ if ($force || !file_exists($qr_file) || $cachedUrl !== $qr_url) {
 
 <?php 
 $cur = 'qr.php';
-include __DIR__ . '/admin/partials/sidebar.php'; 
+include __DIR__ . '/partials/sidebar.php'; 
 ?>
 
 <div class="main">
@@ -111,7 +112,7 @@ include __DIR__ . '/admin/partials/sidebar.php';
       </div>
     </div>
     <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
-      <?php include __DIR__ . '/admin/partials/topbar_user.php'; ?>
+      <?php include __DIR__ . '/partials/topbar_user.php'; ?>
     </div>
   </div>
   <div class="content">
@@ -130,7 +131,7 @@ include __DIR__ . '/admin/partials/sidebar.php';
 
         <div class="qr-center">
           <div style="background:#fff; padding:20px; border-radius:24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom:24px">
-            <img src="qr/menu_qr.png?v=<?= filemtime($qr_file) ?>" alt="Menu QR Code" style="width:280px; height:280px; display:block">
+            <img src="../qr/menu_qr.png?v=<?= filemtime($qr_file) ?>" alt="Menu QR Code" style="width:280px; height:280px; display:block">
           </div>
 
           <div style="width:100%;text-align:center">
@@ -144,7 +145,7 @@ include __DIR__ . '/admin/partials/sidebar.php';
           </div>
 
           <div class="btn-grp" style="justify-content:center; margin-top:20px; gap:8px; flex-wrap:wrap">
-            <a href="qr/menu_qr.png" download="menu_qr.png" class="btn btn-primary btn-md">
+            <a href="../qr/menu_qr.png" download="menu_qr.png" class="btn btn-primary btn-md">
               ⬇️ Download QR
             </a>
             <a href="<?= htmlspecialchars($qr_url) ?>" target="_blank" class="btn btn-outline btn-md">

@@ -15,6 +15,7 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital m
   <title><?= htmlspecialchars($restaurant_name) ?> — Menu</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

@@ -121,6 +121,7 @@ $offers = $conn->query("SELECT id, title FROM seasonal_offers WHERE active=1 ORD
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Dashboard — Menu Manager</title>
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
+  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
 </head>
 <body>
 

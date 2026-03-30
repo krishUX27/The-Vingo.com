@@ -1,21 +1,29 @@
-<?php
-session_start();
+require_once __DIR__ . '/../includes/db.php';
 
-$user = 'superadmin';
-$pass = 'super123';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $u = $_POST['u'] ?? '';
     $p = $_POST['p'] ?? '';
 
-    if ($u === $user && $p === $pass) {
-        $_SESSION['super_logged_in'] = true;
-        header('Location: index.php');
-        exit;
+    $stmt = $conn->prepare("SELECT id, password FROM superadmins WHERE username = ? LIMIT 1");
+    $stmt->bind_param('s', $u);
+    $stmt->execute();
+    $res = $stmt->get_result();
+
+    if ($row = $res->fetch_assoc()) {
+        if (password_verify($p, $row['password'])) {
+            $_SESSION['super_logged_in'] = true;
+            $_SESSION['super_username']  = $u;
+            header('Location: index.php');
+            exit;
+        } else {
+            $error = 'Access Denied: Invalid Password';
+        }
     } else {
-        $error = 'Access Denied: Invalid Credentials';
+        $error = 'Access Denied: Invalid Identifier';
     }
+    $stmt->close();
 }
 
 if (isset($_SESSION['super_logged_in'])) {

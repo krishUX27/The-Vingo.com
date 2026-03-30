@@ -1,15 +1,15 @@
 <?php
-// generate_pdf.php — Root-level PDF export (DOMPDF)
+require_once __DIR__ . '/partials/auth_check.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-$autoload = __DIR__ . '/vendor/autoload.php';
+$autoload = __DIR__ . '/../vendor/autoload.php';
 if (!file_exists($autoload)) {
     die('
     <div style="font-family:sans-serif;padding:40px;max-width:600px;margin:0 auto">
       <h2>⚠️ DOMPDF Not Installed</h2>
       <p>Run in your project root (<code>The-Vingo.com/</code>):</p>
       <pre style="background:#f5f5f5;padding:16px;border-radius:8px">composer require dompdf/dompdf</pre>
-      <p><a href="admin/dashboard.php">← Back to Dashboard</a></p>
+      <p><a href="dashboard.php">← Back to Dashboard</a></p>
     </div>');
 }
 
@@ -17,7 +17,7 @@ require_once $autoload;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
-require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/../includes/db.php';
 
 $result = $conn->query(
     "SELECT d.name, d.price, d.image, d.availability, c.name AS category
@@ -72,7 +72,7 @@ ob_start();
     </thead>
     <tbody>
       <?php foreach ($items as $d):
-        $img_path = __DIR__ . '/uploads/' . $d['image'];
+        $img_path = __DIR__ . '/../uploads/' . $d['image'];
         $has_img  = $d['image'] && file_exists($img_path);
         $type     = $has_img ? pathinfo($img_path, PATHINFO_EXTENSION) : '';
       ?>

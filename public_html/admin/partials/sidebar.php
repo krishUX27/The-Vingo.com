@@ -19,13 +19,9 @@ $prefix = $prefix ?? '';
     <a href="<?= $prefix ?>../menu.php" target="_blank">
       <span class="nav-icon">🌐</span> Live Menu ↗
     </a>
-    <a href="<?= $prefix ?>../print-menu.php" target="_blank">
-      <span class="nav-icon">🖨️</span> Print Menu ↗
-    </a>
-    <a href="<?= $prefix ?>../qr.php" class="<?= $cur === 'qr.php' ? 'active' : '' ?>">
-      <span class="nav-icon">📱</span> QR Code
-    </a>
-    <a href="<?= $prefix ?>../generate_pdf.php" target="_blank">
+    <?= nav_a('print-menu.php', '🖨️', 'Print Menu', $cur) ?>
+    <?= nav_a('qr.php', '📱', 'QR Code', $cur) ?>
+    <a href="<?= $prefix ?>generate_pdf.php" target="_blank">
       <span class="nav-icon">📄</span> Download PDF
     </a>
   </nav>
