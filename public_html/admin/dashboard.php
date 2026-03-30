@@ -1,8 +1,22 @@
 <?php
 require_once __DIR__ . '/partials/auth_check.php';
 require_once __DIR__ . '/../includes/db.php';
+
+// Enable error reporting
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+// Custom logging function
+function dashboard_log($msg) {
+    $log_path = __DIR__ . '/debug.log';
+    $time = date('Y-m-d H:i:s');
+    file_put_contents($log_path, "[$time] $msg\n", FILE_APPEND);
+}
+
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
+
+dashboard_log("Dashboard hit. " . ($_SERVER['REQUEST_METHOD'] === 'POST' ? 'Action: ' . ($_POST['action'] ?? 'none') : 'GET request'));
 
 /* ── Filters ── */
 $search     = trim($_GET['q']         ?? '');
@@ -43,9 +57,23 @@ if ($price_max !== '') {
 $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
 /* ── Stats ── */
-$total_dishes = $conn->query("SELECT COUNT(*) FROM dishes")->fetch_row()[0];
-$avail_cnt    = $conn->query("SELECT COUNT(*) FROM dishes WHERE availability='Available'")->fetch_row()[0];
-$total_cats   = $conn->query("SELECT COUNT(*) FROM categories")->fetch_row()[0];
+$total_dishes_res = $conn->query("SELECT COUNT(*) FROM dishes");
+if (!$total_dishes_res) {
+    dashboard_log("Stats Error (total_dishes): " . $conn->error);
+}
+$total_dishes = $total_dishes_res ? $total_dishes_res->fetch_row()[0] : 0;
+
+$avail_cnt_res = $conn->query("SELECT COUNT(*) FROM dishes WHERE availability='Available'");
+if (!$avail_cnt_res) {
+    dashboard_log("Stats Error (avail_cnt): " . $conn->error);
+}
+$avail_cnt = $avail_cnt_res ? $avail_cnt_res->fetch_row()[0] : 0;
+
+$total_cats_res = $conn->query("SELECT COUNT(*) FROM categories");
+if (!$total_cats_res) {
+    dashboard_log("Stats Error (total_cats): " . $conn->error);
+}
+$total_cats = $total_cats_res ? $total_cats_res->fetch_row()[0] : 0;
 
 /* ── Handle Add Dish (Modal POST) ── */
 $errors = [];
@@ -80,16 +108,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     if (empty($errors)) {
+        dashboard_log("Attempting to insert dish: $name, $price, $cat_id");
         $s = $conn->prepare("INSERT INTO dishes (name,price,category_id,image,availability,currency,offer_id) VALUES (?,?,?,?,?,?,?)");
-        $s->bind_param('sdisssi', $name, $price, $cat_id, $image_name, $availability, $currency, $offer_id);
-        if ($s->execute()) {
-            $new_id = $conn->insert_id;
-            $_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish '{$name}' added successfully!"];
-            header("Location: dashboard.php?new_id={$new_id}");
-            exit;
+        if (!$s) {
+            $err_msg = 'Prepare failed: ' . $conn->error;
+            dashboard_log($err_msg);
+            $errors[] = $err_msg;
+        } else {
+            $s->bind_param('sdisssi', $name, $price, $cat_id, $image_name, $availability, $currency, $offer_id);
+            if ($s->execute()) {
+                $new_id = $conn->insert_id;
+                dashboard_log("Dish '{$name}' added successfully. ID: {$new_id}");
+                $_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish '{$name}' added successfully!"];
+                header("Location: dashboard.php?new_id={$new_id}");
+                exit;
+            }
+            $err_msg = 'DB execute error: ' . $conn->error;
+            dashboard_log($err_msg);
+            $errors[] = $err_msg;
+            $s->close();
         }
-        $errors[] = 'DB error: ' . $conn->error;
-        $s->close();
+    } else {
+        dashboard_log("Validation errors: " . implode(', ', $errors));
     }
 }
 
@@ -107,10 +147,22 @@ $dishes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
 /* ── Category dropdown for filter & modal ── */
-$categories = $conn->query("SELECT * FROM categories ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+$cat_res = $conn->query("SELECT * FROM categories ORDER BY name");
+if (!$cat_res) {
+    dashboard_log("Category query failed: " . $conn->error);
+    $categories = [];
+} else {
+    $categories = $cat_res->fetch_all(MYSQLI_ASSOC);
+}
 
 /* ── Offers dropdown for modal ── */
-$offers = $conn->query("SELECT id, title FROM seasonal_offers WHERE active=1 ORDER BY title")->fetch_all(MYSQLI_ASSOC);
+$offer_res = $conn->query("SELECT id, title FROM seasonal_offers WHERE active=1 ORDER BY title");
+if (!$offer_res) {
+    dashboard_log("Offers query failed: " . $conn->error);
+    $offers = [];
+} else {
+    $offers = $offer_res->fetch_all(MYSQLI_ASSOC);
+}
 
 /* ── UI Rendering ── */
 ?>

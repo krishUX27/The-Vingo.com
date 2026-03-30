@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cat_id       = intval($_POST['category_id'] ?? 0);
     $availability = $_POST['availability']       ?? 'Available';
     $currency     = $_POST['currency']           ?? 'INR';
+    $offer_id     = !empty($_POST['offer_id'])   ? (int)$_POST['offer_id'] : null;
 
     if ($name === '')                                           $errors[] = 'Dish name is required.';
     if ($price === '' || !is_numeric($price) || $price < 0)    $errors[] = 'A valid price is required.';
@@ -53,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, image=?, availability=?, currency=? WHERE id=?");
-        $upd->bind_param('sdisssi', $name, $price, $cat_id, $image_name, $availability, $currency, $id);
+        $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, image=?, availability=?, currency=?, offer_id=? WHERE id=?");
+        $upd->bind_param('sdisssii', $name, $price, $cat_id, $image_name, $availability, $currency, $offer_id, $id);
         if ($upd->execute()) {
             $_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish '{$name}' updated."];
             header('Location: dashboard.php');
@@ -64,11 +65,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $upd->close();
     }
     // Reflect changes
-    $dish = array_merge($dish, compact('name','price','availability', 'currency'));
+    $dish = array_merge($dish, compact('name','price','availability', 'currency', 'offer_id'));
     $dish['category_id'] = $cat_id;
 }
 
 $categories = $conn->query("SELECT * FROM categories ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+$offers     = $conn->query("SELECT id, title FROM seasonal_offers WHERE active=1 ORDER BY title")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -146,6 +148,18 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY name")->fetch_all(
             <select id="availability" name="availability">
               <option value="Available"     <?= $dish['availability']==='Available'     ? 'selected':'' ?>>Available</option>
               <option value="Not Available" <?= $dish['availability']==='Not Available' ? 'selected':'' ?>>Not Available</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="offer_id">Seasonal Offer</label>
+            <select id="offer_id" name="offer_id">
+              <option value="">No Active Offer</option>
+              <?php foreach ($offers as $o): ?>
+                <option value="<?= $o['id'] ?>" <?= ($dish['offer_id'] == $o['id']) ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($o['title']) ?>
+                </option>
+              <?php endforeach; ?>
             </select>
           </div>
 

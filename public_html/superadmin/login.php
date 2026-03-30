@@ -1,20 +1,52 @@
 <?php
 session_start();
+require_once __DIR__ . '/../includes/db.php';
 
-$user = 'superadmin';
-$pass = 'super123';
+// Enable error reporting
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+function super_log($msg) {
+    $log_path = __DIR__ . '/../admin/debug.log';
+    $time = date('Y-m-d H:i:s');
+    file_put_contents($log_path, "[$time] [SUPERADMIN] $msg\n", FILE_APPEND);
+}
+
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $u = $_POST['u'] ?? '';
+    $u = trim($_POST['u'] ?? '');
     $p = $_POST['p'] ?? '';
 
-    if ($u === $user && $p === $pass) {
-        $_SESSION['super_logged_in'] = true;
-        header('Location: index.php');
-        exit;
+    if (empty($u) || empty($p)) {
+        $error = 'Please enter both System ID and Root Key.';
     } else {
-        $error = 'Access Denied: Invalid Credentials';
+        $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = ? AND role = 'superadmin' LIMIT 1");
+        if (!$stmt) {
+            super_log("Query error: " . $conn->error);
+            $error = 'System fault. Check logs.';
+        } else {
+            $stmt->bind_param('s', $u);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($row = $result->fetch_assoc()) {
+                if (password_verify($p, $row['password'])) {
+                    super_log("Superadmin '$u' authenticated.");
+                    $_SESSION['super_logged_in'] = true;
+                    $_SESSION['super_username']  = $row['username'];
+                    header('Location: index.php');
+                    exit;
+                } else {
+                    super_log("Failed root access for '$u': Invalid key.");
+                    $error = 'Access Denied: Invalid Credentials';
+                }
+            } else {
+                super_log("Failed root access for '$u': User not found or not superadmin.");
+                $error = 'Access Denied: Invalid Credentials';
+            }
+            $stmt->close();
+        }
     }
 }
 
@@ -56,7 +88,7 @@ if (isset($_SESSION['super_logged_in'])) {
   <p>System Root Management Layer</p>
   
   <?php if ($error): ?>
-    <div class="error">🔒 <?= $error ?></div>
+    <div class="error">🔒 <?= htmlspecialchars($error) ?></div>
   <?php endif; ?>
 
   <form method="POST">
