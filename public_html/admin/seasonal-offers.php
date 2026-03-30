@@ -5,6 +5,18 @@ require_once __DIR__ . '/../includes/db.php';
 
 $flash  = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
+
+// Enable error reporting
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+// Custom logging function
+function offers_log($msg) {
+    $log_path = __DIR__ . '/debug.log';
+    $time = date('Y-m-d H:i:s');
+    file_put_contents($log_path, "[$time] [OFFERS] $msg\n", FILE_APPEND);
+}
+
 $errors = [];
 
 // ADD OFFER
