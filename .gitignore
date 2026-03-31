@@ -9,6 +9,7 @@ node_modules/
 /public_html/qr/qr_url.txt
 
 # Local Config
+/public_html/includes/db.php
 /public_html/includes/config.php
 .env
 
