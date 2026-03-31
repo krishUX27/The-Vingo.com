@@ -1,16 +1,16 @@
 # Dependencies
-/public_html/vendor/
+/vendor/
 node_modules/
 
 # User Uploads & Generated Media
-/public_html/uploads/*
-!/public_html/uploads/.gitkeep
-/public_html/qr/*.png
-/public_html/qr/qr_url.txt
+/uploads/*
+!/uploads/.gitkeep
+/qr/*.png
+/qr/qr_url.txt
 
 # Local Config
-/public_html/includes/db.php
-/public_html/includes/config.php
+/includes/db.php
+/includes/config.php
 .env
 
 # IDE / OS
