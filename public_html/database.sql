@@ -18,24 +18,15 @@ CREATE TABLE IF NOT EXISTS settings (
   UNIQUE KEY uq_setting_key (setting_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ── Admin Accounts (Operator Level) ────────────────────────────────
-CREATE TABLE IF NOT EXISTS admins (
+-- ── User Accounts (Admin and Superadmin) ────────────────────────────────
+CREATE TABLE IF NOT EXISTS users (
   id         INT          NOT NULL AUTO_INCREMENT,
   username   VARCHAR(50)  NOT NULL,
   password   VARCHAR(255) NOT NULL,
+  role       ENUM('admin', 'superadmin') NOT NULL DEFAULT 'admin',
   created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_admin_user (username)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ── Superadmin Accounts (Root Level) ───────────────────────────────
-CREATE TABLE IF NOT EXISTS superadmins (
-  id         INT          NOT NULL AUTO_INCREMENT,
-  username   VARCHAR(50)  NOT NULL,
-  password   VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_superadmin_user (username)
+  UNIQUE KEY uq_user (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ── Categories ────────────────────────────────────────────────
@@ -99,8 +90,6 @@ INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
   ('restaurant_sub', 'The Future of Digital Menus'),
   ('contact_email', 'hello@thevingo.com');
 
-INSERT IGNORE INTO admins (username, password) VALUES
-  ('admin', '$2y$10$7R8WXYuR0FvI/fHh3mK9Xe/S3dY3h8gGg8k4B9vX.iH3G5sZ.y7yS');
-
-INSERT IGNORE INTO superadmins (username, password) VALUES
-  ('superadmin', '$2y$10$7R8WXYuR0FvI/fHh3mK9Xe/S3dY3h8gGg8k4B9vX.iH3G5sZ.y7yS');
+INSERT IGNORE INTO users (username, password, role) VALUES
+  ('admin', '$2y$10$7R8WXYuR0FvI/fHh3mK9Xe/S3dY3h8gGg8k4B9vX.iH3G5sZ.y7yS', 'admin'),
+  ('superadmin', '$2y$10$7R8WXYuR0FvI/fHh3mK9Xe/S3dY3h8gGg8k4B9vX.iH3G5sZ.y7yS', 'superadmin');

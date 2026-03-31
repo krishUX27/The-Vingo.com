@@ -6,6 +6,8 @@ require_once __DIR__ . '/../includes/db.php';
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
+$admin_sess_id = $_SESSION['admin_id'] ?? 0;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $settings = [
         'restaurant_name' => $_POST['restaurant_name'] ?? '',
@@ -14,8 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     foreach ($settings as $key => $val) {
-        $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
-        $stmt->bind_param('ss', $key, $val);
+        $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value, user_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+        $stmt->bind_param('ssi', $key, $val, $admin_sess_id);
         $stmt->execute();
     }
     
@@ -43,8 +45,8 @@ $cur = 'settings.php';
     <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
       <div class="menu-toggle" id="menuToggle">☰</div>
       <div>
-        <h1>⚙️ Global Settings</h1>
-        <p class="meta">Manage restaurant branding and defaults</p>
+        <h1>⚙️ Restaurant Settings</h1>
+        <p class="meta">Manage your branding and site settings</p>
       </div>
     </div>
     <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
@@ -62,17 +64,17 @@ $cur = 'settings.php';
       <form method="POST">
         <div class="form-group">
           <label>Restaurant Name</label>
-          <input type="text" name="restaurant_name" value="<?= htmlspecialchars(menu_get_setting('restaurant_name', 'My Restaurant')) ?>" required>
+          <input type="text" name="restaurant_name" value="<?= htmlspecialchars(menu_get_setting('restaurant_name', 'My Restaurant', $admin_sess_id)) ?>" required>
         </div>
         
         <div class="form-group">
           <label>Menu Subheader (Tagline)</label>
-          <input type="text" name="restaurant_sub" value="<?= htmlspecialchars(menu_get_setting('restaurant_sub', 'Welcome to our digital menu')) ?>" placeholder="e.g. Traditional Fine Dining Since 1994">
+          <input type="text" name="restaurant_sub" value="<?= htmlspecialchars(menu_get_setting('restaurant_sub', 'Welcome to our digital menu', $admin_sess_id)) ?>" placeholder="e.g. Traditional Fine Dining Since 1994">
         </div>
 
         <div class="form-group">
           <label>Admin Support Email</label>
-          <input type="email" name="admin_email" value="<?= htmlspecialchars(menu_get_setting('admin_email', 'admin@vingo.com')) ?>" required>
+          <input type="email" name="admin_email" value="<?= htmlspecialchars(menu_get_setting('admin_email', 'admin@vingo.com', $admin_sess_id)) ?>" required>
           <p style="font-size:0.75rem; color:var(--text-light); margin-top:4px">Used for profile display and system notifications.</p>
         </div>
 

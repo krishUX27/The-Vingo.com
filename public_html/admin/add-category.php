@@ -7,6 +7,8 @@ $flash  = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 $errors = [];
 
+$admin_sess_id = $_SESSION['admin_id'] ?? 0;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
@@ -16,14 +18,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($name === '') {
             $errors[] = 'Category name is required.';
         } else {
-            $chk = $conn->prepare("SELECT id FROM categories WHERE name = ?");
-            $chk->bind_param('s', $name);
+            // Check for duplicate for THIS user only
+            $chk = $conn->prepare("SELECT id FROM categories WHERE name = ? AND user_id = ?");
+            $chk->bind_param('si', $name, $admin_sess_id);
             $chk->execute();
             if ($chk->get_result()->num_rows > 0) {
-                $errors[] = "'{$name}' already exists.";
+                $errors[] = "'{$name}' already exists in your menu.";
             } else {
-                $ins = $conn->prepare("INSERT INTO categories (name) VALUES (?)");
-                $ins->bind_param('s', $name);
+                $ins = $conn->prepare("INSERT INTO categories (name, user_id) VALUES (?, ?)");
+                $ins->bind_param('si', $name, $admin_sess_id);
                 $ins->execute();
                 $ins->close();
                 $_SESSION['flash'] = ['type' => 'success', 'msg' => "Category '{$name}' added."];
@@ -37,8 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* ── Delete ── */
     if ($action === 'delete') {
         $did = intval($_POST['cat_id'] ?? 0);
-        $used = $conn->prepare("SELECT COUNT(*) FROM dishes WHERE category_id = ?");
-        $used->bind_param('i', $did);
+        // Verify ownership and check count
+        $used = $conn->prepare("SELECT COUNT(*) FROM dishes WHERE category_id = ? AND user_id = ?");
+        $used->bind_param('ii', $did, $admin_sess_id);
         $used->execute();
         $count = $used->get_result()->fetch_row()[0];
         $used->close();
@@ -46,8 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($count > 0) {
             $errors[] = "Cannot delete — {$count} dish(es) belong to this category.";
         } else {
-            $del = $conn->prepare("DELETE FROM categories WHERE id = ?");
-            $del->bind_param('i', $did);
+            $del = $conn->prepare("DELETE FROM categories WHERE id = ? AND user_id = ?");
+            $del->bind_param('ii', $did, $admin_sess_id);
             $del->execute();
             $del->close();
             $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Category deleted.'];
@@ -58,10 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $categories = $conn->query(
-    "SELECT c.*, COUNT(d.id) AS dish_count
+    "SELECT c.*, (SELECT COUNT(*) FROM dishes WHERE category_id = c.id) AS dish_count
      FROM categories c
-     LEFT JOIN dishes d ON d.category_id = c.id
-     GROUP BY c.id
+     WHERE c.user_id = $admin_sess_id
      ORDER BY c.name"
 )->fetch_all(MYSQLI_ASSOC);
 ?>

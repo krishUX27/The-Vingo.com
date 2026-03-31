@@ -19,6 +19,8 @@ function offers_log($msg) {
 
 $errors = [];
 
+$admin_sess_id = $_SESSION['admin_id'] ?? 0;
+
 // ADD OFFER
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add') {
     $title       = trim($_POST['title'] ?? '');
@@ -29,28 +31,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if (empty($title)) $errors[] = 'Offer title is required.';
 
     if (empty($errors)) {
-        $exp = $expires_at ?: null;
-        $s = $conn->prepare("INSERT INTO seasonal_offers (title, description, discount, expires_at) VALUES (?, ?, ?, ?)");
-        $s->bind_param('ssss', $title, $desc, $discount, $exp);
-        if ($s->execute()) {
-            $_SESSION['flash'] = ['type' => 'success', 'msg' => "Offer '{$title}' added!"];
-            header('Location: seasonal-offers.php');
-            exit;
+        $exp = !empty($expires_at) ? $expires_at : null;
+        $s = $conn->prepare("INSERT INTO seasonal_offers (title, description, discount, expires_at, user_id) VALUES (?, ?, ?, ?, ?)");
+        if (!$s) {
+            $err_msg = "Prepare failed: " . $conn->error;
+            offers_log($err_msg);
+            $errors[] = $err_msg;
+        } else {
+            $s->bind_param('ssssi', $title, $desc, $discount, $exp, $admin_sess_id);
+            if ($s->execute()) {
+                $_SESSION['flash'] = ['type' => 'success', 'msg' => "Offer '{$title}' added!"];
+                header('Location: seasonal-offers.php');
+                exit;
+            }
+            $err_msg = "Execute failed: " . $conn->error;
+            offers_log($err_msg);
+            $errors[] = $err_msg;
+            $s->close();
         }
-        $errors[] = 'DB Error: ' . $conn->error;
     }
 }
 
 // DELETE OFFER
 if (isset($_GET['del'])) {
     $del_id = (int)$_GET['del'];
-    $conn->query("DELETE FROM seasonal_offers WHERE id = $del_id");
+    $conn->query("DELETE FROM seasonal_offers WHERE id = $del_id AND user_id = $admin_sess_id");
     $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Offer deleted.'];
     header('Location: seasonal-offers.php');
     exit;
 }
 
-$offers = $conn->query("SELECT * FROM seasonal_offers ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
+$offers = $conn->query("SELECT * FROM seasonal_offers WHERE user_id = $admin_sess_id ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">

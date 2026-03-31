@@ -2,6 +2,10 @@
 // superadmin/manage-admins.php
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/mail_helper.php';
+
+// Auto-Fix: Ensure the email column exists in the users table
+$conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) AFTER username");
 
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
@@ -12,20 +16,33 @@ $success = '';
 // Handle Create Admin
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_admin') {
     $u = trim($_POST['username'] ?? '');
+    $email = trim($_POST['email'] ?? '');
     $p = $_POST['password'] ?? '';
+    $r = $_POST['role'] ?? 'admin';
 
-    if (empty($u) || empty($p)) {
-        $error = 'Both fields are required.';
+    if (empty($u) || empty($p) || empty($email)) {
+        $error = 'Username, email, and password are required.';
     } else {
         $hash = password_hash($p, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("INSERT INTO admins (username, password) VALUES (?, ?)");
-        $stmt->bind_param('ss', $u, $hash);
+        $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param('ssss', $u, $email, $hash, $r);
+
         if ($stmt->execute()) {
-            $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin '{$u}' created successfully!"];
+            // Trigger the mail notification
+            @sendSetupEmail($email, $u);
+
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin '{$u}' created!"];
             header('Location: manage-admins.php');
             exit;
         } else {
-            $error = 'Error: ' . $conn->error;
+            // Check for duplicate key
+            if ($stmt->errno === 1062) {
+                $error = "Account already exists! Create new Vingo Menu login credentials.";
+            } else {
+                // Log and show generic error
+                platform_log("User Creation Fault", $stmt->error, "CRITICAL");
+                $error = "System Error: " . $stmt->error;
+            }
         }
         $stmt->close();
     }
@@ -34,7 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Handle Delete Admin
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
-    $stmt = $conn->prepare("DELETE FROM admins WHERE id = ?");
+    // Safety: ensure we only delete 'admin' roles from this specific page
+    $stmt = $conn->prepare("DELETE FROM users WHERE id = ? AND role = 'admin'");
     $stmt->bind_param('i', $id);
     if ($stmt->execute()) {
         $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin account deleted."];
@@ -44,7 +62,7 @@ if (isset($_GET['delete'])) {
 }
 
 // Fetch all admins
-$admins = $conn->query("SELECT id, username, created_at FROM admins ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
+$admins = $conn->query("SELECT id, username, email, role, created_at FROM users WHERE role = 'admin' ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
 
 $cur = 'manage-admins.php';
 ?>
@@ -88,12 +106,13 @@ $cur = 'manage-admins.php';
       
       <!-- Admin List -->
       <div class="card">
-        <div class="card-title">Active Operator Accounts</div>
+        <div class="card-title">Active Admin Accounts</div>
         <div class="table-wrap">
           <table style="width:100%">
             <thead>
-              <tr>
+              <tr style="text-align:left">
                 <th>Username</th>
+                <th>Email</th>
                 <th>Created</th>
                 <th style="text-align:right">Actions</th>
               </tr>
@@ -102,6 +121,7 @@ $cur = 'manage-admins.php';
               <?php foreach ($admins as $a): ?>
               <tr>
                 <td><strong><?= htmlspecialchars($a['username']) ?></strong></td>
+                <td style="font-size:0.85rem; color:#64748b"><?= htmlspecialchars($a['email'] ?? 'N/A') ?></td>
                 <td style="font-size:0.85rem; color:var(--text-light)"><?= date('M d, Y', strtotime($a['created_at'])) ?></td>
                 <td style="text-align:right">
                   <a href="?delete=<?= $a['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete this admin account?')">🗑️ Delete</a>
@@ -109,7 +129,7 @@ $cur = 'manage-admins.php';
               </tr>
               <?php endforeach; ?>
               <?php if (empty($admins)): ?>
-                <tr><td colspan="3" style="text-align:center; padding:40px; color:var(--text-light)">No admin accounts found.</td></tr>
+                <tr><td colspan="4" style="text-align:center; padding:40px; color:var(--text-light)">No admin accounts found.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -121,12 +141,16 @@ $cur = 'manage-admins.php';
         <div class="card-title">➕ Create New Admin</div>
         <form method="POST">
           <input type="hidden" name="action" value="add_admin">
-          <div class="form-group" style="margin-bottom:20px">
-            <label>Username</label>
+          <div class="form-group" style="margin-bottom:15px">
+            <label>Internal ID</label>
             <input type="text" name="username" required placeholder="e.g. josh_ops">
           </div>
-          <div class="form-group" style="margin-bottom:24px">
-            <label>Initial Password</label>
+          <div class="form-group" style="margin-bottom:15px">
+            <label>Contact Email</label>
+            <input type="email" name="email" required placeholder="admin@thevingo.com">
+          </div>
+          <div class="form-group" style="margin-bottom:15px">
+            <label>Security Key</label>
             <input type="password" name="password" required placeholder="••••••••">
           </div>
           <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center">🚀 Create Account</button>

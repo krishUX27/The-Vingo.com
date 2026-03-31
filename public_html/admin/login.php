@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($u) || empty($p)) {
         $error = 'Please enter both username and password.';
     } else {
-        $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = ? LIMIT 1");
+        $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ? AND role = 'admin' LIMIT 1");
         if (!$stmt) {
             login_log("Query error: " . $conn->error);
             $error = 'Internal server error. Please check logs.';
@@ -44,12 +44,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header('Location: dashboard.php');
                     exit;
                 } else {
-                    login_log("Failed login attempt for '$u': Incorrect password.");
-                    $error = 'Invalid username or password.';
+                    $error = 'Incorrect password.';
                 }
             } else {
-                login_log("Failed login attempt for '$u': User not found.");
-                $error = 'Invalid username or password.';
+                // Double check if account exists but is a Superadmin
+                $check = $conn->prepare("SELECT role FROM users WHERE username = ? LIMIT 1");
+                $check->bind_param('s', $u);
+                $check->execute();
+                $res = $check->get_result();
+                if ($r = $res->fetch_assoc()) {
+                    if ($r['role'] === 'superadmin') {
+                        $error = 'This account is a Super Admin. Please login at the Master Root Console.';
+                    } else {
+                        $error = 'Account not found.';
+                    }
+                } else {
+                    $error = 'Account not found.';
+                }
             }
             $stmt->close();
         }

@@ -28,16 +28,16 @@ if ($conn->connect_error) {
 
 $conn->set_charset('utf8mb4');
 
-/** ── Helper: Get setting from DB ── */
-function menu_get_setting($key, $default = '') {
+/** ── Helper: Get setting from DB (Supports Private Mode) ── */
+function menu_get_setting($key, $default = '', $user_id = 0) {
     global $conn;
     $key = $conn->real_escape_string($key);
-    $res = $conn->query("SELECT setting_value FROM settings WHERE setting_key = '$key'");
+    $where = "WHERE setting_key = '$key'";
+    if ($user_id > 0) $where .= " AND user_id = $user_id";
+    
+    $res = $conn->query("SELECT setting_value FROM settings $where LIMIT 1");
     if ($res && $row = $res->fetch_assoc()) return $row['setting_value'];
     return $default;
 }
-
-$restaurant_name = menu_get_setting('restaurant_name', 'My Restaurant');
-$restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital menu');
 ?>
 

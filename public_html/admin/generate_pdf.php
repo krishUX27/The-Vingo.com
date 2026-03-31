@@ -1,119 +1,152 @@
 <?php
 require_once __DIR__ . '/partials/auth_check.php';
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-$autoload = __DIR__ . '/../vendor/autoload.php';
-if (!file_exists($autoload)) {
-    die('
-    <div style="font-family:sans-serif;padding:40px;max-width:600px;margin:0 auto">
-      <h2>⚠️ DOMPDF Not Installed</h2>
-      <p>Run in your project root (<code>The-Vingo.com/</code>):</p>
-      <pre style="background:#f5f5f5;padding:16px;border-radius:8px">composer require dompdf/dompdf</pre>
-      <p><a href="dashboard.php">← Back to Dashboard</a></p>
-    </div>');
-}
-
-require_once $autoload;
-use Dompdf\Dompdf;
-use Dompdf\Options;
-
 require_once __DIR__ . '/../includes/db.php';
 
+$admin_id = $_SESSION['admin_id'] ?? 0;
+
+// Fetch settings
+function get_set($key, $default, $uid) {
+    global $conn;
+    $stmt = $conn->prepare("SELECT setting_value FROM settings WHERE setting_key = ? AND user_id = ?");
+    $stmt->bind_param("si", $key, $uid);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res->fetch_assoc();
+    return ($row && !empty($row['setting_value'])) ? $row['setting_value'] : $default;
+}
+
+$restaurant_name = get_set('restaurant_name', 'Our Menu', $admin_id);
+$restaurant_sub  = get_set('restaurant_sub',  'Signature Selection', $admin_id);
+
+// Fetch dishes grouped by category
 $result = $conn->query(
     "SELECT d.name, d.price, d.image, d.availability, c.name AS category
      FROM dishes d
      JOIN categories c ON c.id = d.category_id
+     WHERE d.user_id = $admin_id
      ORDER BY c.name, d.name"
 );
 $dishes  = $result->fetch_all(MYSQLI_ASSOC);
-
-/* Group by category */
 $grouped = [];
-foreach ($dishes as $d) {
-    $grouped[$d['category']][] = $d;
-}
-
-ob_start();
+foreach ($dishes as $d) { $grouped[$d['category']][] = $d; }
 ?>
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
+<title>Vingo Menu PDF Generation</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body  { font-family: DejaVu Sans, sans-serif; font-size:13px; color:#2d3748; padding:22px; }
-  h1    { text-align:center; font-size:22px; color:#6c63ff; margin-bottom:4px; }
-  .sub  { text-align:center; color:#718096; font-size:11px; margin-bottom:26px; }
-  .cat  { font-size:13px; font-weight:bold; color:#6c63ff; border-bottom:2px solid #6c63ff;
-          padding-bottom:4px; margin:20px 0 10px; text-transform:uppercase; letter-spacing:.8px; }
-  table { width:100%; border-collapse:collapse; margin-bottom:10px; }
-  th    { background:#f0f2f5; padding:8px 10px; text-align:left; font-size:10px;
-          text-transform:uppercase; letter-spacing:.5px; color:#718096; border-bottom:1px solid #e2e8f0; }
-  td    { padding:8px 10px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
-  tr:last-child td { border-bottom:none; }
-  .img-cell img { width:46px; height:46px; object-fit:cover; border-radius:5px; }
-  .no-img       { width:46px; height:46px; background:#f0f2f5; border-radius:5px;
-                  display:inline-block; text-align:center; line-height:46px; font-size:20px; }
-  .price        { color:#6c63ff; font-weight:700; }
-  .av-yes       { color:#27ae60; font-weight:600; }
-  .av-no        { color:#e74c3c; font-weight:600; }
-  .footer       { margin-top:30px; text-align:center; color:#a0aec0; font-size:10px; }
+  :root { --primary: #111; --accent: #6c63ff; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Outfit', sans-serif; background: #fff; padding: 40px; color: #1a1a1a; }
+  
+  .header { text-align: center; margin-bottom: 40px; position: relative; }
+  .header h1 { font-size: 36px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 4px; color: var(--primary); }
+  .header p { color: #888; font-size: 13px; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; }
+  .header::after { content: ''; display: block; width: 60px; height: 3px; background: var(--accent); margin: 16px auto 0; border-radius: 2px; }
+
+  .category-section { margin-bottom: 40px; break-inside: avoid; }
+  .category-title { 
+    font-size: 20px; 
+    font-weight: 800; 
+    text-transform: uppercase; 
+    letter-spacing: 1.5px; 
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .category-title::after { content: ''; flex: 1; height: 1px; background: #f0f0f0; }
+  
+  .dish-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 32px; 
+    column-rule: 1px solid #f0f0f0;
+  }
+  
+  .dish { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #fafafa;
+    break-inside: avoid;
+  }
+  .dish-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .dish-name { font-size: 16px; font-weight: 700; color: #111; }
+  .dish-dots { flex: 1; border-bottom: 1px dotted #ccc; height: 3px; }
+  .dish-price { font-weight: 800; color: var(--accent); font-size: 16px; }
+
+  .footer { 
+    margin-top: 80px; 
+    text-align: center; 
+    font-size: 11px; 
+    color: #bbb; 
+    border-top: 1px solid #f0f0f0; 
+    padding-top: 24px; 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  @media print {
+    body { padding: 0; }
+    .no-print { display: none; }
+    @page { margin: 1.5cm; }
+  }
 </style>
 </head>
 <body>
-<h1>🍴 Our Menu</h1>
-<div class="sub">Generated on <?= date('d M Y, h:i A') ?></div>
+
+<div class="header">
+  <h1><?= htmlspecialchars($restaurant_name) ?></h1>
+  <p><?= htmlspecialchars($restaurant_sub) ?></p>
+</div>
 
 <?php foreach ($grouped as $cat => $items): ?>
-  <div class="cat"><?= htmlspecialchars($cat) ?></div>
-  <table>
-    <thead>
-      <tr><th width="60">Image</th><th>Dish</th><th>Price</th><th>Availability</th></tr>
-    </thead>
-    <tbody>
-      <?php foreach ($items as $d):
-        $img_path = __DIR__ . '/../uploads/' . $d['image'];
-        $has_img  = $d['image'] && file_exists($img_path);
-        $type     = $has_img ? pathinfo($img_path, PATHINFO_EXTENSION) : '';
-      ?>
-      <tr>
-        <td class="img-cell">
-          <?php 
-          $is_webp  = strtolower($type) === 'webp';
-          $can_webp = function_exists('imagecreatefromwebp');
-          
-          if ($has_img && (!$is_webp || $can_webp)):
-            $b64 = base64_encode(file_get_contents($img_path));
-          ?>
-            <img src="data:image/<?= $type ?>;base64,<?= $b64 ?>" alt="">
-          <?php else: ?>
-            <span class="no-img">🍽️</span>
-          <?php endif; ?>
-        </td>
-        <td><?= htmlspecialchars($d['name']) ?></td>
-        <td class="price">₹<?= number_format($d['price'], 2) ?></td>
-        <td class="<?= $d['availability']==='Available' ? 'av-yes' : 'av-no' ?>">
-          <?= $d['availability'] ?>
-        </td>
-      </tr>
+  <div class="category-section">
+    <div class="category-title">
+      <span><?= htmlspecialchars($cat) ?></span>
+    </div>
+    <div class="dish-grid">
+      <?php foreach ($items as $d): ?>
+        <div class="dish">
+          <div class="dish-header">
+            <div class="dish-name"><?= htmlspecialchars($d['name']) ?></div>
+            <div class="dish-dots"></div>
+            <div class="dish-price">₹<?= number_format($d['price'], 0) ?></div>
+          </div>
+        </div>
       <?php endforeach; ?>
-    </tbody>
-  </table>
+    </div>
+  </div>
 <?php endforeach; ?>
 
-<div class="footer">The-Vingo.com Menu — <?= date('Y') ?></div>
+<div class="footer">
+  Dynamically Generated by Vingo Menu Manager &copy; <?= date('Y') ?> • vingo-menu.com
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+  window.onload = () => {
+    const element = document.body;
+    const opt = {
+      margin:       [10, 10, 10, 10],
+      filename:     'Vingo_Menu_<?= date('Ymd') ?>.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Use a slight timeout to ensure styles and fonts are ready
+    setTimeout(() => {
+      html2pdf().set(opt).from(element).save().then(() => {
+        // Optional: window.close(); 
+      });
+    }, 1000);
+  };
+</script>
 </body>
 </html>
-<?php
-$html = ob_get_clean();
-
-$opts = new Options();
-$opts->set('defaultFont', 'DejaVu Sans');
-$opts->set('isRemoteEnabled', false);
-
-$dompdf = new Dompdf($opts);
-$dompdf->loadHtml($html);
-$dompdf->setPaper('A4', 'portrait');
-$dompdf->render();
-$dompdf->stream('menu_' . date('Ymd') . '.pdf', ['Attachment' => true]);
-

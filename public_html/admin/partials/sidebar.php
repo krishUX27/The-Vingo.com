@@ -16,7 +16,7 @@ $prefix = $prefix ?? '';
     <?= nav_a('dashboard.php',   '📊', 'Dashboard',   $cur) ?>
     <?= nav_a('add-category.php',    '📂', 'Categories',  $cur) ?>
     <?= nav_a('seasonal-offers.php', '🎁', 'Seasonal Offers', $cur) ?>
-    <a href="<?= $prefix ?>../menu.php" target="_blank">
+    <a href="<?= $prefix ?>../menu.php?id=<?= $_SESSION['admin_id'] ?? 0 ?>" target="_blank">
       <span class="nav-icon">🌐</span> Live Menu ↗
     </a>
     <?= nav_a('print-menu.php', '🖨️', 'Print Menu', $cur) ?>
@@ -24,6 +24,7 @@ $prefix = $prefix ?? '';
     <a href="<?= $prefix ?>generate_pdf.php" target="_blank">
       <span class="nav-icon">📄</span> Download PDF
     </a>
+    <?= nav_a('settings.php', '⚙️', 'Restaurant Settings', $cur) ?>
   </nav>
   <div class="sidebar-footer">Vingo Menu v2</div>
 </aside>

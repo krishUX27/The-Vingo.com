@@ -1,9 +1,13 @@
 <?php
 // api/add_category.php — AJAX endpoint: inline category creation
-header('Content-Type: application/json');
-header('Cache-Control: no-cache');
-
+session_start();
 require_once __DIR__ . '/../includes/db.php';
+
+$admin_sess_id = $_SESSION['admin_id'] ?? 0;
+if (!$admin_sess_id) {
+    echo json_encode(['success' => false, 'error' => 'Authentication required.']);
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -23,8 +27,8 @@ if (strlen($name) > 100) {
 }
 
 // ── Duplicate check ───────────────────────────────────────────
-$chk = $conn->prepare("SELECT id FROM categories WHERE name = ?");
-$chk->bind_param('s', $name);
+$chk = $conn->prepare("SELECT id FROM categories WHERE name = ? AND user_id = ?");
+$chk->bind_param('si', $name, $admin_sess_id);
 $chk->execute();
 $chk->store_result();
 
@@ -44,8 +48,8 @@ if ($chk->num_rows > 0) {
 $chk->close();
 
 // ── Insert ────────────────────────────────────────────────────
-$ins = $conn->prepare("INSERT INTO categories (name) VALUES (?)");
-$ins->bind_param('s', $name);
+$ins = $conn->prepare("INSERT INTO categories (name, user_id) VALUES (?, ?)");
+$ins->bind_param('si', $name, $admin_sess_id);
 
 if ($ins->execute()) {
     $new_id = $conn->insert_id;

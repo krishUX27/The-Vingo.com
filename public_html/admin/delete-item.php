@@ -6,8 +6,10 @@ session_start();
 $id = intval($_GET['id'] ?? 0);
 if (!$id) { header('Location: dashboard.php'); exit; }
 
-$s = $conn->prepare("SELECT name, image FROM dishes WHERE id = ?");
-$s->bind_param('i', $id);
+$admin_sess_id = $_SESSION['admin_id'] ?? 0;
+
+$s = $conn->prepare("SELECT name, image FROM dishes WHERE id = ? AND user_id = ?");
+$s->bind_param('ii', $id, $admin_sess_id);
 $s->execute();
 $dish = $s->get_result()->fetch_assoc();
 $s->close();
@@ -24,8 +26,8 @@ if ($dish['image'] && file_exists(__DIR__ . '/../uploads/' . $dish['image'])) {
 }
 
 // Delete record
-$del = $conn->prepare("DELETE FROM dishes WHERE id = ?");
-$del->bind_param('i', $id);
+$del = $conn->prepare("DELETE FROM dishes WHERE id = ? AND user_id = ?");
+$del->bind_param('ii', $id, $admin_sess_id);
 $del->execute();
 $del->close();
 

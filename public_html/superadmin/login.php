@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/logger.php';
 
 // Enable error reporting
 ini_set('display_errors', 1);
@@ -35,20 +36,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     super_log("Superadmin '$u' authenticated.");
                     $_SESSION['super_logged_in'] = true;
                     $_SESSION['super_username']  = $row['username'];
+                    
+                    // Log Success
+                    platform_log("Root Access Granted", $u, "VERIFIED");
+                    
                     header('Location: index.php');
                     exit;
                 } else {
-                    super_log("Failed root access for '$u': Invalid key.");
-                    $error = 'Access Denied: Invalid Credentials';
+                    $error = 'Incorrect Root Key.';
                 }
             } else {
-                super_log("Failed root access for '$u': User not found or not superadmin.");
-                $error = 'Access Denied: Invalid Credentials';
+                // Check if account exists but is a regular Admin
+                $check = $conn->prepare("SELECT role FROM users WHERE username = ? LIMIT 1");
+                $check->bind_param('s', $u);
+                $check->execute();
+                $res = $check->get_result();
+                if ($r = $res->fetch_assoc()) {
+                    if ($r['role'] === 'admin') {
+                        $error = "This account is a regular Admin. Please use the Operator Panel to sign in.";
+                    } else {
+                        $error = "Access Denied: System ID not found.";
+                    }
+                } else {
+                    $error = "Access Denied: System ID not found.";
+                }
             }
             $stmt->close();
         }
     }
-    $stmt->close();
 }
 
 if (isset($_SESSION['super_logged_in'])) {

@@ -5,8 +5,10 @@ require_once __DIR__ . '/../includes/db.php';
 $id = intval($_GET['id'] ?? 0);
 if (!$id) { header('Location: dashboard.php'); exit; }
 
-$s = $conn->prepare("SELECT * FROM dishes WHERE id = ?");
-$s->bind_param('i', $id);
+$admin_sess_id = $_SESSION['admin_id'] ?? 0;
+
+$s = $conn->prepare("SELECT * FROM dishes WHERE id = ? AND user_id = ?");
+$s->bind_param('ii', $id, $admin_sess_id);
 $s->execute();
 $dish = $s->get_result()->fetch_assoc();
 $s->close();
@@ -54,8 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, image=?, availability=?, currency=?, offer_id=? WHERE id=?");
-        $upd->bind_param('sdisssii', $name, $price, $cat_id, $image_name, $availability, $currency, $offer_id, $id);
+        $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, image=?, availability=?, currency=?, offer_id=? WHERE id=? AND user_id=?");
+        $upd->bind_param('sdisssiii', $name, $price, $cat_id, $image_name, $availability, $currency, $offer_id, $id, $admin_sess_id);
         if ($upd->execute()) {
             $_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish '{$name}' updated."];
             header('Location: dashboard.php');
@@ -69,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dish['category_id'] = $cat_id;
 }
 
-$categories = $conn->query("SELECT * FROM categories ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+$categories = $conn->query("SELECT * FROM categories WHERE user_id = $admin_sess_id ORDER BY name")->fetch_all(MYSQLI_ASSOC);
 $offers     = $conn->query("SELECT id, title FROM seasonal_offers WHERE active=1 ORDER BY title")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>

@@ -2,6 +2,18 @@
 require_once __DIR__ . '/partials/auth_check.php';
 require_once __DIR__ . '/../includes/db.php';
 
+// --- ROBUST AUTO-REPAIR FOR DISHES TABLE ---
+$res = $conn->query("DESCRIBE dishes");
+$cols = $res ? array_column($res->fetch_all(MYSQLI_ASSOC), 'Field') : [];
+
+if (!in_array('currency', $cols)) {
+    $conn->query("ALTER TABLE dishes ADD COLUMN currency VARCHAR(10) DEFAULT 'INR' AFTER availability");
+}
+if (!in_array('offer_id', $cols)) {
+    $conn->query("ALTER TABLE dishes ADD COLUMN offer_id INT DEFAULT NULL AFTER currency");
+}
+// ------------------------------------------
+
 // Enable error reporting
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -56,20 +68,23 @@ if ($price_max !== '') {
 }
 $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-/* ── Stats ── */
-$total_dishes_res = $conn->query("SELECT COUNT(*) FROM dishes");
+// Current Admin Session ID
+$admin_sess_id = $_SESSION['admin_id'] ?? 0;
+
+/* ── Stats (Filtered by User) ── */
+$total_dishes_res = $conn->query("SELECT COUNT(*) FROM dishes WHERE user_id = $admin_sess_id");
 if (!$total_dishes_res) {
     dashboard_log("Stats Error (total_dishes): " . $conn->error);
 }
 $total_dishes = $total_dishes_res ? $total_dishes_res->fetch_row()[0] : 0;
 
-$avail_cnt_res = $conn->query("SELECT COUNT(*) FROM dishes WHERE availability='Available'");
+$avail_cnt_res = $conn->query("SELECT COUNT(*) FROM dishes WHERE availability='Available' AND user_id = $admin_sess_id");
 if (!$avail_cnt_res) {
     dashboard_log("Stats Error (avail_cnt): " . $conn->error);
 }
 $avail_cnt = $avail_cnt_res ? $avail_cnt_res->fetch_row()[0] : 0;
 
-$total_cats_res = $conn->query("SELECT COUNT(*) FROM categories");
+$total_cats_res = $conn->query("SELECT COUNT(*) FROM categories WHERE user_id = $admin_sess_id");
 if (!$total_cats_res) {
     dashboard_log("Stats Error (total_cats): " . $conn->error);
 }
@@ -108,14 +123,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     if (empty($errors)) {
-        dashboard_log("Attempting to insert dish: $name, $price, $cat_id");
-        $s = $conn->prepare("INSERT INTO dishes (name,price,category_id,image,availability,currency,offer_id) VALUES (?,?,?,?,?,?,?)");
+        dashboard_log("Attempting to insert dish: $name, $price, $cat_id for User $admin_sess_id");
+        $s = $conn->prepare("INSERT INTO dishes (name,price,category_id,image,availability,currency,offer_id,user_id) VALUES (?,?,?,?,?,?,?,?)");
         if (!$s) {
             $err_msg = 'Prepare failed: ' . $conn->error;
             dashboard_log($err_msg);
             $errors[] = $err_msg;
         } else {
-            $s->bind_param('sdisssi', $name, $price, $cat_id, $image_name, $availability, $currency, $offer_id);
+            $s->bind_param('sdisssii', $name, $price, $cat_id, $image_name, $availability, $currency, $offer_id, $admin_sess_id);
             if ($s->execute()) {
                 $new_id = $conn->insert_id;
                 dashboard_log("Dish '{$name}' added successfully. ID: {$new_id}");
@@ -133,21 +148,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-/* ── Dish list ── */
+/* ── Dish list (Owner filtered) ── */
 $sql  = "SELECT d.*, c.name AS cat_name, o.title AS offer_title, o.discount AS offer_discount
          FROM dishes d
          JOIN categories c ON c.id = d.category_id
          LEFT JOIN seasonal_offers o ON o.id = d.offer_id
-         {$where}
+         WHERE d.user_id = ? " . ($where ? "AND " . str_replace('WHERE','',$where) : "") . "
          ORDER BY d.created_at DESC";
 $stmt = $conn->prepare($sql);
+
+// Add the user_id to the params array
+array_unshift($params, $admin_sess_id);
+$types = 'i' . $types;
+
 if ($params) $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $dishes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-/* ── Category dropdown for filter & modal ── */
-$cat_res = $conn->query("SELECT * FROM categories ORDER BY name");
+/* ── Category dropdown (Owner filtered) ── */
+$cat_res = $conn->query("SELECT * FROM categories WHERE user_id = $admin_sess_id ORDER BY name");
 if (!$cat_res) {
     dashboard_log("Category query failed: " . $conn->error);
     $categories = [];
@@ -189,7 +209,7 @@ if (!$offer_res) {
       </div>
     </div>
     <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
-      <a href="../menu.php" target="_blank" class="btn btn-outline btn-sm">
+      <a href="../menu.php?id=<?= $admin_sess_id ?>" target="_blank" class="btn btn-outline btn-sm">
         <span class="live-dot"></span> Live Menu View
       </a>
       <?php include __DIR__ . '/partials/topbar_user.php'; ?>

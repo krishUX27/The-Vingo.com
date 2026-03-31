@@ -1,18 +1,22 @@
 <?php
-// menu.php — QR Digital Menu (Live)
-// UI: Dark hero → white card with name → sticky filter pills → dish list with + button
 require_once __DIR__ . '/includes/db.php';
+$user_id = intval($_GET['id'] ?? 0);
+$restaurant_name = menu_get_setting('restaurant_name', 'Vingo Menu', $user_id);
+$restaurant_sub  = menu_get_setting('restaurant_sub',  'Premium Digital Selection', $user_id);
 
-$restaurant_name = menu_get_setting('restaurant_name', 'My Restaurant');
-$restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital menu');
+// Fetch active offers for this user
+$offers = [];
+if ($user_id) {
+    $off_res = $conn->query("SELECT * FROM seasonal_offers WHERE user_id = $user_id ORDER BY created_at DESC");
+    if ($off_res) $offers = $off_res->fetch_all(MYSQLI_ASSOC);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="<?= htmlspecialchars($restaurant_name) ?> — Live Menu">
-  <title><?= htmlspecialchars($restaurant_name) ?> — Menu</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $restaurant_name ?> — Vingo Menu</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="assets/images/favicon.png">
@@ -20,52 +24,74 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital m
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:      #f5f5f5;
+      --bg:      #fcfcfc;
       --surface: #ffffff;
-      --border:  #e8e8e8;
+      --border:  rgba(0,0,0,0.05);
       --text:    #1a1a1a;
       --muted:   #888888;
     }
 
+    html, body {
+      overflow-x: hidden;
+      width: 100%;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--bg);
+      background: radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%),
+                  radial-gradient(at 50% 0%, hsla(225,39%,30%,0.04) 0, transparent 50%),
+                  radial-gradient(at 100% 0%, hsla(339,49%,30%,0.04) 0, transparent 50%);
+      background-color: #f7f9fb;
       color: var(--text);
       min-height: 100vh;
+      background-attachment: fixed;
+      position: relative;
     }
 
-    /* ── Hero (dark gradient, no image needed) ── */
-    .hero {
-      background: linear-gradient(180deg, #111 0%, #333 100%);
-      min-height: 200px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px 80px;
-    }
-
-    /* ── White restaurant card (overlapping hero) ── */
+    /* ── Signature Header ── */
     .restaurant-card {
       background: var(--surface);
-      border-radius: 18px;
-      padding: 28px 36px;
+      padding: 32px 24px 20px;
       text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,.15);
-      max-width: 420px;
-      width: 90%;
-      margin: -60px auto 0;
+      border-bottom: 1px solid var(--border);
       position: relative;
       z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-accent {
+      font-size: 1.5rem;
+      margin-bottom: 4px;
+      color: #fbbf24;
+      filter: drop-shadow(0 0 8px rgba(251,191,36,0.3));
     }
     .restaurant-name {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: var(--text);
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+      position: relative;
+    }
+    .restaurant-name::after {
+      content: '✨';
+      position: absolute;
+      top: -12px;
+      right: -24px;
+      font-size: 1rem;
+      -webkit-text-fill-color: initial;
     }
     .restaurant-sub {
-      font-size: .88rem;
+      font-size: .85rem;
       color: var(--muted);
-      margin-top: 6px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.8;
     }
 
     /* ── Filter Pills (sticky) ── */
@@ -107,6 +133,19 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital m
       border-radius: 30px;
     }
 
+    /* ── Dish Grid ── */
+    .dish-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 8px 16px;
+    }
+    
+    @media(min-width: 800px) {
+      .dish-list { grid-template-columns: 1fr 1fr; gap: 20px; }
+      .menu-body { max-width: 1000px; }
+    }
+
     /* ── Menu Body ── */
     .menu-body {
       max-width: 800px;
@@ -122,7 +161,7 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital m
       font-size: 1.05rem;
       font-weight: 800;
       color: var(--text);
-      padding: 18px 16px 10px;
+      padding: 12px 16px 6px;
       letter-spacing: -.2px;
     }
 
@@ -131,12 +170,13 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital m
       display: flex;
       align-items: center;
       gap: 16px;
-      padding: 16px;
+      padding: 20px;
       background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      transition: all 0.2s;
     }
-    .dish-row:first-of-type { border-top: 1px solid var(--border); }
-    .dish-row:hover { background: #fafafa; }
+    .dish-row:hover { background: #fafafa; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
 
     .dish-img-wrap {
       width: 70px;
@@ -185,28 +225,12 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital m
       flex-shrink: 0;
     }
 
-    /* "+" add button */
-    .add-btn {
-      width: 34px; height: 34px;
-      border-radius: 50%;
-      background: #111;
-      color: #fff;
-      border: none;
-      font-size: 1.25rem;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+    .dish-price {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
       flex-shrink: 0;
-      font-family: inherit;
-      transition: background .15s, transform .15s;
-    }
-    .add-btn:hover  { background: #333; transform: scale(1.08); }
-    .add-btn:active { transform: scale(.94); }
-    .add-btn.na {
-      background: #ddd;
-      cursor: not-allowed;
+      margin-left: 8px;
     }
 
     /* ── Skeleton ── */
@@ -251,70 +275,102 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital m
     }
     #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-    /* ── Filter Bar (Advanced) ── */
-    .filter-card {
-      background: var(--surface);
-      border-radius: 12px;
-      margin: 20px auto 0;
-      max-width: 800px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,.05);
-      border: 1px solid var(--border);
-    }
-    .filter-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 15px;
-      align-items: flex-end;
-    }
-    .filter-group { display: flex; flex-direction: column; gap: 6px; }
-    .filter-group label {
-      font-size: .75rem;
+    /* ── Inline Filter Pill ── */
+    .filter-trigger {
+      width: auto;
+      height: 40px;
+      background: #6366f1;
+      color: #fff;
+      padding: 0 18px;
+      border-radius: 100px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-weight: 700;
-      color: var(--text);
-      letter-spacing: .2px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    .filter-trigger:hover { transform: scale(1.05); background: #4f46e5; }
+    .filter-trigger:active { transform: scale(0.95); }
+
+    /* ── Filter Modal ── */
+    #modalOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #modalOverlay.show { opacity: 1; pointer-events: auto; }
+
+    .modal-content {
+      background: #fff;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 24px 24px 0 0;
+      padding: 32px 24px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #modalOverlay.show .modal-content { transform: translateY(0); }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .modal-title { font-size: 1.25rem; font-weight: 800; }
+    .close-modal { font-size: 1.5rem; cursor: pointer; color: var(--muted); }
+
+    .filter-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+    .filter-group label { font-size: .75rem; font-weight: 700; color: var(--text); letter-spacing: 0.5px; text-transform: uppercase; }
     .filter-group input, .filter-group select {
-      padding: 10px 12px;
+      padding: 14px 16px;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 12px;
       font-family: inherit;
-      font-size: .85rem;
+      font-size: 1rem;
+      background: #f8fafc;
       outline: none;
       transition: border-color .15s;
     }
-    .filter-group input:focus, .filter-group select:focus {
-      border-color: #6c63ff;
-    }
-    .filter-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .btn-filter {
-      background: #6c63ff;
+    .filter-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .btn-apply {
+      background: #111;
       color: #fff;
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 1rem;
       border: none;
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: .85rem;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+      margin-top: 10px;
     }
-    .btn-reset {
-      background: #fff;
-      color: #6c63ff;
-      border: 1px solid #6c63ff;
-      padding: 10px;
-      border-radius: 8px;
+    .btn-reset-light {
+      background: #f1f5f9;
+      color: #64748b;
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
       font-weight: 600;
-      font-size: .85rem;
+      font-size: 0.9rem;
+      border: none;
+      margin-top: 12px;
       cursor: pointer;
-      text-align: center;
     }
 
     /* Dot color pool */
@@ -344,48 +400,142 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital m
 </head>
 <body>
 
-<!-- Hero -->
-<div class="hero"></div>
-
 <!-- Restaurant Card -->
 <div class="restaurant-card">
-  <div class="restaurant-name"><?= htmlspecialchars($restaurant_name) ?></div>
-  <div class="restaurant-sub"><?= htmlspecialchars($restaurant_sub) ?></div>
+  <div class="brand-accent">✨</div>
+  <div class="restaurant-name"><?= $restaurant_name ?></div>
+  <div class="restaurant-sub"><?= $restaurant_sub ?></div>
 </div>
 
-<!-- Advanced Filter Bar -->
-<div class="filter-card">
-  <div class="filter-grid">
-    <div class="filter-group full-mobile">
-      <label>Search</label>
-      <input type="text" id="f-search" placeholder="Dish name...">
+<!-- Seasonal Offers Slideshow -->
+<?php if (!empty($offers)): ?>
+<div class="offers-slideshow" style="margin: 0; width: 100%; overflow: hidden; background: #fff; padding-bottom: 24px; border-bottom: 2px solid #f0f0f0">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:20px 20px 0">
+    <div style="display:flex; align-items:center; gap:8px">
+      <span style="font-size:1.2rem">✨</span>
+      <span style="font-weight:800; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; color:#1a1a1a">Seasonal Specials</span>
     </div>
+  </div>
+  
+  <div class="offer-carousel" id="offerCarousel" style="display:flex; gap:16px; overflow-x:auto; scrollbar-width:none; padding:12px 20px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch">
+    <?php foreach ($offers as $off): ?>
+      <div class="offer-slide" style="min-width: calc(100vw - 40px); max-width: 400px; scroll-snap-align: start; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 20px; padding: 24px; color: #fff; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.25); position: relative; overflow: hidden; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center">
+        <!-- Abstract shape backdrop -->
+        <div style="position:absolute; top:-20px; right:-20px; width:80px; height:80px; background:rgba(255,255,255,0.1); border-radius:50%"></div>
+        
+        <div style="font-size:0.75rem; font-weight:800; opacity:0.8; margin-bottom:6px; letter-spacing:0.5px">Exclusive Deal</div>
+        <div style="font-size:1.2rem; font-weight:800; margin-bottom:8px; line-height:1.2"><?= htmlspecialchars($off['title']) ?></div>
+        <div style="font-size:0.85rem; opacity:0.95; margin-bottom:16px; min-height:40px"><?= htmlspecialchars($off['description'] ?: 'Special limited time offer!') ?></div>
+        
+        <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.25); padding:8px 18px; border-radius:12px; font-weight:900; font-size:1rem; backdrop-filter:blur(4px)">
+           <span style="font-size:1.1rem">🎁</span> <?= htmlspecialchars($off['discount']) ?>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+
+  <!-- Pagination Dots (Floating Pill) -->
+  <div style="position:relative; margin-top: -36px; z-index:20; display:flex; justify-content:center">
+    <div id="offerDots" style="display:flex; justify-content:center; gap:10px; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); padding: 8px 16px; border-radius: 100px; box-shadow: 0 4px 12px rgba(0,0,0,0.1)">
+      <?php foreach ($offers as $i => $off): ?>
+        <div class="dot <?= $i===0?'active':'' ?>" data-idx="<?= $i ?>" style="width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.4); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer"></div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</div>
+
+<style>
+  #offerDots .dot.active { background: #ffffff; width: 32px; border-radius: 10px; box-shadow: 0 0 15px rgba(255, 255, 255, 0.6); }
+  .offer-carousel::-webkit-scrollbar { display: none; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const carousel = document.getElementById('offerCarousel');
+    const dots     = document.querySelectorAll('#offerDots .dot');
+    if (!carousel || dots.length === 0) return;
+
+    const getSlideWidth = () => {
+       const slide = carousel.querySelector('.offer-slide');
+       return slide ? slide.offsetWidth + 16 : 0; // 16 is the gap
+    };
+
+    // Update dots on scroll
+    carousel.addEventListener('scroll', () => {
+        const sw = getSlideWidth();
+        const index = Math.round(carousel.scrollLeft / sw);
+        dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    });
+
+    // Click to scroll
+    dots.forEach(dot => {
+        dot.onclick = () => {
+            const idx = parseInt(dot.getAttribute('data-idx'));
+            carousel.scrollTo({ left: idx * getSlideWidth(), behavior: 'smooth' });
+        };
+    });
+
+    // Auto slide
+    let scrollIndex = 0;
+    let autoInterval = setInterval(() => {
+        scrollIndex = (scrollIndex + 1) % dots.length;
+        carousel.scrollTo({ left: scrollIndex * getSlideWidth(), behavior: 'smooth' });
+    }, 5000);
+
+    // Pause auto-slide on touch/interact
+    carousel.addEventListener('pointerdown', () => clearInterval(autoInterval));
+});
+</script>
+<?php endif; ?>
+
+<!-- Search Trigger (After Offers) -->
+<div class="filter-trigger-wrap" style="display:flex; justify-content:center; margin: 16px auto 0">
+  <div class="filter-trigger" id="openFilter">
+    <span style="font-size:0.75rem; font-weight:700">🔍 SEARCH & FILTER MENU</span>
+  </div>
+</div>
+
+
+
+<!-- Filter Modal Overlay -->
+<div id="modalOverlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">Search & Filter</div>
+      <div class="close-modal" id="closeFilter">✕</div>
+    </div>
+    
+    <div class="filter-group">
+      <label>Search Dish</label>
+      <input type="text" id="f-search" placeholder="What are you craving?">
+    </div>
+
     <div class="filter-group">
       <label>Category</label>
       <select id="f-category">
         <option value="all">All Categories</option>
       </select>
     </div>
-    <div class="filter-group">
-      <label>Availability</label>
-      <select id="f-avail">
-        <option value="all">All</option>
-        <option value="Available">Available</option>
-        <option value="Not Available">Not Available</option>
-      </select>
+
+    <div class="filter-grid-2">
+      <div class="filter-group">
+        <label>Status</label>
+        <select id="f-avail">
+          <option value="all">All</option>
+          <option value="Available">Available</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Price Range</label>
+        <div style="display:flex; align-items:center; gap:8px">
+          <input type="number" id="f-min" placeholder="Min" style="width:50%; padding: 10px">
+          <input type="number" id="f-max" placeholder="Max" style="width:50%; padding: 10px">
+        </div>
+      </div>
     </div>
-    <div class="filter-group">
-      <label>Min ₹</label>
-      <input type="number" id="f-min" placeholder="0" min="0">
-    </div>
-    <div class="filter-group">
-      <label>Max ₹</label>
-      <input type="number" id="f-max" placeholder="999" min="0">
-    </div>
-    <div class="filter-actions">
-      <button id="btn-apply" class="btn-filter">🔍 Filter</button>
-      <button id="btn-reset" class="btn-reset">Reset</button>
-    </div>
+
+    <button id="btn-apply" class="btn-apply">Show Results</button>
+    <button id="btn-reset" class="btn-reset-light">Reset All</button>
   </div>
 </div>
 
@@ -415,7 +565,9 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Welcome to our digital m
 <div id="toast">⚡ Menu updated</div>
 
 <script>
-const FETCH_URL   = 'api/fetch_dishes.php';
+const URL_PARAMS  = new URLSearchParams(window.location.search);
+const MENU_ID     = URL_PARAMS.get('id') || 0;
+const FETCH_URL   = 'api/fetch_dishes.php?user_id=' + MENU_ID;
 const POLL_MS     = 3000;
 
 /* Dot color pool */
@@ -490,7 +642,6 @@ function dishRow(d, dotClass) {
         ${d.offer_title ? `<div style="font-size:0.7rem; color:#16a34a; font-weight:700; margin-top:2px">🎁 ${esc(d.offer_title)}</div>` : ''}
       </div>
       ${priceHtml}
-      ${btn}
     </div>`;
 }
 
@@ -564,7 +715,7 @@ function renderMenu(grouped, isFirstLoad = true) {
     return `
       <div class="cat-section" data-cat="${esc(cat)}">
         <div class="cat-title">${esc(cat)}</div>
-        ${rows}
+        <div class="dish-list">${rows}</div>
       </div>`;
   }).join('');
 }
@@ -604,8 +755,22 @@ async function fetchMenu() {
   }
 }
 
-// Event Listeners
-document.getElementById('btn-apply').onclick = applyAdvancedFilters;
+// Modal Control
+const overlay = document.getElementById('modalOverlay');
+const openBtn = document.getElementById('openFilter');
+const closeBtn = document.getElementById('closeFilter');
+
+const toggleModal = (show) => overlay.classList.toggle('show', show);
+openBtn.onclick = () => toggleModal(true);
+closeBtn.onclick = () => toggleModal(false);
+overlay.onclick = (e) => { if(e.target === overlay) toggleModal(false); };
+
+/* ── Event Listeners ── */
+document.getElementById('btn-apply').onclick = () => {
+    applyAdvancedFilters();
+    toggleModal(false);
+};
+
 document.getElementById('btn-reset').onclick = () => {
     document.getElementById('f-search').value = '';
     document.getElementById('f-category').value = 'all';
@@ -613,11 +778,12 @@ document.getElementById('btn-reset').onclick = () => {
     document.getElementById('f-min').value = '';
     document.getElementById('f-max').value = '';
     applyAdvancedFilters();
+    toggleModal(false);
 };
 
 // Also apply on enter key for inputs
 ['f-search','f-min','f-max'].forEach(id => {
-  document.getElementById(id).onkeyup = e => { if (e.key === 'Enter') applyAdvancedFilters(); };
+  document.getElementById(id).onkeyup = e => { if (e.key === 'Enter') { applyAdvancedFilters(); toggleModal(false); } };
 });
 
 fetchMenu();

@@ -2,9 +2,10 @@
 require_once __DIR__ . '/partials/auth_check.php';
 require_once __DIR__ . '/../includes/db.php';
 
+$admin_sess_id = $_SESSION['admin_id'] ?? 0;
 $qr_dir  = __DIR__ . '/../qr/';
-$qr_file = $qr_dir . 'menu_qr.png';
-$url_file = $qr_dir . 'qr_url.txt';
+$qr_file = $qr_dir . "menu_qr_{$admin_sess_id}.png";
+$url_file = $qr_dir . "qr_url_{$admin_sess_id}.txt";
 
 if (!is_dir($qr_dir)) mkdir($qr_dir, 0755, true);
 
@@ -14,7 +15,7 @@ $host     = $_SERVER['HTTP_HOST'];
 $base     = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $error = null;
 $generated = false;
-$qr_url = $proto . '://' . $host . dirname($base) . '/menu.php';
+$qr_url = $proto . '://' . $host . dirname($base) . '/menu.php?id=' . $admin_sess_id;
 
 $force     = isset($_GET['regen']);
 $cachedUrl = file_exists($url_file) ? trim(file_get_contents($url_file)) : '';
@@ -131,7 +132,7 @@ include __DIR__ . '/partials/sidebar.php';
 
         <div class="qr-center">
           <div style="background:#fff; padding:20px; border-radius:24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom:24px">
-            <img src="../qr/menu_qr.png?v=<?= filemtime($qr_file) ?>" alt="Menu QR Code" style="width:280px; height:280px; display:block">
+            <img src="../qr/<?= basename($qr_file) ?>?v=<?= filemtime($qr_file) ?>" alt="Menu QR Code" style="width:280px; height:280px; display:block">
           </div>
 
           <div style="width:100%;text-align:center">
@@ -145,7 +146,7 @@ include __DIR__ . '/partials/sidebar.php';
           </div>
 
           <div class="btn-grp" style="justify-content:center; margin-top:20px; gap:8px; flex-wrap:wrap">
-            <a href="../qr/menu_qr.png" download="menu_qr.png" class="btn btn-primary btn-md">
+            <a href="../qr/<?= basename($qr_file) ?>" download="menu_qr.png" class="btn btn-primary btn-md">
               ⬇️ Download QR
             </a>
             <a href="<?= htmlspecialchars($qr_url) ?>" target="_blank" class="btn btn-outline btn-md">
