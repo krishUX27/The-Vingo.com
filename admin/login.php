@@ -26,12 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($u) || empty($p)) {
         $error = 'Please enter both username and password.';
     } else {
-        $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ? AND role = 'admin' LIMIT 1");
+        $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE (username = ? OR email = ?) AND role = 'admin' LIMIT 1");
         if (!$stmt) {
             login_log("Query error: " . $conn->error);
             $error = 'Internal server error. Please check logs.';
         } else {
-            $stmt->bind_param('s', $u);
+            $stmt->bind_param('ss', $u, $u);
             $stmt->execute();
             $result = $stmt->get_result();
 
@@ -48,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 // Double check if account exists but is a Superadmin
-                $check = $conn->prepare("SELECT role FROM users WHERE username = ? LIMIT 1");
-                $check->bind_param('s', $u);
+                $check = $conn->prepare("SELECT role FROM users WHERE username = ? OR email = ? LIMIT 1");
+                $check->bind_param('ss', $u, $u);
                 $check->execute();
                 $res = $check->get_result();
                 if ($r = $res->fetch_assoc()) {
@@ -98,8 +98,8 @@ if (isset($_SESSION['admin_logged_in'])) {
 
   <form method="POST">
     <div class="form-group" style="margin-bottom:20px">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" placeholder="Enter username" required autofocus>
+      <label for="username">Username or Email</label>
+      <input type="text" id="username" name="username" placeholder="Enter username or email" required autofocus>
     </div>
     <div class="form-group" style="margin-bottom:24px">
       <label for="password">Password</label>

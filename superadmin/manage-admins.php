@@ -20,24 +20,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $p = $_POST['password'] ?? '';
     $r = $_POST['role'] ?? 'admin';
 
-    if (empty($u) || empty($p) || empty($email)) {
-        $error = 'Username, email, and password are required.';
+    if (empty($u) || empty($email)) {
+        $error = 'Username and email are required.';
     } else {
-        $hash = password_hash($p, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param('ssss', $u, $email, $hash, $r);
+        // Generate Secure Token
+        $token = bin2hex(random_bytes(32));
+        $expiry = date('Y-m-d H:i:s', strtotime('+24 hours'));
+        
+        // Temporary random password (will be reset by admin)
+        $temp_pass = password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
+        
+        $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, is_active, activation_token, token_expiry) VALUES (?, ?, ?, ?, 0, ?, ?)");
+        $stmt->bind_param('ssssss', $u, $email, $temp_pass, $r, $token, $expiry);
 
         if ($stmt->execute()) {
-            // Trigger the mail notification
-            @sendSetupEmail($email, $u);
+            // Trigger the mail notification with token
+            @sendSetupEmail($email, $u, $token);
 
-            $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin '{$u}' created!"];
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin invited! Activation link sent to {$email}."];
             header('Location: manage-admins.php');
             exit;
         } else {
             // Check for duplicate key
             if ($stmt->errno === 1062) {
-                $error = "Account already exists! Create new Vingo Menu login credentials.";
+                $error = "Account already exists! Use a unique username or email.";
             } else {
                 // Log and show generic error
                 platform_log("User Creation Fault", $stmt->error, "CRITICAL");
@@ -74,9 +80,29 @@ $cur = 'manage-admins.php';
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
   <style>
-    :root { --super-accent: #f59e0b; }
+    :root { 
+      --super-accent: #f59e0b; 
+      --super-accent-glow: rgba(245, 158, 11, 0.3);
+      --super-sidebar: #0f172a; 
+      --super-sidebar-h: #1e293b;
+    }
+    
+    .sidebar { background: var(--super-sidebar) !important; border-right: 1px solid rgba(255,255,255,0.05) !important; }
+    .sidebar-header { color: var(--super-accent) !important; }
+    .sidebar-header span:first-child { background: var(--super-accent) !important; box-shadow: 0 4px 12px var(--super-accent-glow) !important; }
+    .sidebar nav a:hover { background: var(--super-sidebar-h) !important; color: var(--super-accent) !important; }
+    .sidebar nav a.active { background: var(--super-accent) !important; color: #0f172a !important; box-shadow: 0 4px 20px var(--super-accent-glow) !important; }
+
     .main { min-height: 100vh; }
     .content { padding: 30px; }
+    
+    .btn-primary { background: var(--super-accent); color: #0f172a; font-weight: 800; border: none; }
+    .btn-primary:hover { background: #fbbf24; transform: translateY(-2px); box-shadow: 0 8px 20px var(--super-accent-glow); }
+    
+    .flash-success { background: #fffbeb; border-color: var(--super-accent); color: #d97706; }
+    
+    input:focus { border-color: var(--super-accent) !important; box-shadow: 0 0 0 4px var(--super-accent-glow) !important; }
+    .user-avatar { background: var(--super-accent) !important; color: #0f172a !important; box-shadow: 0 4px 12px var(--super-accent-glow) !important; }
   </style>
 </head>
 <body>
@@ -142,18 +168,17 @@ $cur = 'manage-admins.php';
         <form method="POST">
           <input type="hidden" name="action" value="add_admin">
           <div class="form-group" style="margin-bottom:15px">
-            <label>Internal ID</label>
+            <label>Master Username (ID)</label>
             <input type="text" name="username" required placeholder="e.g. josh_ops">
           </div>
           <div class="form-group" style="margin-bottom:15px">
-            <label>Contact Email</label>
+            <label>Recipient Email</label>
             <input type="email" name="email" required placeholder="admin@thevingo.com">
           </div>
-          <div class="form-group" style="margin-bottom:15px">
-            <label>Security Key</label>
-            <input type="password" name="password" required placeholder="••••••••">
-          </div>
-          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center">🚀 Create Account</button>
+          <p style="font-size:0.75rem; color:#64748b; margin-bottom:15px">
+            A secure password setup link will be sent to the email provided above.
+          </p>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center">📧 Send Setup Invite</button>
         </form>
       </div>
 

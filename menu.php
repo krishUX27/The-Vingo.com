@@ -1,6 +1,12 @@
 <?php
 require_once __DIR__ . '/includes/db.php';
 $user_id = intval($_GET['id'] ?? 0);
+
+// QR Scan Tracking Logic
+if ($user_id > 0) {
+    $conn->query("INSERT INTO qr_scans (user_id, scan_count) VALUES ($user_id, 1) ON DUPLICATE KEY UPDATE scan_count = scan_count + 1");
+}
+
 $restaurant_name = menu_get_setting('restaurant_name', 'Vingo Menu', $user_id);
 $restaurant_sub  = menu_get_setting('restaurant_sub',  'Premium Digital Selection', $user_id);
 
@@ -29,6 +35,9 @@ if ($user_id) {
       --border:  rgba(0,0,0,0.05);
       --text:    #1a1a1a;
       --muted:   #888888;
+      --header-bg: #2b45b0; /* Deep blue from reference */
+      --card-blue: #6386ff; /* Offer card blue */
+      --card-red:  #e4635d;  /* Offer card red accent */
     }
 
     html, body {
@@ -38,119 +47,174 @@ if ($user_id) {
 
     body {
       font-family: 'Inter', sans-serif;
-      background: radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%),
-                  radial-gradient(at 50% 0%, hsla(225,39%,30%,0.04) 0, transparent 50%),
-                  radial-gradient(at 100% 0%, hsla(339,49%,30%,0.04) 0, transparent 50%);
-      background-color: #f7f9fb;
+      background-color: #ffffff;
       color: var(--text);
       min-height: 100vh;
-      background-attachment: fixed;
-      position: relative;
     }
 
-    /* ── Signature Header ── */
-    .restaurant-card {
-      background: var(--surface);
-      padding: 32px 24px 20px;
+    /* ── Reference Redesign Header ── */
+    .header-section {
+      background: var(--header-bg);
+      padding: 30px 20px 50px;
       text-align: center;
-      border-bottom: 1px solid var(--border);
-      position: relative;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-    }
-    .brand-accent {
-      font-size: 1.5rem;
-      margin-bottom: 4px;
-      color: #fbbf24;
-      filter: drop-shadow(0 0 8px rgba(251,191,36,0.3));
+      color: #fff;
+      /* Full width, no border radius */
     }
     .restaurant-name {
-      font-size: 2.2rem;
-      font-weight: 900;
-      letter-spacing: -1px;
-      background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      line-height: 1.1;
+      font-size: 2.4rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+    .search-filter-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      max-width: 500px;
+      margin: 0 auto 30px;
+    }
+    .search-input-wrap {
+      flex: 1;
       position: relative;
     }
-    .restaurant-name::after {
-      content: '✨';
-      position: absolute;
-      top: -12px;
-      right: -24px;
+    .search-input-wrap input {
+      width: 100%;
+      padding: 12px 20px;
+      border-radius: 50px;
+      border: none;
       font-size: 1rem;
-      -webkit-text-fill-color: initial;
+      outline: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    .restaurant-sub {
-      font-size: .85rem;
-      color: var(--muted);
-      font-weight: 500;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      opacity: 0.8;
+    .ref-filter-btn {
+      background: #334155;
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
-    /* ── Filter Pills (sticky) ── */
-    .filter-row {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 20px;
+    /* ── Reference Offer Cards ── */
+    .offers-container {
+      margin-top: -15px;
+      padding: 0 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .offer-carousel-ref {
       display: flex;
-      gap: 10px;
+      gap: 0;
       overflow-x: auto;
       scrollbar-width: none;
-      margin-top: 18px;
+      padding: 10px 0;
+      scroll-snap-type: x mandatory;
     }
-    .filter-row::-webkit-scrollbar { display: none; }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 7px 20px;
-      border-radius: 30px;
-      font-size: .84rem;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      background: transparent;
-      color: var(--muted);
-      border: none;
-      outline: none;
-      font-family: inherit;
-      transition: all .15s;
-    }
-    .pill:hover { color: var(--text); }
-    .pill.active {
-      background: #111;
+    .offer-carousel-ref::-webkit-scrollbar { display: none; }
+    
+    .offer-card-ref {
+      flex: 0 0 100%;
+      min-width: 100%;
+      height: 160px;
+      background: var(--card-blue);
+      border-radius: 24px;
+      position: relative;
+      overflow: hidden;
       color: #fff;
-      border-radius: 30px;
+      scroll-snap-align: center;
+      padding: 30px;
+      display: flex;
+      align-items: center; /* Align items horizontally */
+      justify-content: flex-start; /* Start from left */
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    .offer-card-ref .accent-shape {
+      position: absolute;
+      top: -30px;
+      left: -30px;
+      width: 140px;
+      height: 140px;
+      background: var(--card-red);
+      border-radius: 50%;
+      z-index: 1;
+    }
+    .offer-content-ref {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-left: 90px; /* Shift everything past the red circle */
+      text-align: left; /* Ensure text is left aligned */
+    }
+    .offer-discount-text {
+      font-size: 2.8rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .offer-title-text {
+      font-size: 1.25rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .offer-sub-text {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      font-weight: 500;
+    }
+
+    .dots-container {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 15px;
+    }
+    .ref-dot {
+      width: 8px;
+      height: 8px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    .ref-dot.active {
+      background: #fff;
+    }
+
+    /* ── Filter Pills (Original kept for logic but hidden/restyled) ── */
+    .filter-row {
+      display: none; /* We use the modal now */
     }
 
     /* ── Dish Grid ── */
     .dish-list {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-      padding: 8px 16px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      padding: 0 16px;
     }
     
-    @media(min-width: 800px) {
-      .dish-list { grid-template-columns: 1fr 1fr; gap: 20px; }
-      .menu-body { max-width: 1000px; }
+    @media(max-width: 768px) {
+      .dish-list { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .menu-body { padding: 40px 15px 100px; }
+    }
+
+    @media(max-width: 480px) {
+      .dish-list { grid-template-columns: 1fr; }
     }
 
     /* ── Menu Body ── */
     .menu-body {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
-      padding: 24px 16px 100px;
+      padding: 40px 30px 100px; /* Added side padding for margins below header */
     }
 
     /* ── Category Heading ── */
@@ -169,8 +233,8 @@ if ($user_id) {
     .dish-row {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 20px;
+      gap: 12px;
+      padding: 16px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px;
@@ -200,9 +264,10 @@ if ($user_id) {
     .dish-info { flex: 1; min-width: 0; }
 
     .dish-name {
-      font-size: .97rem;
-      font-weight: 600;
+      font-size: .88rem;
+      font-weight: 700;
       color: var(--text);
+      line-height: 1.3;
     }
     .dish-badge {
       display: inline-flex;
@@ -219,19 +284,13 @@ if ($user_id) {
     }
 
     .dish-price {
-      font-size: 1rem;
-      font-weight: 700;
+      font-size: 0.95rem;
+      font-weight: 800;
       color: var(--text);
       flex-shrink: 0;
     }
 
-    .dish-price {
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: var(--text);
-      flex-shrink: 0;
-      margin-left: 8px;
-    }
+
 
     /* ── Skeleton ── */
     #skeleton-wrap .skel-line {
@@ -400,100 +459,52 @@ if ($user_id) {
 </head>
 <body>
 
-<!-- Restaurant Card -->
-<div class="restaurant-card">
-  <div class="brand-accent">✨</div>
+<!-- Redesigned Header per Reference -->
+<div class="header-section">
   <div class="restaurant-name"><?= $restaurant_name ?></div>
-  <div class="restaurant-sub"><?= $restaurant_sub ?></div>
-</div>
-
-<!-- Seasonal Offers Slideshow -->
-<?php if (!empty($offers)): ?>
-<div class="offers-slideshow" style="margin: 0; width: 100%; overflow: hidden; background: #fff; padding-bottom: 24px; border-bottom: 2px solid #f0f0f0">
-  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:20px 20px 0">
-    <div style="display:flex; align-items:center; gap:8px">
-      <span style="font-size:1.2rem">✨</span>
-      <span style="font-weight:800; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; color:#1a1a1a">Seasonal Specials</span>
-    </div>
-  </div>
   
-  <div class="offer-carousel" id="offerCarousel" style="display:flex; gap:16px; overflow-x:auto; scrollbar-width:none; padding:12px 20px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch">
-    <?php foreach ($offers as $off): ?>
-      <div class="offer-slide" style="min-width: calc(100vw - 40px); max-width: 400px; scroll-snap-align: start; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 20px; padding: 24px; color: #fff; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.25); position: relative; overflow: hidden; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center">
-        <!-- Abstract shape backdrop -->
-        <div style="position:absolute; top:-20px; right:-20px; width:80px; height:80px; background:rgba(255,255,255,0.1); border-radius:50%"></div>
-        
-        <div style="font-size:0.75rem; font-weight:800; opacity:0.8; margin-bottom:6px; letter-spacing:0.5px">Exclusive Deal</div>
-        <div style="font-size:1.2rem; font-weight:800; margin-bottom:8px; line-height:1.2"><?= htmlspecialchars($off['title']) ?></div>
-        <div style="font-size:0.85rem; opacity:0.95; margin-bottom:16px; min-height:40px"><?= htmlspecialchars($off['description'] ?: 'Special limited time offer!') ?></div>
-        
-        <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.25); padding:8px 18px; border-radius:12px; font-weight:900; font-size:1rem; backdrop-filter:blur(4px)">
-           <span style="font-size:1.1rem">🎁</span> <?= htmlspecialchars($off['discount']) ?>
-        </div>
-      </div>
-    <?php endforeach; ?>
+  <!-- Search & Filter Row -->
+  <div class="search-filter-row">
+    <div class="search-input-wrap">
+      <input type="text" id="refSearch" placeholder="Search for dishes..." onkeyup="syncSearch(this.value)">
+    </div>
+    <button class="ref-filter-btn" id="openFilter">
+      Filter <span style="font-size: 0.7rem">▼</span>
+    </button>
   </div>
 
-  <!-- Pagination Dots (Floating Pill) -->
-  <div style="position:relative; margin-top: -36px; z-index:20; display:flex; justify-content:center">
-    <div id="offerDots" style="display:flex; justify-content:center; gap:10px; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); padding: 8px 16px; border-radius: 100px; box-shadow: 0 4px 12px rgba(0,0,0,0.1)">
+  <!-- Offer Carousel per Reference -->
+  <?php if (!empty($offers)): ?>
+  <div class="offers-container">
+    <div class="offer-carousel-ref" id="refCarousel">
+      <?php foreach ($offers as $off): ?>
+        <div class="offer-card-ref">
+          <div class="accent-shape"></div>
+          <div class="offer-content-ref">
+            <div class="offer-discount-text"><?= htmlspecialchars($off['discount']) ?></div>
+            <div class="offer-title-text"><?= htmlspecialchars($off['title']) ?></div>
+            <div class="offer-sub-text"><?= htmlspecialchars($off['description'] ?: 'Summer Offer') ?></div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    
+    <div class="dots-container" id="refDots">
       <?php foreach ($offers as $i => $off): ?>
-        <div class="dot <?= $i===0?'active':'' ?>" data-idx="<?= $i ?>" style="width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.4); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer"></div>
+        <div class="ref-dot <?= $i===0?'active':'' ?>" data-idx="<?= $i ?>"></div>
       <?php endforeach; ?>
     </div>
   </div>
+  <?php endif; ?>
 </div>
-
-<style>
-  #offerDots .dot.active { background: #ffffff; width: 32px; border-radius: 10px; box-shadow: 0 0 15px rgba(255, 255, 255, 0.6); }
-  .offer-carousel::-webkit-scrollbar { display: none; }
-</style>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const carousel = document.getElementById('offerCarousel');
-    const dots     = document.querySelectorAll('#offerDots .dot');
-    if (!carousel || dots.length === 0) return;
-
-    const getSlideWidth = () => {
-       const slide = carousel.querySelector('.offer-slide');
-       return slide ? slide.offsetWidth + 16 : 0; // 16 is the gap
-    };
-
-    // Update dots on scroll
-    carousel.addEventListener('scroll', () => {
-        const sw = getSlideWidth();
-        const index = Math.round(carousel.scrollLeft / sw);
-        dots.forEach((d, i) => d.classList.toggle('active', i === index));
-    });
-
-    // Click to scroll
-    dots.forEach(dot => {
-        dot.onclick = () => {
-            const idx = parseInt(dot.getAttribute('data-idx'));
-            carousel.scrollTo({ left: idx * getSlideWidth(), behavior: 'smooth' });
-        };
-    });
-
-    // Auto slide
-    let scrollIndex = 0;
-    let autoInterval = setInterval(() => {
-        scrollIndex = (scrollIndex + 1) % dots.length;
-        carousel.scrollTo({ left: scrollIndex * getSlideWidth(), behavior: 'smooth' });
-    }, 5000);
-
-    // Pause auto-slide on touch/interact
-    carousel.addEventListener('pointerdown', () => clearInterval(autoInterval));
-});
+// Sync reference search with the hidden advanced filter search
+function syncSearch(val) {
+  document.getElementById('f-search').value = val;
+  applyAdvancedFilters();
+}
 </script>
-<?php endif; ?>
-
-<!-- Search Trigger (After Offers) -->
-<div class="filter-trigger-wrap" style="display:flex; justify-content:center; margin: 16px auto 0">
-  <div class="filter-trigger" id="openFilter">
-    <span style="font-size:0.75rem; font-weight:700">🔍 SEARCH & FILTER MENU</span>
-  </div>
-</div>
 
 
 
@@ -501,14 +512,12 @@ document.addEventListener('DOMContentLoaded', () => {
 <div id="modalOverlay">
   <div class="modal-content">
     <div class="modal-header">
-      <div class="modal-title">Search & Filter</div>
+      <div class="modal-title">Filter Options</div>
       <div class="close-modal" id="closeFilter">✕</div>
     </div>
     
-    <div class="filter-group">
-      <label>Search Dish</label>
-      <input type="text" id="f-search" placeholder="What are you craving?">
-    </div>
+    <!-- Hidden search field for filter logic -->
+    <input type="hidden" id="f-search" value="">
 
     <div class="filter-group">
       <label>Category</label>
@@ -773,6 +782,7 @@ document.getElementById('btn-apply').onclick = () => {
 
 document.getElementById('btn-reset').onclick = () => {
     document.getElementById('f-search').value = '';
+    document.getElementById('refSearch').value = '';
     document.getElementById('f-category').value = 'all';
     document.getElementById('f-avail').value = 'all';
     document.getElementById('f-min').value = '';
@@ -781,9 +791,34 @@ document.getElementById('btn-reset').onclick = () => {
     toggleModal(false);
 };
 
-// Also apply on enter key for inputs
-['f-search','f-min','f-max'].forEach(id => {
+// Also apply on enter key for numeric inputs
+['f-min','f-max'].forEach(id => {
   document.getElementById(id).onkeyup = e => { if (e.key === 'Enter') { applyAdvancedFilters(); toggleModal(false); } };
+});
+
+// Carousel Logic for Reference Redesign
+document.addEventListener('DOMContentLoaded', () => {
+    const carousel = document.getElementById('refCarousel');
+    const dots     = document.querySelectorAll('#refDots .ref-dot');
+    if (!carousel || dots.length === 0) return;
+
+    const getSlideWidth = () => {
+       const slide = carousel.querySelector('.offer-card-ref');
+       return slide ? slide.offsetWidth : 0;
+    };
+
+    carousel.addEventListener('scroll', () => {
+        const sw = getSlideWidth();
+        const index = Math.round(carousel.scrollLeft / sw);
+        dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    });
+
+    dots.forEach(dot => {
+        dot.onclick = () => {
+            const idx = parseInt(dot.getAttribute('data-idx'));
+            carousel.scrollTo({ left: idx * getSlideWidth(), behavior: 'smooth' });
+        };
+    });
 });
 
 fetchMenu();

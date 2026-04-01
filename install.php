@@ -1,64 +1,48 @@
 <?php
-/**
- * install.php — Premium Setup Wizard for Vingo Menu
- */
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// install.php - Universal Vingo Setup Wizard
+require_once __DIR__ . '/includes/db.php';
 
-$db_host = 'localhost';
-$db_user = 'root';
-$db_pass = '';
-$db_name = 'menu_project';
+$message = '';
+$step = isset($_POST['step']) ? (int)$_POST['step'] : 1;
 
-$conn = new mysqli($db_host, $db_user, $db_pass);
-$db_exists = false;
-if (!$conn->connect_error) {
-    $res = $conn->query("SHOW DATABASES LIKE '$db_name'");
-    if ($res && $res->num_rows > 0) $db_exists = true;
-}
-
-$step = 1;
-$error = '';
-$success = '';
-
-// Step 1: Initialize Database
-if (isset($_POST['init_db'])) {
-    if ($conn->query("CREATE DATABASE IF NOT EXISTS $db_name CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")) {
-        $conn->select_db($db_name);
-        // Create Tables
-        $conn->query("CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) UNIQUE, email VARCHAR(100), password VARCHAR(255), role ENUM('admin','superadmin') DEFAULT 'admin', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
-        $conn->query("CREATE TABLE IF NOT EXISTS categories (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, name VARCHAR(100))");
-        $conn->query("CREATE TABLE IF NOT EXISTS dishes (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, name VARCHAR(150), price DECIMAL(10,2), category_id INT, image VARCHAR(255) DEFAULT NULL, availability ENUM('Available','Not Available') DEFAULT 'Available', currency VARCHAR(10) DEFAULT 'INR', offer_id INT DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB");
-        $conn->query("CREATE TABLE IF NOT EXISTS settings (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, setting_key VARCHAR(50), setting_value TEXT)");
-        $conn->query("CREATE TABLE IF NOT EXISTS seasonal_offers (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, title VARCHAR(100), description TEXT, discount VARCHAR(50), expires_at DATE, active TINYINT(1) DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
-        $conn->query("CREATE TABLE IF NOT EXISTS system_logs (id INT AUTO_INCREMENT PRIMARY KEY, event VARCHAR(100), source VARCHAR(50), status VARCHAR(20), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
-        
-        $conn->query("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('restaurant_name', 'Vingo Menu'), ('restaurant_sub', 'Digital Excellence')");
-        $success = "Database initialized! Proceed to create your master account.";
-        $step = 2;
-    } else {
-        $error = "Failed to create database: " . $conn->error;
-    }
-}
-
-// Step 2: Create Master Account
-if (isset($_POST['create_master'])) {
-    $conn->select_db($db_name);
-    $u = trim($_POST['master_user'] ?? '');
-    $p = $_POST['master_pass'] ?? '';
-    if (strlen($p) < 6) {
-        $error = "Password must be at least 6 characters.";
-        $step = 2;
-    } else {
-        $hash = password_hash($p, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, 'superadmin')");
-        $stmt->bind_param('ss', $u, $hash);
-        if ($stmt->execute()) {
-            $success = "Master account created! System ready.";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($step === 1) {
+        // Step 1: Core Tables Initialization
+        try {
+            $conn->query("CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) UNIQUE, email VARCHAR(100), password VARCHAR(255), role ENUM('superadmin', 'admin') DEFAULT 'admin', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+            $conn->query("CREATE TABLE IF NOT EXISTS categories (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT, name VARCHAR(100), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+            $conn->query("CREATE TABLE IF NOT EXISTS dishes (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT, category_id INT, name VARCHAR(100), price DECIMAL(10,2), description TEXT, image VARCHAR(255), availability ENUM('Available', 'Not Available') DEFAULT 'Available', currency VARCHAR(10) DEFAULT 'INR', offer_id INT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+            $conn->query("CREATE TABLE IF NOT EXISTS settings (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, setting_key VARCHAR(50), setting_value TEXT, UNIQUE KEY u_user_setting (user_id, setting_key))");
+            $conn->query("CREATE TABLE IF NOT EXISTS seasonal_offers (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT, title VARCHAR(100), description TEXT, discount VARCHAR(50), active TINYINT DEFAULT 1, expires_at DATE NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+            $conn->query("CREATE TABLE IF NOT EXISTS qr_scans (user_id INT PRIMARY KEY, scan_count INT DEFAULT 0)");
+            
+            $message = "Database tables initialized successfully!";
+            $step = 2;
+        } catch (Exception $e) {
+            $message = "Error: " . $e->getMessage();
+        }
+    } elseif ($step === 2) {
+        // Step 2: Super Admin Creation (Or Skip)
+        if (isset($_POST['skip_admin'])) {
+            $message = "Super Admin creation skipped. Setup complete!";
             $step = 3;
         } else {
-            $error = "Setup failed: " . $conn->error;
-            $step = 2;
+            $user = trim($_POST['username'] ?? '');
+            $pass = password_hash($_POST['password'] ?? '', PASSWORD_DEFAULT);
+            $email = trim($_POST['email'] ?? '');
+
+            if ($user && $_POST['password']) {
+                $stmt = $conn->prepare("INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, 'superadmin') ON DUPLICATE KEY UPDATE password=VALUES(password), email=VALUES(email)");
+                $stmt->bind_param("sss", $user, $pass, $email);
+                if ($stmt->execute()) {
+                    $message = "Super Admin account created successfully!";
+                    $step = 3;
+                } else {
+                    $message = "Error: " . $conn->error;
+                }
+            } else {
+                $message = "Please fill in all fields.";
+            }
         }
     }
 }
@@ -67,63 +51,69 @@ if (isset($_POST['create_master'])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Setup Wizard | Vingo</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <title>Vingo Setup Wizard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="assets/css/menu-style.css">
     <style>
-        :root { --p: #6366f1; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: #fff; padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); width: 450px; text-align: center; }
-        h1 { font-weight: 800; color: #0f172a; margin-bottom: 8px; }
-        p { color: #64748b; font-size: 0.9rem; margin-bottom: 30px; }
+        body { background: #f8fafc; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .setup-card { background: #fff; padding: 40px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); width: min(450px, 95vw); text-align: center; }
         .step-indicator { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; background: #e2e8f0; }
-        .dot.active { background: var(--p); transform: scale(1.2); }
-        .form-group { text-align: left; margin-bottom: 20px; }
-        label { display: block; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 8px; }
-        input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; }
-        input:focus { border-color: var(--p); }
-        .btn { width: 100%; padding: 14px; background: var(--p); color: #fff; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .btn:hover { background: #4f46e5; }
-        .alert { padding: 15px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 20px; }
-        .alert-success { background: #f0fdf4; color: #166534; }
-        .alert-error { background: #fef2f2; color: #991b1b; }
+        .step-dot { width: 10px; height: 10px; border-radius: 50%; background: #e2e8f0; }
+        .step-dot.active { background: #3b82f6; box-shadow: 0 0 10px rgba(59,130,246,0.5); }
     </style>
 </head>
 <body>
-<div class="card">
-    <h1>Vingo Setup</h1>
-    <p>Welcome to your new digital menu system.</p>
+
+<div class="setup-card">
+    <div style="font-size: 3rem; margin-bottom: 20px">⚙️</div>
+    <h2 style="margin-bottom: 10px">Vingo Setup</h2>
+    <p style="color: #64748b; margin-bottom: 30px; font-size: 0.9rem">
+        Step <?= $step ?> of 3
+    </p>
 
     <div class="step-indicator">
-        <div class="dot <?= $step >= 1 ? 'active' : '' ?>"></div>
-        <div class="dot <?= $step >= 2 ? 'active' : '' ?>"></div>
-        <div class="dot <?= $step >= 3 ? 'active' : '' ?>"></div>
+        <div class="step-dot <?= $step >= 1 ? 'active' : '' ?>"></div>
+        <div class="step-dot <?= $step >= 2 ? 'active' : '' ?>"></div>
+        <div class="step-dot <?= $step >= 3 ? 'active' : '' ?>"></div>
     </div>
 
-    <?php if ($error): ?> <div class="alert alert-error"><?= $error ?></div> <?php endif; ?>
-    <?php if ($success): ?> <div class="alert alert-success"><?= $success ?></div> <?php endif; ?>
+    <?php if ($message): ?>
+        <div class="flash flash-info" style="margin-bottom: 20px; font-size: 0.85rem"><?= htmlspecialchars($message) ?></div>
+    <?php endif; ?>
 
-    <?php if ($step == 1): ?>
+    <?php if ($step === 1): ?>
         <form method="POST">
-            <button type="submit" name="init_db" class="btn">🚀 Initialize Database</button>
+            <input type="hidden" name="step" value="1">
+            <p style="margin-bottom: 20px; font-size: 0.9rem">Deploy core database structure for the platform.</p>
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center">Initialize Tables</button>
         </form>
-    <?php elseif ($step == 2): ?>
+    <?php elseif ($step === 2): ?>
         <form method="POST">
-            <div class="form-group">
+            <input type="hidden" name="step" value="2">
+            <div class="form-group" style="text-align: left; margin-bottom: 15px">
                 <label>Master Username</label>
-                <input type="text" name="master_user" value="superadmin" required>
+                <input type="text" name="username" placeholder="e.g. root_admin" required>
             </div>
-            <div class="form-group">
-                <label>Initial Password</label>
-                <input type="password" name="master_pass" placeholder="At least 6 characters" required>
+            <div class="form-group" style="text-align: left; margin-bottom: 15px">
+                <label>Master Password</label>
+                <input type="password" name="password" required>
             </div>
-            <button type="submit" name="create_master" class="btn">🛡️ Finalize Setup</button>
+            <div class="form-group" style="text-align: left; margin-bottom: 15px">
+                <label>Recovery Email</label>
+                <input type="email" name="email" placeholder="admin@vingo-menu.com">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 12px">Create Super Admin</button>
+            <button type="submit" name="skip_admin" value="1" class="btn btn-outline" style="width: 100%; justify-content: center" onclick="return confirm('Skip creating admin? Database tables will still be updated.')">Skip & Finalize</button>
         </form>
-    <?php elseif ($step == 3): ?>
-        <div class="alert alert-success">System Configured Successfully!</div>
-        <p>Please delete <b>install.php</b> for security.</p>
-        <a href="superadmin/login.php" class="btn" style="text-decoration:none; display:block">Go to Master Console →</a>
+    <?php elseif ($step === 3): ?>
+        <p style="margin-bottom: 30px">Setup complete! Access your consoles below.</p>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+            <a href="superadmin/index.php" class="btn btn-primary" style="justify-content: center">Master Root Console</a>
+            <a href="index.php" class="btn btn-outline" style="justify-content: center">View Public Home</a>
+        </div>
+        <p style="color: #ef4444; font-size: 0.75rem; margin-top: 25px; font-weight: 700">Recommended: Remove install.php now!</p>
     <?php endif; ?>
 </div>
+
 </body>
 </html>

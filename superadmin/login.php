@@ -22,12 +22,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($u) || empty($p)) {
         $error = 'Please enter both System ID and Root Key.';
     } else {
-        $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = ? AND role = 'superadmin' LIMIT 1");
+        $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE (username = ? OR email = ?) AND role = 'superadmin' LIMIT 1");
         if (!$stmt) {
             super_log("Query error: " . $conn->error);
             $error = 'System fault. Check logs.';
         } else {
-            $stmt->bind_param('s', $u);
+            $stmt->bind_param('ss', $u, $u);
             $stmt->execute();
             $result = $stmt->get_result();
 
@@ -47,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 // Check if account exists but is a regular Admin
-                $check = $conn->prepare("SELECT role FROM users WHERE username = ? LIMIT 1");
-                $check->bind_param('s', $u);
+                $check = $conn->prepare("SELECT role FROM users WHERE username = ? OR email = ? LIMIT 1");
+                $check->bind_param('ss', $u, $u);
                 $check->execute();
                 $res = $check->get_result();
                 if ($r = $res->fetch_assoc()) {
@@ -109,8 +109,8 @@ if (isset($_SESSION['super_logged_in'])) {
 
   <form method="POST">
     <div class="input-grp">
-      <label>System Login</label>
-      <input type="text" name="u" placeholder="System ID" required autofocus autocomplete="off">
+      <label>System Login (Username/Email)</label>
+      <input type="text" name="u" placeholder="Username or Email" required autofocus autocomplete="off">
     </div>
     <div class="input-grp">
       <label>Root Key</label>

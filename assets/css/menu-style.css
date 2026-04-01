@@ -45,6 +45,8 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
+a { text-decoration: none; }
+
 
 /* ════════════════════════════════
    SIDEBAR
@@ -232,6 +234,7 @@ tbody tr:hover { background: #fdfdfd; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  text-decoration: none !important;
   transition: var(--transition);
 }
 .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 12px var(--accent-glow); }
@@ -242,6 +245,8 @@ tbody tr:hover { background: #fdfdfd; }
 .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-light); }
 .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
 .btn-sm { padding: 8px 16px; font-size: 0.75rem; }
+.btn-grp { display: flex; align-items: center; gap: 8px; }
+.btn-grp.vertical { flex-direction: column; }
 
 /* ════════════════════════════════
    BADGES

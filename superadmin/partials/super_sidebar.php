@@ -11,7 +11,6 @@ function nav_super(string $href, string $icon, string $label, string $cur): stri
   <nav>
     <?= nav_super('index.php', '🛡️', 'Root Console', $cur) ?>
     <?= nav_super('manage-admins.php', '👥', 'Manage Admins', $cur) ?>
-    <?= nav_super('settings.php', '🛠️', 'System Settings', $cur) ?>
     <div style="height:1px; background:rgba(255,255,255,0.05); margin:20px 0"></div>
     <a href="../admin/index.php"><span class="nav-icon">🚪</span> Exit to Admin</a>
     <a href="logout.php" onclick="return confirm('Sign out from Root Console?')">

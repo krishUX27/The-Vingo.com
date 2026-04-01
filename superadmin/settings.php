@@ -42,11 +42,29 @@ $cur = 'settings.php';
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
   <style>
-    :root { --super-accent: #f59e0b; }
+    :root { 
+      --super-accent: #f59e0b; 
+      --super-accent-glow: rgba(245, 158, 11, 0.3);
+      --super-sidebar: #0f172a; 
+      --super-sidebar-h: #1e293b;
+    }
+    
+    .sidebar { background: var(--super-sidebar) !important; border-right: 1px solid rgba(255,255,255,0.05) !important; }
+    .sidebar-header { color: var(--super-accent) !important; }
+    .sidebar-header span:first-child { background: var(--super-accent) !important; box-shadow: 0 4px 12px var(--super-accent-glow) !important; }
+    .sidebar nav a:hover { background: var(--super-sidebar-h) !important; color: var(--super-accent) !important; }
+    .sidebar nav a.active { background: var(--super-accent) !important; color: #0f172a !important; box-shadow: 0 4px 20px var(--super-accent-glow) !important; }
+
     .main { min-height: 100vh; }
     .content { padding: 30px; }
     .settings-table td { padding: 16px 0; vertical-align: middle; border-bottom: 1px solid var(--border); }
     .settings-table .s-label { font-weight: 700; color: #475569; width: 200px; font-size: 0.85rem; text-transform: uppercase; }
+    
+    .btn-primary { background: var(--super-accent); color: #0f172a; font-weight: 800; border: none; }
+    .btn-primary:hover { background: #fbbf24; transform: translateY(-2px); box-shadow: 0 8px 20px var(--super-accent-glow); }
+    
+    input:focus { border-color: var(--super-accent) !important; box-shadow: 0 0 0 4px var(--super-accent-glow) !important; }
+    .user-avatar { background: var(--super-accent) !important; color: #0f172a !important; box-shadow: 0 4px 12px var(--super-accent-glow) !important; }
   </style>
 </head>
 <body>
