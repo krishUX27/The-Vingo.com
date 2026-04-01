@@ -2,18 +2,6 @@
 require_once __DIR__ . '/partials/auth_check.php';
 require_once __DIR__ . '/../includes/db.php';
 
-// --- ROBUST AUTO-REPAIR FOR DISHES TABLE ---
-$res = $conn->query("DESCRIBE dishes");
-$cols = $res ? array_column($res->fetch_all(MYSQLI_ASSOC), 'Field') : [];
-
-if (!in_array('currency', $cols)) {
-    $conn->query("ALTER TABLE dishes ADD COLUMN currency VARCHAR(10) DEFAULT 'INR' AFTER availability");
-}
-if (!in_array('offer_id', $cols)) {
-    $conn->query("ALTER TABLE dishes ADD COLUMN offer_id INT DEFAULT NULL AFTER currency");
-}
-// ------------------------------------------
-
 // Enable error reporting
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -69,26 +57,22 @@ if ($price_max !== '') {
 $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
 // Current Admin Session ID
-$admin_sess_id = $_SESSION['admin_id'] ?? 0;
+$admin_sess_id = (int)($_SESSION['admin_id'] ?? 0);
 
-/* ── Stats (Filtered by User) ── */
-$total_dishes_res = $conn->query("SELECT COUNT(*) FROM dishes WHERE user_id = $admin_sess_id");
-if (!$total_dishes_res) {
-    dashboard_log("Stats Error (total_dishes): " . $conn->error);
+/* ── Stats (Filtered by User - Securely) ── */
+function get_stat_count($conn, $sql, $uid) {
+    $st = $conn->prepare($sql);
+    if (!$st) return 0;
+    $st->bind_param('i', $uid);
+    $st->execute();
+    $r = $st->get_result()->fetch_row();
+    $st->close();
+    return $r ? (int)$r[0] : 0;
 }
-$total_dishes = $total_dishes_res ? $total_dishes_res->fetch_row()[0] : 0;
 
-$avail_cnt_res = $conn->query("SELECT COUNT(*) FROM dishes WHERE availability='Available' AND user_id = $admin_sess_id");
-if (!$avail_cnt_res) {
-    dashboard_log("Stats Error (avail_cnt): " . $conn->error);
-}
-$avail_cnt = $avail_cnt_res ? $avail_cnt_res->fetch_row()[0] : 0;
-
-$total_cats_res = $conn->query("SELECT COUNT(*) FROM categories WHERE user_id = $admin_sess_id");
-if (!$total_cats_res) {
-    dashboard_log("Stats Error (total_cats): " . $conn->error);
-}
-$total_cats = $total_cats_res ? $total_cats_res->fetch_row()[0] : 0;
+$total_dishes = get_stat_count($conn, "SELECT COUNT(*) FROM dishes WHERE user_id = ?", $admin_sess_id);
+$avail_cnt    = get_stat_count($conn, "SELECT COUNT(*) FROM dishes WHERE availability='Available' AND user_id = ?", $admin_sess_id);
+$total_cats   = get_stat_count($conn, "SELECT COUNT(*) FROM categories WHERE user_id = ?", $admin_sess_id);
 
 /* ── Handle Add Dish (Modal POST) ── */
 $errors = [];

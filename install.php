@@ -27,10 +27,12 @@ if (isset($_POST['init_db'])) {
         $conn->select_db($db_name);
         // Create Tables
         $conn->query("CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) UNIQUE, email VARCHAR(100), password VARCHAR(255), role ENUM('admin','superadmin') DEFAULT 'admin', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
-        $conn->query("CREATE TABLE IF NOT EXISTS categories (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) UNIQUE)");
-        $conn->query("CREATE TABLE IF NOT EXISTS dishes (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(150), price DECIMAL(10,2), category_id INT, image VARCHAR(255) DEFAULT NULL, availability ENUM('Available','Not Available') DEFAULT 'Available', currency VARCHAR(10) DEFAULT 'INR', offer_id INT DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB");
-        $conn->query("CREATE TABLE IF NOT EXISTS settings (id INT AUTO_INCREMENT PRIMARY KEY, setting_key VARCHAR(50) UNIQUE, setting_value TEXT)");
+        $conn->query("CREATE TABLE IF NOT EXISTS categories (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, name VARCHAR(100))");
+        $conn->query("CREATE TABLE IF NOT EXISTS dishes (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, name VARCHAR(150), price DECIMAL(10,2), category_id INT, image VARCHAR(255) DEFAULT NULL, availability ENUM('Available','Not Available') DEFAULT 'Available', currency VARCHAR(10) DEFAULT 'INR', offer_id INT DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB");
+        $conn->query("CREATE TABLE IF NOT EXISTS settings (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, setting_key VARCHAR(50), setting_value TEXT)");
+        $conn->query("CREATE TABLE IF NOT EXISTS seasonal_offers (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, title VARCHAR(100), description TEXT, discount VARCHAR(50), expires_at DATE, active TINYINT(1) DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
         $conn->query("CREATE TABLE IF NOT EXISTS system_logs (id INT AUTO_INCREMENT PRIMARY KEY, event VARCHAR(100), source VARCHAR(50), status VARCHAR(20), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+        
         $conn->query("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('restaurant_name', 'Vingo Menu'), ('restaurant_sub', 'Digital Excellence')");
         $success = "Database initialized! Proceed to create your master account.";
         $step = 2;

@@ -1,6 +1,6 @@
 -- ============================================================
---  Menu Manager — database.sql
---  Import: phpMyAdmin → Import this file
+--  Menu Manager — Production Database Schema (v3)
+--  Optimized for Hostinger Deployment
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS menu_project
@@ -8,88 +8,88 @@ CREATE DATABASE IF NOT EXISTS menu_project
   COLLATE utf8mb4_unicode_ci;
 
 USE menu_project;
- 
--- ── Settings ──────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS settings (
-  id            INT          NOT NULL AUTO_INCREMENT,
-  setting_key   VARCHAR(50)  NOT NULL,
-  setting_value TEXT,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_setting_key (setting_key)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ── User Accounts (Admin and Superadmin) ────────────────────────────────
+-- ── 1. Users ──
 CREATE TABLE IF NOT EXISTS users (
-  id         INT          NOT NULL AUTO_INCREMENT,
-  username   VARCHAR(50)  NOT NULL,
-  password   VARCHAR(255) NOT NULL,
-  role       ENUM('admin', 'superadmin') NOT NULL DEFAULT 'admin',
-  created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id          INT          NOT NULL AUTO_INCREMENT,
+  username    VARCHAR(50)  NOT NULL,
+  email       VARCHAR(100) DEFAULT NULL,
+  password    VARCHAR(255) NOT NULL,
+  role        ENUM('admin', 'superadmin') NOT NULL DEFAULT 'admin',
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_user (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ── Categories ────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS categories (
-  id   INT          NOT NULL AUTO_INCREMENT,
-  name VARCHAR(100) NOT NULL,
+-- ── 2. Settings (Multi-tenant) ──
+CREATE TABLE IF NOT EXISTS settings (
+  id            INT          NOT NULL AUTO_INCREMENT,
+  user_id       INT          NOT NULL DEFAULT 0,
+  setting_key   VARCHAR(50)  NOT NULL,
+  setting_value TEXT,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_cat_name (name)
+  INDEX idx_user_setting (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ── Dishes ───────────────────────────────────────────────────
+-- ── 3. Categories (Multi-tenant) ──
+CREATE TABLE IF NOT EXISTS categories (
+  id      INT          NOT NULL AUTO_INCREMENT,
+  user_id INT          NOT NULL DEFAULT 0,
+  name    VARCHAR(100) NOT NULL,
+  PRIMARY KEY (id),
+  INDEX idx_user_cat (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ── 4. Seasonal Offers ──
+CREATE TABLE IF NOT EXISTS seasonal_offers (
+  id          INT          NOT NULL AUTO_INCREMENT,
+  user_id     INT          NOT NULL DEFAULT 0,
+  title       VARCHAR(100) NOT NULL,
+  description TEXT         DEFAULT NULL,
+  discount    VARCHAR(50)  DEFAULT NULL,
+  expires_at  DATE         DEFAULT NULL,
+  active      TINYINT(1)   NOT NULL DEFAULT 1,
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  INDEX idx_user_offer (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ── 5. Dishes (Multi-tenant) ──
 CREATE TABLE IF NOT EXISTS dishes (
   id           INT            NOT NULL AUTO_INCREMENT,
+  user_id      INT            NOT NULL DEFAULT 0,
   name         VARCHAR(150)   NOT NULL,
   price        DECIMAL(10,2)  NOT NULL DEFAULT 0.00,
   category_id  INT            NOT NULL,
   image        VARCHAR(255)   DEFAULT NULL,
   availability ENUM('Available','Not Available') NOT NULL DEFAULT 'Available',
+  currency     VARCHAR(10)    DEFAULT 'INR',
+  offer_id     INT            DEFAULT NULL,
   created_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  INDEX idx_user_dish (user_id),
   CONSTRAINT fk_dish_cat
     FOREIGN KEY (category_id) REFERENCES categories(id)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ── Seasonal Offers ──────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS seasonal_offers (
-  id       INT          NOT NULL AUTO_INCREMENT,
-  title    VARCHAR(100) NOT NULL,
-  discount VARCHAR(50)  DEFAULT NULL,
-  active   TINYINT(1)   NOT NULL DEFAULT 1,
+-- ── 6. System Logs ──
+CREATE TABLE IF NOT EXISTS system_logs (
+  id          INT          NOT NULL AUTO_INCREMENT,
+  event       VARCHAR(100) NOT NULL,
+  source      VARCHAR(50)  DEFAULT 'System',
+  status      VARCHAR(20)  DEFAULT 'OK',
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ── Seed categories ───────────────────────────────────────────
-INSERT IGNORE INTO categories (name) VALUES
-  ('Starters'),('Main Course'),('Desserts'),('Beverages');
+-- ── Seed Initial Data ──
+INSERT IGNORE INTO users (id, username, password, role) VALUES
+  (1, 'superadmin', '$2y$10$7R8WXYuR0FvI/fHh3mK9Xe/S3dY3h8gGg8k4B9vX.iH3G5sZ.y7yS', 'superadmin');
 
--- ── Seed dishes ───────────────────────────────────────────────
-INSERT INTO dishes (name, price, category_id, image, availability)
-SELECT 'Garlic Bread',          2.99, id, NULL, 'Available'     FROM categories WHERE name='Starters'    LIMIT 1;
-INSERT INTO dishes (name, price, category_id, image, availability)
-SELECT 'Paneer Tikka',          8.99, id, NULL, 'Available'     FROM categories WHERE name='Starters'    LIMIT 1;
-INSERT INTO dishes (name, price, category_id, image, availability)
-SELECT 'Grilled Chicken',      12.99, id, NULL, 'Available'     FROM categories WHERE name='Main Course' LIMIT 1;
-INSERT INTO dishes (name, price, category_id, image, availability)
-SELECT 'Dal Makhani',           9.50, id, NULL, 'Available'     FROM categories WHERE name='Main Course' LIMIT 1;
-INSERT INTO dishes (name, price, category_id, image, availability)
-SELECT 'Chocolate Lava Cake',   5.99, id, NULL, 'Available'     FROM categories WHERE name='Desserts'    LIMIT 1;
-INSERT INTO dishes (name, price, category_id, image, availability)
-SELECT 'Gulab Jamun',           3.99, id, NULL, 'Not Available' FROM categories WHERE name='Desserts'    LIMIT 1;
-INSERT INTO dishes (name, price, category_id, image, availability)
-SELECT 'Fresh Lemonade',        2.49, id, NULL, 'Available'     FROM categories WHERE name='Beverages'   LIMIT 1;
-INSERT INTO dishes (name, price, category_id, image, availability)
-SELECT 'Mango Lassi',           2.99, id, NULL, 'Available'     FROM categories WHERE name='Beverages'   LIMIT 1;
+INSERT IGNORE INTO categories (user_id, name) VALUES
+  (1, 'Starters'),(1, 'Main Course'),(1, 'Desserts'),(1, 'Beverages');
 
--- ── Seed System Data ───────────────────────────────────────────
--- Default Passwords: admin123, super123 (hashed using php PASSWORD_DEFAULT)
-INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
-  ('restaurant_name', 'Vingo Menu'),
-  ('restaurant_sub', 'The Future of Digital Menus'),
-  ('contact_email', 'hello@thevingo.com');
-
-INSERT IGNORE INTO users (username, password, role) VALUES
-  ('admin', '$2y$10$7R8WXYuR0FvI/fHh3mK9Xe/S3dY3h8gGg8k4B9vX.iH3G5sZ.y7yS', 'admin'),
-  ('superadmin', '$2y$10$7R8WXYuR0FvI/fHh3mK9Xe/S3dY3h8gGg8k4B9vX.iH3G5sZ.y7yS', 'superadmin');
+INSERT IGNORE INTO settings (user_id, setting_key, setting_value) VALUES
+  (0, 'restaurant_name', 'Vingo Menu'),
+  (0, 'restaurant_sub', 'Premium Digital Menu Solution');

@@ -3,22 +3,29 @@
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 
-// Real Stats Calculation
-$total_dishes = $conn->query("SELECT COUNT(*) FROM dishes")->fetch_row()[0] ?? 0;
-$total_categories = $conn->query("SELECT COUNT(*) FROM categories")->fetch_row()[0] ?? 0;
+// Real Stats Calculation (Safe fetch)
+function get_total($conn, $table) {
+    $res = $conn->query("SELECT COUNT(*) FROM $table");
+    return $res ? ($res->fetch_row()[0] ?? 0) : 0;
+}
+
+$total_dishes     = get_total($conn, 'dishes');
+$total_categories = get_total($conn, 'categories');
 
 // Offer tracking (with safety check for the table)
 $has_offers = $conn->query("SHOW TABLES LIKE 'seasonal_offers'")->num_rows > 0;
-$total_offers = $has_offers ? ($conn->query("SELECT COUNT(*) FROM seasonal_offers")->fetch_row()[0] ?? 0) : 0;
+$total_offers = $has_offers ? get_total($conn, 'seasonal_offers') : 0;
 
 // System Health Calculation
 $health = ($conn && !$conn->connect_error) ? '99.9%' : 'FAULT';
 
-// Auto-Fix: Ensure the logs table exists
-$conn->query("CREATE TABLE IF NOT EXISTS system_logs (id INT AUTO_INCREMENT PRIMARY KEY, event VARCHAR(100), source VARCHAR(50), status VARCHAR(20), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
-
-// Real Event Logs
-$logs = $conn->query("SELECT event, source, status, created_at FROM system_logs ORDER BY created_at DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+// Real Event Logs (Safe fetch)
+$logs = [];
+$has_logs = $conn->query("SHOW TABLES LIKE 'system_logs'")->num_rows > 0;
+if ($has_logs) {
+    $res = $conn->query("SELECT event, source, status, created_at FROM system_logs ORDER BY created_at DESC LIMIT 5");
+    if ($res) $logs = $res->fetch_all(MYSQLI_ASSOC);
+}
 
 $cur = 'index.php';
 ?>
