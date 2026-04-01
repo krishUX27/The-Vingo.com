@@ -21,50 +21,69 @@ function sendSetupEmail($to_email, $username, $token) {
     // Link to setup-password.php at root
     $link = "$proto://$host/setup-password.php?token=$token";
 
-    // Email Template
+    // Headers to help avoid Spam folder
+    $headers = "MIME-Version: 1.0" . "\r\n";
+    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+    $headers .= "From: Vingo System <$from>" . "\r\n";
+    $headers .= "Reply-To: $from" . "\r\n";
+    $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+    $headers .= "X-Priority: 1 (Highest)" . "\r\n";
+    $headers .= "Importance: High" . "\r\n";
+
+    // Email Template (with Bulletproof button for mobile)
     $message = "
+    <!DOCTYPE html>
     <html>
     <head>
-        <title>Vingo Account Setup</title>
+        <meta charset='UTF-8'>
+        <title>Account Setup</title>
     </head>
-    <body style='font-family: sans-serif; line-height: 1.6; color: #333;'>
-        <div style='max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
-            <div style='text-align: center; margin-bottom: 25px;'>
-               <h2 style='color: #6366f1; margin-bottom: 5px;'>Vingo Menu Manager</h2>
-               <p style='color: #64748b; font-size: 0.85rem;'>Master Console Notification</p>
-            </div>
-            
-            <p>Hello <strong>$username</strong>,</p>
-            <p>Your access account has been successfully provisioned. To ensure your account is secure, you must set a private password before you can access the dashboard.</p>
-            
-            <div style='background: #fdfdfd; padding: 35px; border-radius: 16px; margin: 25px 0; text-align: center; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);'>
-                <p style='margin-bottom: 20px; font-weight: 700; color: #0f172a; font-size: 1.1rem;'>Set Your Master Security Key</p>
-                <div style='margin-bottom: 20px;'>
-                    <a href='$link' style='display: inline-block; background-color: #f59e0b; color: #0f172a; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-weight: 800; font-size: 1rem; border: none; letter-spacing: 0.5px; box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.4);'>
-                        🔓 SETUP ACCOUNT PASSWORD
-                    </a>
-                </div>
-                <p style='font-size: 0.75rem; color: #94a3b8;'>Secure invitation valid for exactly <strong>24 hours</strong>.</p>
-            </div>
+    <body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;'>
+        <table border='0' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f8fafc; padding: 20px 0;'>
+            <tr>
+                <td align='center'>
+                    <div style='max-width: 600px; background-color: #ffffff; border-radius: 16px; padding: 40px; border: 1px solid #edf2f7; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);'>
+                        <div style='text-align: center; margin-bottom: 30px;'>
+                           <h2 style='color: #4f46e5; margin: 0;'>Vingo Menu</h2>
+                           <p style='color: #718096; font-size: 14px; margin-top: 5px;'>Secure Platform Invitation</p>
+                        </div>
+                        
+                        <p style='color: #2d3748; font-size: 16px; line-height: 24px;'>Hello <strong>$username</strong>,</p>
+                        <p style='color: #4a5568; font-size: 16px; line-height: 24px; margin-bottom: 30px;'>
+                            Your master access account has been successfully provisioned. To protect your dashboard, please click the secure link below to set your account password.
+                        </p>
+                        
+                        <!-- Bulletproof Button -->
+                        <table border='0' cellpadding='0' cellspacing='0' style='margin: 30px auto;'>
+                            <tr>
+                                <td align='center' style='border-radius: 12px;' bgcolor='#f59e0b'>
+                                    <a href='$link' target='_blank' style='font-size: 16px; font-weight: bold; color: #000000; text-decoration: none; padding: 18px 45px; border-radius: 12px; border: 1px solid #f59e0b; display: block; background-color: #f59e0b; letter-spacing: 0.5px;'>
+                                        SET PASSWORD NOW
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
 
-            <p style='font-size:0.8rem; color:#64748b;'>If you did not expect this invitation, please ignore this email.</p>
-            <hr style='border: 0; border-top: 1px solid #eee; margin: 25px 0;'>
-            <p style='font-size: 0.75rem; color: #94a3b8; text-align: center;'>
-                &copy; " . date('Y') . " Vingo.com | Automated Security System
-            </p>
-        </div>
+                        <p style='font-size: 12px; color: #a0aec0; text-align: center; margin-top: 30px;'>
+                            This security link expires in <strong>24 hours</strong>. If you did not expect this invitation, please ignore this email.
+                        </p>
+                        
+                        <hr style='border: 0; border-top: 1px solid #edf2f7; margin: 30px 0;'>
+                        
+                        <p style='font-size: 12px; color: #a0aec0; text-align: center; margin: 0;'>
+                            &copy; " . date('Y') . " Vingo.com | Automated Delivery System
+                        </p>
+                    </div>
+                </td>
+            </tr>
+        </table>
     </body>
     </html>
     ";
 
-    $headers = "MIME-Version: 1.0" . "\r\n";
-    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    $headers .= "From: Vingo System <$from>" . "\r\n";
-
-    // Send Mail and capture result
+    // Send Mail
     $sent = mail($to_email, $subject, $message, $headers);
     
-    // Log failure for debugging if logger is available
     if (!$sent && function_exists('platform_log')) {
         platform_log("Email Delivery Failed", "Target: $to_email", "ERROR");
     }
