@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($u) || empty($p)) {
         $error = 'Please enter both username and password.';
     } else {
-        $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ? AND role = 'admin' LIMIT 1");
+        $stmt = $conn->prepare("SELECT id, username, password, role, is_active FROM users WHERE username = ? AND role = 'admin' AND is_active = 1 LIMIT 1");
         if (!$stmt) {
             login_log("Query error: " . $conn->error);
             $error = 'Internal server error. Please check logs.';

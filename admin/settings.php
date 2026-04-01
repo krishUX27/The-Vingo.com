@@ -64,7 +64,7 @@ $cur = 'settings.php';
       <form method="POST">
         <div class="form-group">
           <label>Restaurant Name</label>
-          <input type="text" name="restaurant_name" value="<?= htmlspecialchars(menu_get_setting('restaurant_name', 'My Restaurant', $admin_sess_id)) ?>" required>
+          <input type="text" name="restaurant_name" value="<?= htmlspecialchars(menu_get_setting('restaurant_name', 'Restaurant Name', $admin_sess_id)) ?>" required>
         </div>
         
         <div class="form-group">
@@ -74,7 +74,7 @@ $cur = 'settings.php';
 
         <div class="form-group">
           <label>Admin Support Email</label>
-          <input type="email" name="admin_email" value="<?= htmlspecialchars(menu_get_setting('admin_email', 'admin@vingo.com', $admin_sess_id)) ?>" required>
+          <input type="email" name="admin_email" value="<?= htmlspecialchars(menu_get_setting('admin_email', 'admin@example.com', $admin_sess_id)) ?>" required>
           <p style="font-size:0.75rem; color:var(--text-light); margin-top:4px">Used for profile display and system notifications.</p>
         </div>
 

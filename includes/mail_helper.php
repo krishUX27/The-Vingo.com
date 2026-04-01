@@ -61,5 +61,13 @@ function sendSetupEmail($to_email, $username, $token) {
     $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
     $headers .= "From: Vingo System <$from>" . "\r\n";
 
-    return @mail($to_email, $subject, $message, $headers);
+    // Send Mail and capture result
+    $sent = mail($to_email, $subject, $message, $headers);
+    
+    // Log failure for debugging if logger is available
+    if (!$sent && function_exists('platform_log')) {
+        platform_log("Email Delivery Failed", "Target: $to_email", "ERROR");
+    }
+    
+    return $sent;
 }

@@ -3,6 +3,7 @@
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/mail_helper.php';
+require_once __DIR__ . '/../includes/logger.php';
 
 // Auto-Fix: Ensure the email column exists in the users table
 $conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) AFTER username");
@@ -35,9 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         if ($stmt->execute()) {
             // Trigger the mail notification with token
-            @sendSetupEmail($email, $u, $token);
+            $sent = sendSetupEmail($email, $u, $token);
 
-            $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin invited! Activation link sent to {$email}."];
+            if ($sent) {
+                $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin invited! Activation link sent to {$email}."];
+            } else {
+                $_SESSION['flash'] = ['type' => 'warn', 'msg' => "Admin created, but the email invite failed to send. Please check your server SMTP/Mail settings or give the setup link manually."];
+            }
+            
             header('Location: manage-admins.php');
             exit;
         } else {

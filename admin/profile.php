@@ -10,8 +10,7 @@ $sess_username = $_SESSION['admin_username'] ?? 'admin';
 $admin_email    = menu_get_setting('admin_email', 'admin@vingo.com');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Note: Since we are using hardcoded credentials for now, this is just a placeholder logic.
-    // In a real DB-backed user system, we would update the users table here.
+    // Update the database-backed user system.
     
     // We will update the admin_email in settings.
     $email = $_POST['email'] ?? '';
@@ -82,8 +81,8 @@ $cur = 'profile.php';
 
       <div class="card" style="border-color:rgba(239, 68, 68, 0.1)">
         <div class="card-title" style="color:var(--danger)">Security & Access</div>
-        <div style="background:#fff1f2; color:#b91c1c; padding:16px; border-radius:12px; font-size:0.85rem; margin-bottom:20px">
-          <strong>Protected Account:</strong> Credentials for 'Operator' access are predefined. To change the master login, please update the <code>admin/index.php</code> configuration.
+        <div style="background:#f1f5f9; color:#475569; padding:16px; border-radius:12px; font-size:0.85rem; margin-bottom:20px">
+          <strong>Security Note:</strong> Contact the Platform Superadmin to reset your master login credentials or password if required.
         </div>
         
         <div class="form-group" style="opacity:0.6; pointer-events:none">
@@ -96,7 +95,7 @@ $cur = 'profile.php';
         </div>
 
         <div style="margin-top:24px">
-          <button disabled class="btn btn-outline" style="cursor:not-allowed">Manage Security</button>
+          <button disabled class="btn btn-outline" style="cursor:not-allowed; opacity:0.5">Manage Security</button>
         </div>
       </div>
     </div>
