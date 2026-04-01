@@ -428,6 +428,13 @@ tbody tr:hover { background: #fdfdfd; }
   .user-profile { padding: 6px; }
 }
 
+/* Sidebar Overlay */
+.sidebar-overlay {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 1500;
+  display: none; opacity: 0; transition: opacity 0.3s;
+}
+.sidebar-overlay.show { display: block; opacity: 1; }
+
 @media (max-width: 480px) {
   .topbar-right .btn-outline { display: none; }
   .login-card { padding: 30px 20px; }

@@ -118,6 +118,11 @@ $cur = 'manage-admins.php';
     
     input:focus { border-color: var(--super-accent) !important; box-shadow: 0 0 0 4px var(--super-accent-glow) !important; }
     .user-avatar { background: var(--super-accent) !important; color: #0f172a !important; box-shadow: 0 4px 12px var(--super-accent-glow) !important; }
+    
+    .super-grid { display: grid; grid-template-columns: 1fr 340px; gap: 30px; align-items: start; }
+    @media (max-width: 1024px) {
+      .super-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -135,7 +140,7 @@ $cur = 'manage-admins.php';
     </div>
   </div>
 
-  <div class="content">
+   <div class="content">
     <?php if ($flash): ?>
       <div class="flash flash-<?= $flash['type'] ?>"><?= $flash['msg'] ?></div>
     <?php endif; ?>
@@ -143,7 +148,7 @@ $cur = 'manage-admins.php';
       <div class="flash flash-danger"><?= $error ?></div>
     <?php endif; ?>
 
-    <div style="display:grid; grid-template-columns: 1fr 340px; gap:30px; align-items:start">
+    <div class="super-grid">
       
       <!-- Admin List -->
       <div class="card">
