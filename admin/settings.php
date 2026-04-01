@@ -95,8 +95,9 @@ $cur = 'settings.php';
         </div>
         <div>
           <label style="font-size:0.75rem; text-transform:uppercase; color:var(--text-light); display:block; margin-bottom:4px">Public URL</label>
-          <div style="font-weight:700; font-family:monospace; font-size:0.85rem">localhost/menu.php</div>
-        </div>
+          <div style="font-weight:700; font-family:monospace; font-size:0.85rem">
+            <?= (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') ?>://<?= $_SERVER['HTTP_HOST'] ?>/menu.php?id=<?= $admin_sess_id ?>
+          </div>        </div>
       </div>
     </div>
   </div>
