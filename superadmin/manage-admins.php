@@ -5,8 +5,11 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/mail_helper.php';
 require_once __DIR__ . '/../includes/logger.php';
 
-// Auto-Fix: Ensure the email column exists in the users table
+// Auto-Fix: Ensure the email and activation columns exist in the users table
 $conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) AFTER username");
+$conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active TINYINT DEFAULT 1 AFTER role");
+$conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS activation_token VARCHAR(128) DEFAULT NULL");
+$conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS token_expiry DATETIME DEFAULT NULL");
 
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
@@ -32,31 +35,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $temp_pass = password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
         
         $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, is_active, activation_token, token_expiry) VALUES (?, ?, ?, ?, 0, ?, ?)");
-        $stmt->bind_param('ssssss', $u, $email, $temp_pass, $r, $token, $expiry);
-
-        if ($stmt->execute()) {
-            // Trigger the mail notification with token
-            $sent = sendSetupEmail($email, $u, $token);
-
-            if ($sent) {
-                $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin invited! Activation link sent to {$email}."];
-            } else {
-                $_SESSION['flash'] = ['type' => 'warn', 'msg' => "Admin created, but the email invite failed to send. Please check your server SMTP/Mail settings or give the setup link manually."];
-            }
-            
-            header('Location: manage-admins.php');
-            exit;
+        
+        if (!$stmt) {
+             platform_log("User Prep Fault", $conn->error, "CRITICAL");
+             $error = "Database preparation failed. Please check table structure.";
         } else {
-            // Check for duplicate key
-            if ($stmt->errno === 1062) {
-                $error = "Account already exists! Use a unique username or email.";
+            $stmt->bind_param('ssssss', $u, $email, $temp_pass, $r, $token, $expiry);
+
+            if ($stmt->execute()) {
+                // Trigger the mail notification with token
+                $sent = sendSetupEmail($email, $u, $token);
+
+                if ($sent) {
+                    $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin invited! Activation link sent to {$email}."];
+                } else {
+                    $_SESSION['flash'] = ['type' => 'warn', 'msg' => "Admin created, but the email invite failed to send. Please check your server SMTP settings."];
+                }
+                
+                header('Location: manage-admins.php');
+                exit;
             } else {
-                // Log and show generic error
-                platform_log("User Creation Fault", $stmt->error, "CRITICAL");
-                $error = "System Error: " . $stmt->error;
+                // Check for duplicate key
+                if ($stmt->errno === 1062) {
+                    $error = "Account already exists! Use a unique username or email.";
+                } else {
+                    // Log and show generic error
+                    platform_log("User Creation Fault", $stmt->error, "CRITICAL");
+                    $error = "System Error: " . $stmt->error;
+                }
             }
+            $stmt->close();
         }
-        $stmt->close();
     }
 }
 
