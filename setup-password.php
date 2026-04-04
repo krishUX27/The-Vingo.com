@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user_id) {
     <meta charset="UTF-8">
     <title>Account Setup | Vingo Platform</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="assets/css/menu-style.css">
+    <link rel="stylesheet" href="assets/css/menu-style.css?v=<?= time() ?>">
     <style>
         body { background: #f8fafc; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Outfit', sans-serif; }
         .setup-card { background: #fff; padding: 40px; border-radius: 28px; box-shadow: 0 25px 60px -12px rgba(99,102,241,0.15); width: min(440px, 95vw); text-align: center; border: 1px solid rgba(99,102,241,0.1); }

@@ -199,8 +199,8 @@ if (!$cat_res) {
     $categories = $cat_res->fetch_all(MYSQLI_ASSOC);
 }
 
-/* ── Offers dropdown for modal ── */
-$offer_res = $conn->query("SELECT id, title FROM seasonal_offers WHERE active=1 ORDER BY title");
+/* ── Offers dropdown for modal (Owner filtered) ── */
+$offer_res = $conn->query("SELECT id, title FROM seasonal_offers WHERE user_id = $admin_sess_id AND active=1 ORDER BY title");
 if (!$offer_res) {
     dashboard_log("Offers query failed: " . $conn->error);
     $offers = [];

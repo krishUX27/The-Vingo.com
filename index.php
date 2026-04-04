@@ -16,7 +16,7 @@
     rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="assets/css/style.css?v=1.1">
+  <link rel="stylesheet" href="assets/css/style.css?v=<?= time() ?>">
   <link rel="icon" type="image/png" href="assets/images/favicon.png">
 </head>
 
@@ -219,7 +219,7 @@
     </div>
   </footer>
 
-  <script src="assets/js/app.js?v=1.1"></script>
+  <script src="assets/js/app.js?v=<?= time() ?>"></script>
 </body>
 
 </html>

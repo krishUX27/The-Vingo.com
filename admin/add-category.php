@@ -140,20 +140,15 @@ $categories = $conn->query(
                   <span>📂</span> <?= htmlspecialchars($c['name']) ?>
                 </div>
                 
-                <div class="cat-actions">
-                  <span class="badge badge-info"><?= $cnt ?> dishes</span>
-                  <?php if ($cnt > 0): ?>
-                    <span title="Contains dishes" style="cursor:help; opacity:.5">🔒</span>
-                  <?php else: ?>
+                    <span class="badge badge-info"><?= $cnt ?> dishes</span>
                     <a href="delete-category.php?id=<?= $c['id'] ?>" 
                        class="btn btn-danger btn-sm"
                        style="padding:6px 12px; border-radius:10px"
                        onclick="return confirm('Delete \'<?= addslashes(htmlspecialchars($c['name'])) ?>\'?')">
                       🗑️
                     </a>
-                  <?php endif; ?>
-                </div>
-              </li>
+                  </div>
+                </li>
             <?php endforeach; ?>
           </ul>
         <?php endif; ?>

@@ -15,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 email VARCHAR(100), 
                 password VARCHAR(255), 
                 role ENUM('superadmin', 'admin') DEFAULT 'admin', 
-                is_active TINYINT DEFAULT 1, 
                 status ENUM('active','hold') DEFAULT 'active', 
                 is_deleted TINYINT(1) DEFAULT 0,
                 deleted_at DATETIME NULL,
@@ -50,11 +49,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 deleted_at DATETIME NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )",
-            "settings" => "CREATE TABLE IF NOT EXISTS settings (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, setting_key VARCHAR(50), setting_value TEXT, UNIQUE KEY u_user_setting (user_id, setting_key))",
-            "seasonal_offers" => "CREATE TABLE IF NOT EXISTS seasonal_offers (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT, title VARCHAR(100), description TEXT, discount VARCHAR(50), active TINYINT DEFAULT 1, expires_at DATE NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)",
-            "qr_scans" => "CREATE TABLE IF NOT EXISTS qr_scans (user_id INT PRIMARY KEY, scan_count INT DEFAULT 0)",
-            "menu_imports" => "CREATE TABLE IF NOT EXISTS menu_imports (id INT AUTO_INCREMENT PRIMARY KEY, admin_id INT NOT NULL, file_name VARCHAR(255), file_type VARCHAR(20), file_path VARCHAR(255), uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP, status ENUM('processing','completed','failed') DEFAULT 'processing')",
-            "trash_logs" => "CREATE TABLE IF NOT EXISTS trash_logs (id INT AUTO_INCREMENT PRIMARY KEY, item_type VARCHAR(50), item_id INT, original_data JSON, deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+            "settings" => "CREATE TABLE IF NOT EXISTS settings (
+                id INT AUTO_INCREMENT PRIMARY KEY, 
+                user_id INT DEFAULT 0, 
+                setting_key VARCHAR(50), 
+                setting_value TEXT, 
+                UNIQUE KEY u_user_setting (user_id, setting_key)
+            )",
+            "seasonal_offers" => "CREATE TABLE IF NOT EXISTS seasonal_offers (
+                id INT AUTO_INCREMENT PRIMARY KEY, 
+                user_id INT, 
+                title VARCHAR(100), 
+                description TEXT, 
+                discount VARCHAR(50), 
+                active TINYINT DEFAULT 1, 
+                is_deleted TINYINT(1) DEFAULT 0,
+                deleted_at DATETIME NULL,
+                expires_at DATE NULL, 
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )",
+            "qr_scans" => "CREATE TABLE IF NOT EXISTS qr_scans (
+                user_id INT PRIMARY KEY, 
+                scan_count INT DEFAULT 0
+            )",
+            "menu_imports" => "CREATE TABLE IF NOT EXISTS menu_imports (
+                id INT AUTO_INCREMENT PRIMARY KEY, 
+                admin_id INT NOT NULL, 
+                file_name VARCHAR(255), 
+                file_type VARCHAR(20), 
+                file_path VARCHAR(255), 
+                uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
+                status ENUM('processing','completed','failed') DEFAULT 'processing'
+            )",
+            "trash_logs" => "CREATE TABLE IF NOT EXISTS trash_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY, 
+                item_type VARCHAR(50), 
+                item_id INT, 
+                original_data JSON, 
+                deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )"
         ];
 
         try {
@@ -100,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title>Vingo Setup Wizard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="assets/css/menu-style.css">
+    <link rel="stylesheet" href="assets/css/menu-style.css?v=<?= time() ?>">
     <style>
         body { background: #f8fafc; height: 100vh; display: flex; align-items: center; justify-content: center; }
         .setup-card { background: #fff; padding: 40px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); width: min(450px, 95vw); text-align: center; }

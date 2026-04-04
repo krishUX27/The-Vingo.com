@@ -87,6 +87,14 @@ function process_csv_import($file_path, $admin_id, $conn) {
         $price_raw = trim($data[2] ?? '0');
         $price     = floatval(preg_replace('/[^0-9.]/', '', $price_raw));
         $desc      = trim($data[3] ?? '');
+        
+        // New Fields
+        $veg_type  = trim($data[4] ?? 'veg');
+        if (!in_array($veg_type, ['veg', 'non_veg'])) $veg_type = 'veg';
+        
+        $avail_b   = intval($data[5] ?? 0) ? 1 : 0;
+        $avail_l   = intval($data[6] ?? 0) ? 1 : 0;
+        $avail_d   = intval($data[7] ?? 0) ? 1 : 0;
 
         if (empty($dish_name)) {
             $stats['skipped']++;
@@ -109,12 +117,22 @@ function process_csv_import($file_path, $admin_id, $conn) {
                     $cat_id = $cat_map[$cat_key];
                 }
             } else {
-                if (!empty($cat_map)) $cat_id = reset($cat_map);
+                if (!empty($cat_map)) {
+                  $cat_id = reset($cat_map);
+                } else {
+                  // Fallback category if none exist
+                  $conn->query("INSERT INTO categories (name, user_id) VALUES ('General', $admin_id)");
+                  $cat_id = $conn->insert_id;
+                  $cat_map['general'] = $cat_id;
+                }
             }
 
             // 2. Insert Dish
-            $stmt = $conn->prepare("INSERT INTO dishes (user_id, category_id, name, price, description, availability, currency) VALUES (?, ?, ?, ?, ?, 'Available', 'INR')");
-            $stmt->bind_param("iisds", $admin_id, $cat_id, $dish_name, $price, $desc);
+            $sql = "INSERT INTO dishes (user_id, category_id, name, price, description, veg_type, available_breakfast, available_lunch, available_dinner, availability, currency) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Available', 'INR')";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iisdssiii", $admin_id, $cat_id, $dish_name, $price, $desc, $veg_type, $avail_b, $avail_l, $avail_d);
+            
             if ($stmt->execute()) {
                 $stats['success']++;
             } else {
@@ -255,16 +273,36 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
           <div class="format-guide">
             <strong>📊 Excel/CSV Format Requirement</strong>
             <p style="font-size: 0.8rem; margin: 10px 0;">To ensure your dishes are correctly added, use the following column order:</p>
-            <table>
-              <thead>
-                <tr><th>Column A</th><th>Column B</th><th>Column C</th><th>Column D</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>Category</td><td>Dish Name</td><td>Price</td><td>Description</td></tr>
-                <tr><td>Burgers</td><td>Classic Veggie</td><td>299</td><td>Double patty with cheese</td></tr>
-              </tbody>
-            </table>
-            <p class="file-hint" style="margin-top:10px">⚠️ Tip: Save your Excel as <strong>.CSV</strong> for the fastest and most reliable import.</p>
+            <div style="overflow-x: auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Column A</th><th>Column B</th><th>Column C</th><th>Column D</th>
+                    <th>Column E</th><th>Column F</th><th>Column G</th><th>Column H</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="background:#f1f5f9; font-weight:700">
+                    <td>Category</td><td>Dish Name</td><td>Price</td><td>Description</td>
+                    <td>Veg Type</td><td>Breakfast</td><td>Lunch</td><td>Dinner</td>
+                  </tr>
+                  <tr>
+                    <td>Burgers</td><td>Classic Veggie</td><td>299</td><td>Double patty with cheese</td>
+                    <td>veg</td><td>0</td><td>1</td><td>1</td>
+                  </tr>
+                  <tr>
+                    <td>Breakfast</td><td>Idli</td><td>60</td><td>Steamed rice cakes</td>
+                    <td>veg</td><td>1</td><td>0</td><td>0</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="file-hint" style="margin-top:10px">
+              💡 <strong>Requirement:</strong> Veg Type must be <code>veg</code> or <code>non_veg</code>. Use <code>1</code> for Available and <code>0</code> for Not Available.
+            </p>
+            <p class="file-hint" style="margin-top:5px">
+              ⚠️ <strong>Tip:</strong> Make sure your CSV file follows the correct column order including Veg Type and meal availability fields to avoid import errors.
+            </p>
           </div>
         </div>
 

@@ -52,16 +52,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// DELETE OFFER
+// DELETE OFFER (Soft Delete)
 if (isset($_GET['del'])) {
     $del_id = (int)$_GET['del'];
-    $conn->query("DELETE FROM seasonal_offers WHERE id = $del_id AND user_id = $admin_sess_id");
-    $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Offer deleted.'];
+    $conn->query("UPDATE seasonal_offers SET is_deleted = 1, deleted_at = NOW() WHERE id = $del_id AND user_id = $admin_sess_id");
+    $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Offer moved to Trash.'];
     header('Location: seasonal-offers.php');
     exit;
 }
 
-$offers = $conn->query("SELECT * FROM seasonal_offers WHERE user_id = $admin_sess_id ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
+$offers = $conn->query("SELECT * FROM seasonal_offers WHERE user_id = $admin_sess_id AND is_deleted = 0 ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">

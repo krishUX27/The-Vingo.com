@@ -5,9 +5,9 @@ require_once __DIR__ . '/../includes/db.php';
 
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
-
+$admin_sess_id = $_SESSION['admin_id'] ?? 0;
 $sess_username = $_SESSION['admin_username'] ?? 'admin';
-$admin_email    = menu_get_setting('admin_email', 'admin@vingo.com');
+$admin_email    = menu_get_setting('admin_email', 'admin@vingo.com', $admin_sess_id);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Update the database-backed user system.
@@ -15,9 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // We will update the admin_email in settings.
     $email = $_POST['email'] ?? '';
     
-    $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+    $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value, user_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
     $key = 'admin_email';
-    $stmt->bind_param('ss', $key, $email);
+    $stmt->bind_param('ssi', $key, $email, $admin_sess_id);
     $stmt->execute();
     
     $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Profile updated successfully!'];

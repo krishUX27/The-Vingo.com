@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $categories = $conn->query("SELECT * FROM categories WHERE user_id = $admin_sess_id ORDER BY name")->fetch_all(MYSQLI_ASSOC);
-$offers     = $conn->query("SELECT id, title FROM seasonal_offers WHERE active=1 ORDER BY title")->fetch_all(MYSQLI_ASSOC);
+$offers     = $conn->query("SELECT id, title FROM seasonal_offers WHERE user_id = $admin_sess_id AND active=1 ORDER BY title")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
