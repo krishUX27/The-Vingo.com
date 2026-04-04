@@ -64,6 +64,8 @@ function process_and_compress_image($source, $dest) {
 
 // ── CSV Processing Logic (Strict Mode Robust) ─────────────────
 function process_csv_import($file_path, $admin_id, $conn) {
+    ini_set('auto_detect_line_endings', true);
+    
     $handle = fopen($file_path, "r");
     if (!$handle) return false;
 
@@ -101,26 +103,32 @@ function process_csv_import($file_path, $admin_id, $conn) {
         $cat_name  = trim($data[0] ?? '');
         $dish_name = trim($data[1] ?? '');
         $price_raw = trim($data[2] ?? '0');
-        $price     = floatval(preg_replace('/[^0-9.]/', '', $price_raw));
-        $desc      = trim($data[3] ?? '');
         
-        // New Fields
-        $veg_type  = trim($data[4] ?? 'veg');
-        if (!in_array($veg_type, ['veg', 'non_veg'])) $veg_type = 'veg';
+        // Robust Price cleaning
+        $price = (float)str_replace(',', '', preg_replace('/[^0-9.,]/', '', $price_raw));
+        $desc  = trim($data[3] ?? '');
         
-        $avail_b   = intval($data[5] ?? 0) ? 1 : 0;
-        $avail_l   = intval($data[6] ?? 0) ? 1 : 0;
-        $avail_d   = intval($data[7] ?? 0) ? 1 : 0;
+        // Fuzzy Veg Type detection
+        $veg_raw  = strtolower(trim($data[4] ?? 'veg'));
+        $veg_type = (strpos($veg_raw, 'non') !== false) ? 'non_veg' : 'veg';
+        
+        // Flexible binary detection (1, yes, y, true, available)
+        $is_true = function($v) {
+            $v = strtolower(trim($v));
+            return in_array($v, ['1', 'y', 'yes', 'true', 'available', 'v']);
+        };
+
+        $avail_b   = $is_true($data[5] ?? '0') ? 1 : 0;
+        $avail_l   = $is_true($data[6] ?? '0') ? 1 : 0;
+        $avail_d   = $is_true($data[7] ?? '0') ? 1 : 0;
 
         if (empty($dish_name)) {
             $stats['skipped']++;
-            error_log("Import Skip: Row $row_count has no dish name.");
             continue;
         }
 
         try {
             $stmt = null;
-            // 1. Ensure Category
             $cat_id = 0;
             if (!empty($cat_name)) {
                 $cat_key = strtolower($cat_name);

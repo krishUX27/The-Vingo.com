@@ -140,6 +140,7 @@ $categories = $conn->query(
                   <span>📂</span> <?= htmlspecialchars($c['name']) ?>
                 </div>
                 
+                <div class="cat-actions">
                     <span class="badge badge-info"><?= $cnt ?> dishes</span>
                     <a href="delete-category.php?id=<?= $c['id'] ?>" 
                        class="btn btn-danger btn-sm"
@@ -147,8 +148,8 @@ $categories = $conn->query(
                        onclick="return confirm('Delete \'<?= addslashes(htmlspecialchars($c['name'])) ?>\'?')">
                       🗑️
                     </a>
-                  </div>
-                </li>
+                </div>
+              </li>
             <?php endforeach; ?>
           </ul>
         <?php endif; ?>

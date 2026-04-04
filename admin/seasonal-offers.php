@@ -61,7 +61,8 @@ if (isset($_GET['del'])) {
     exit;
 }
 
-$offers = $conn->query("SELECT * FROM seasonal_offers WHERE user_id = $admin_sess_id AND is_deleted = 0 ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
+$offers_res = $conn->query("SELECT * FROM seasonal_offers WHERE user_id = $admin_sess_id AND is_deleted = 0 ORDER BY created_at DESC");
+$offers = ($offers_res) ? $offers_res->fetch_all(MYSQLI_ASSOC) : [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
