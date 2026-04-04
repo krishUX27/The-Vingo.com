@@ -102,6 +102,7 @@ function process_csv_import($file_path, $admin_id, $conn) {
         }
 
         try {
+            $stmt = null;
             // 1. Ensure Category
             $cat_id = 0;
             if (!empty($cat_name)) {
@@ -113,6 +114,7 @@ function process_csv_import($file_path, $admin_id, $conn) {
                     $cat_id = $conn->insert_id;
                     $cat_map[$cat_key] = $cat_id;
                     $stmt->close();
+                    $stmt = null;
                 } else {
                     $cat_id = $cat_map[$cat_key];
                 }
@@ -139,11 +141,12 @@ function process_csv_import($file_path, $admin_id, $conn) {
                 $stats['skipped']++;
             }
             $stmt->close();
+            $stmt = null;
         } catch (Exception $e) {
             $stats['skipped']++;
             // Log individual row error silently to keep the loop moving
             error_log("Import Row Error: " . $e->getMessage());
-            if (isset($stmt)) $stmt->close();
+            if ($stmt) $stmt->close();
         }
     }
     fclose($handle);
