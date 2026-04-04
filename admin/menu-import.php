@@ -64,8 +64,15 @@ function process_and_compress_image($source, $dest) {
 
 // ── CSV Processing Logic (Strict Mode Robust) ─────────────────
 function process_csv_import($file_path, $admin_id, $conn) {
+    ini_set('auto_detect_line_endings', true);
+    
     $handle = fopen($file_path, "r");
     if (!$handle) return false;
+
+    // Detect delimiter
+    $first_line = fgets($handle);
+    $delimiter = (strpos($first_line, ';') !== false && strpos($first_line, ',') === false) ? ';' : ',';
+    rewind($handle);
 
     $stats = ['total' => 0, 'success' => 0, 'skipped' => 0];
     $row_count = 0;
@@ -76,10 +83,15 @@ function process_csv_import($file_path, $admin_id, $conn) {
     while($row = $res->fetch_assoc()) { $cat_map[strtolower(trim($row['name']))] = $row['id']; }
 
     // Use 0 for unlimited line length in fgetcsv
-    while (($data = fgetcsv($handle, 0, ",")) !== FALSE) {
+    while (($data = fgetcsv($handle, 0, $delimiter)) !== FALSE) {
         $row_count++;
         if ($row_count === 1) continue; // Skip Header
         
+        // Handle BOM or weird encoding on first column
+        if ($row_count === 2 && !empty($data[0])) {
+            $data[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $data[0]); 
+        }
+
         $stats['total']++;
         
         $cat_name  = trim($data[0] ?? '');
@@ -98,6 +110,7 @@ function process_csv_import($file_path, $admin_id, $conn) {
 
         if (empty($dish_name)) {
             $stats['skipped']++;
+            error_log("Import Skip: Row $row_count has no dish name.");
             continue;
         }
 
