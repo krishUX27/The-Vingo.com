@@ -175,13 +175,13 @@ function process_csv_import($file_path, $admin_id, $conn) {
                 $stats['success']++;
             } else {
                 $stats['skipped']++;
+                $stats['last_err'] = $stmt->error;
             }
             $stmt->close();
             $stmt = null;
         } catch (Exception $e) {
             $stats['skipped']++;
-            // Log individual row error silently to keep the loop moving
-            error_log("Import Row Error: " . $e->getMessage());
+            $stats['last_err'] = $e->getMessage();
             if ($stmt) $stmt->close();
         }
     }
@@ -230,7 +230,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['menu_file'])) {
                     $res = process_csv_import($file_path, $admin_id, $conn);
                     if ($res) {
                         $conn->query("UPDATE menu_imports SET status = 'completed' WHERE id = $import_id");
-                        $success = "{$res['total']} rows detected. {$res['success']} dishes imported. {$res['skipped']} rows skipped due to invalid data.";
+                        $success = "{$res['total']} rows detected. {$res['success']} dishes imported. {$res['skipped']} rows skipped.";
+                        if ($res['skipped'] > 0 && !empty($res['last_err'])) {
+                            $success .= " Last DB Error: " . $res['last_err'];
+                        }
                     } else {
                         throw new Exception("Unable to parse CSV file.");
                     }
