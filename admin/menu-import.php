@@ -23,6 +23,12 @@ if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 // Robust Schema Auto-Fix: Ensure Admin Data Isolation Columns exist on live DB
 $conn->query("ALTER TABLE categories ADD COLUMN IF NOT EXISTS user_id INT DEFAULT 0 AFTER name");
 $conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS user_id INT DEFAULT 0 AFTER id");
+
+// Legacy Fix: Drop old 'uq_cat_name' if exists (it blocks multi-admin categories)
+$conn->query("ALTER TABLE categories DROP INDEX IF EXISTS uq_cat_name");
+// New Fix: Ensure category uniqueness per user (Multi-Tenant Index)
+$conn->query("ALTER TABLE categories ADD UNIQUE INDEX IF NOT EXISTS u_cat_user (user_id, name)");
+
 $conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS is_deleted TINYINT(1) DEFAULT 0 AFTER currency");
 $conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS deleted_at DATETIME NULL AFTER is_deleted");
 $conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS available_breakfast TINYINT(1) DEFAULT 1 AFTER veg_type");
