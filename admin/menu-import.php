@@ -64,14 +64,14 @@ function process_and_compress_image($source, $dest) {
 
 // ── CSV Processing Logic (Strict Mode Robust) ─────────────────
 function process_csv_import($file_path, $admin_id, $conn) {
-    ini_set('auto_detect_line_endings', true);
-    
     $handle = fopen($file_path, "r");
     if (!$handle) return false;
 
-    // Detect delimiter
+    // Detect delimiter more robustly by counting occurrences
     $first_line = fgets($handle);
-    $delimiter = (strpos($first_line, ';') !== false && strpos($first_line, ',') === false) ? ';' : ',';
+    $c_comma = substr_count($first_line, ',');
+    $c_semi  = substr_count($first_line, ';');
+    $delimiter = ($c_semi > $c_comma) ? ';' : ',';
     rewind($handle);
 
     $stats = ['total' => 0, 'success' => 0, 'skipped' => 0];
@@ -289,12 +289,12 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
           <div class="format-guide">
             <strong>📊 Excel/CSV Format Requirement</strong>
             <p style="font-size: 0.8rem; margin: 10px 0;">To ensure your dishes are correctly added, use the following column order:</p>
-            <div style="overflow-x: auto;">
-              <table>
+            <div style="overflow-x: auto; background: white; border-radius: 8px; border: 1px solid var(--border)">
+              <table style="width: 100%; min-width: 800px; margin-top: 0; border: none">
                 <thead>
-                  <tr>
-                    <th>Column A</th><th>Column B</th><th>Column C</th><th>Column D</th>
-                    <th>Column E</th><th>Column F</th><th>Column G</th><th>Column H</th>
+                  <tr style="background: #f8fafc">
+                    <th>Col A</th><th>Col B</th><th>Col C</th><th>Col D</th>
+                    <th>Col E</th><th>Col F</th><th>Col G</th><th>Col H</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -303,21 +303,17 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
                     <td>Veg Type</td><td>Breakfast</td><td>Lunch</td><td>Dinner</td>
                   </tr>
                   <tr>
-                    <td>Burgers</td><td>Classic Veggie</td><td>299</td><td>Double patty with cheese</td>
+                    <td>Burgers</td><td>Classic Veggie</td><td>299</td><td>Double patty...</td>
                     <td>veg</td><td>0</td><td>1</td><td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Breakfast</td><td>Idli</td><td>60</td><td>Steamed rice cakes</td>
-                    <td>veg</td><td>1</td><td>0</td><td>0</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <p class="file-hint" style="margin-top:10px">
-              💡 <strong>Requirement:</strong> Veg Type must be <code>veg</code> or <code>non_veg</code>. Use <code>1</code> for Available and <code>0</code> for Not Available.
+              💡 <strong>Columns:</strong> A: Category, B: Name, C: Price, D: Desc, E: Veg Type, F: B, G: L, H: D
             </p>
             <p class="file-hint" style="margin-top:5px">
-              ⚠️ <strong>Tip:</strong> Make sure your CSV file follows the correct column order including Veg Type and meal availability fields to avoid import errors.
+              ⚠️ <strong>Tip:</strong> Ensure your CSV follows this order exactly. Skip headers if necessary.
             </p>
           </div>
         </div>
