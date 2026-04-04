@@ -78,6 +78,7 @@ if (isset($_SESSION['super_logged_in'])) {
   <title>Superadmin | Vingo Master</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
     :root { --super-bg: #0f172a; --super-accent: #f59e0b; }
     * { margin:0; padding:0; box-sizing:border-box; }

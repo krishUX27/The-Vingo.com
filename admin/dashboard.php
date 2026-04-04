@@ -340,9 +340,14 @@ if (!$offer_res) {
       <form method="POST" id="bulk-action-form">
         <input type="hidden" name="action" value="bulk_delete">
         <div class="btn-grp" style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-          <button type="button" class="btn btn-primary" id="open-add-dish">
-             <span style="font-size:1rem">➕</span> Add New Dish
-          </button>
+          <div style="display:flex; gap:10px; align-items:center">
+            <button type="button" class="btn btn-primary" id="open-add-dish">
+               <span style="font-size:1rem">➕</span> Add New Dish
+            </button>
+            <a href="trash.php" class="btn btn-outline" title="Recover deleted items">
+               <span>🗑️</span> View Trash
+            </a>
+          </div>
           <div id="bulk-controls" style="display:none; gap:10px; align-items:center;">
             <span id="select-count" style="font-size:0.85rem; color:var(--muted)">0 selected</span>
             <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Move selected items to Trash?')">
@@ -420,7 +425,8 @@ if (!$offer_res) {
                   <a href="edit-item.php?id=<?= $d['id'] ?>" class="btn btn-warn btn-sm">✏️ Edit</a>
                   <a href="delete-item.php?id=<?= $d['id'] ?>"
                      class="btn btn-danger btn-sm"
-                     onclick="return confirm('Delete \'<?= addslashes(htmlspecialchars($d['name'])) ?>\'? This cannot be undone.')">
+                     title="Move to Trash"
+                     onclick="return confirm('Move \'<?= addslashes(htmlspecialchars($d['name'])) ?>\' to Trash?')">
                     🗑️
                   </a>
                 </div>

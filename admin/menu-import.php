@@ -269,6 +269,7 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
   <title>Menu Import | Vingo Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
+  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
     /* Prevent unwanted horizontal scroll globally */
     body, html { overflow-x: hidden; width: 100%; position: relative; margin: 0; padding: 0; }

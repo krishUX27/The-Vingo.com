@@ -75,6 +75,7 @@ $categories = $conn->query(
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Categories — Menu Manager</title>
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
+  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
 </head>
 <body>
 

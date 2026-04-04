@@ -395,51 +395,45 @@ tbody tr:hover { background: #fdfdfd; }
 }
 .menu-toggle:hover { background: #f1f5f9; border-color: var(--accent); }
 
+/* ── RESPONSIVENESS OVERHAUL ── */
 @media (max-width: 1024px) {
   .menu-toggle { display: flex; }
-  
   .sidebar { 
     transform: translateX(-100%); 
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 2000;
   }
   .sidebar.open { transform: translateX(0); box-shadow: 20px 0 60px rgba(0,0,0,0.15); }
+  .sidebar-close { display: block !important; }
   
-  .main { margin-left: 0; width: 100%; transition: margin 0.4s; }
-  
+  .main { margin-left: 0; width: 100%; }
   .topbar { padding: 0 20px; }
-  .topbar-left h1 { font-size: 1.25rem; }
+  .topbar-left h1 { font-size: 1.1rem; }
   .topbar-left .meta { display: none; }
+  .topbar-right .btn-outline { display: none; }
   
-  /* Stack Grids */
-  .content { padding: 20px; }
-  div[style*="display:grid;grid-template-columns:1fr 1fr"] {
-    grid-template-columns: 1fr !important;
-    gap: 20px !important;
-  }
-  
-  /* Tables */
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .table-wrap table { min-width: 600px; }
-  
-  /* User Profile on mobile */
-  .user-name { display: none; }
-  .user-role { display: none; }
-  .user-profile { padding: 6px; }
-}
+  .content { padding: 15px; }
+  .grid-2 { grid-template-columns: 1fr !important; gap: 16px !important; }
 
-/* Sidebar Overlay */
-.sidebar-overlay {
-  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 1500;
-  display: none; opacity: 0; transition: opacity 0.3s;
+  .table-wrap { 
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch; 
+    border-radius: 12px;
+  }
+  .table-wrap table { min-width: 800px; }
+  
+  .user-name, .user-role { display: none; }
+  .user-profile { padding: 6px; }
+
+  .modal { width: 95% !important; max-height: 90vh !important; top: 5% !important; transform: translateX(-50%) !important; overflow-y: auto; }
 }
-.sidebar-overlay.show { display: block; opacity: 1; }
 
 @media (max-width: 480px) {
-  .topbar-right .btn-outline { display: none; }
-  .login-card { padding: 30px 20px; }
-  .card-title { font-size: 1rem; }
-  .btn { padding: 10px 16px; font-size: 0.85rem; }
+  .topbar-right .badge { display: none; }
+  .login-card { padding: 25px 15px; width: 95% !important; }
+  .btn { width: 100%; justify-content: center; }
+  .btn-sm { width: auto; }
+  .stat-card .val { font-size: 1.5rem; }
 }
 
 /* Sidebar Close Button (Mobile Only) */

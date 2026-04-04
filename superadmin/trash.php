@@ -63,16 +63,21 @@ unset($_SESSION['flash']);
   <title>Super Trash Bin | Vingo Master</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
+  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
     :root { 
       --super-accent: #f59e0b; 
       --super-accent-glow: rgba(245, 158, 11, 0.3);
       --super-sidebar: #0f172a; 
     }
-    .sidebar { background: var(--super-sidebar) !important; }
+    .sidebar { background: var(--super-sidebar) !important; border-right: 1px solid rgba(255,255,255,0.05) !important; }
     .sidebar-header { color: var(--super-accent) !important; }
+    .sidebar nav a.active { background: var(--super-accent) !important; color: #0f172a !important; box-shadow: 0 4px 20px var(--super-accent-glow) !important; }
+    
     .btn-primary { background: var(--super-accent); color: #0f172a; font-weight: 800; border: none; }
+    .btn-primary:hover { background: #fbbf24; transform: translateY(-2px); }
     .status-badge { padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+    .user-avatar { background: var(--super-accent) !important; color: #0f172a !important; box-shadow: 0 4px 12px var(--super-accent-glow) !important; }
   </style>
 </head>
 <body>
