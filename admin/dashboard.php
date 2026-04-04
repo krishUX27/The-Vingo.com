@@ -73,13 +73,18 @@ $admin_sess_id = (int)($_SESSION['admin_id'] ?? 0);
 
 /* ── Stats (Filtered by User - Securely) ── */
 function get_stat_count($conn, $sql, $uid) {
-    $st = $conn->prepare($sql);
-    if (!$st) return 0;
-    $st->bind_param('i', $uid);
-    $st->execute();
-    $r = $st->get_result()->fetch_row();
-    $st->close();
-    return $r ? (int)$r[0] : 0;
+    try {
+        $st = $conn->prepare($sql);
+        if (!$st) return 0;
+        $st->bind_param('i', $uid);
+        $st->execute();
+        $r = $st->get_result()->fetch_row();
+        $st->close();
+        return $r ? (int)$r[0] : 0;
+    } catch (Exception $e) {
+        dashboard_log("Stat Error: " . $e->getMessage());
+        return 0;
+    }
 }
 
 $total_dishes = get_stat_count($conn, "SELECT COUNT(*) FROM dishes WHERE user_id = ? AND is_deleted = 0", $admin_sess_id);
