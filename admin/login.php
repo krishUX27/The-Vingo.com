@@ -2,9 +2,9 @@
 session_start();
 require_once __DIR__ . '/../includes/db.php';
 
-// Enable error reporting
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+// Production Error Handling
+ini_set('display_errors', 0);
+error_reporting(E_ALL & ~E_NOTICE);
 
 // Custom logging function (same as dashboard)
 function login_log($msg) {
@@ -96,7 +96,19 @@ if (isset($_SESSION['admin_logged_in'])) {
 </head>
 <body class="login-screen">
 
-<div class="login-card">
+<?php 
+  // Determine animation class based on error type
+  $anim_class = '';
+  if ($error) {
+    if (strpos($error, 'on hold') !== false) {
+      $anim_class = 'card-hold';
+    } else {
+      $anim_class = 'shake';
+    }
+  }
+?>
+
+<div class="login-card <?= $anim_class ?>">
   <div class="login-header">
     <div class="logo">🍴</div>
     <h2>Vingo Menu</h2>
@@ -116,12 +128,29 @@ if (isset($_SESSION['admin_logged_in'])) {
     </div>
     <div class="form-group" style="margin-bottom:24px">
       <label for="password">Password</label>
-      <input type="password" id="password" name="password" placeholder="••••••••" required>
+      <div style="position:relative">
+        <input type="password" id="password" name="password" placeholder="••••••••" required style="width:100%; padding-right:45px">
+        <span id="togglePassword" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.1rem; opacity:0.6; transition:0.2s">👁️</span>
+      </div>
     </div>
     <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:16px">
       🚀 Sign In
     </button>
   </form>
+
+  <script>
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#password');
+
+    togglePassword.addEventListener('click', function (e) {
+        // Toggle the type attribute
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        
+        // Toggle the eye icon emoji
+        this.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+  </script>
 
   <p style="text-align:center; font-size:0.75rem; color:var(--text-light); margin-top:30px">
     © <?= date('Y') ?> Vingo Menu Manager v2

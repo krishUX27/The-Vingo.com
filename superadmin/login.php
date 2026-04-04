@@ -3,9 +3,9 @@ session_start();
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/logger.php';
 
-// Enable error reporting
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+// Production Error Handling
+ini_set('display_errors', 0);
+error_reporting(E_ALL & ~E_NOTICE);
 
 function super_log($msg) {
     $log_path = __DIR__ . '/../admin/debug.log';
@@ -95,11 +95,21 @@ if (isset($_SESSION['super_logged_in'])) {
     .error { background:#450a0a; color:#f87171; padding:12px; border-radius:10px; font-size:0.85rem; margin-bottom:20px; border:1px solid #7f1d1d; }
     .back { display:inline-block; margin-top:30px; font-size:0.8rem; color:#475569; text-decoration:none; }
     .back:hover { color:#94a3b8; }
+    
+    /* ── Animations ── */
+    .shake { animation: shake 0.5s ease-in-out; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-10px); }
+      40% { transform: translateX(10px); }
+      60% { transform: translateX(-8px); }
+      80% { transform: translateX(8px); }
+    }
   </style>
 </head>
 <body>
 
-<div class="card">
+<div class="card <?= $error ? 'shake' : '' ?>">
   <h1>Vingo Master</h1>
   <p>System Root Management Layer</p>
   
@@ -114,10 +124,24 @@ if (isset($_SESSION['super_logged_in'])) {
     </div>
     <div class="input-grp">
       <label>Root Key</label>
-      <input type="password" name="p" placeholder="••••••••" required>
+      <div style="position:relative">
+        <input type="password" id="p" name="p" placeholder="••••••••" required style="width:100%; padding-right:45px">
+        <span id="togglePassword" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.1rem; opacity:0.6; transition:0.2s">👁️</span>
+      </div>
     </div>
     <button type="submit">Initialize Root Console</button>
   </form>
+
+  <script>
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#p');
+
+    togglePassword.addEventListener('click', function (e) {
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        this.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+  </script>
 
   <a href="../admin/index.php" class="back">← Exit to Operator Panel</a>
 </div>

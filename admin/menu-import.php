@@ -5,8 +5,8 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/logger.php';
 
 // Hostinger / Shared Hosting Optimizations
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+ini_set('display_errors', 0);
+error_reporting(E_ALL & ~E_NOTICE);
 set_time_limit(0); 
 ini_set('memory_limit', '256M');
 
@@ -77,10 +77,14 @@ function process_csv_import($file_path, $admin_id, $conn) {
     $stats = ['total' => 0, 'success' => 0, 'skipped' => 0];
     $row_count = 0;
 
-    // Cache categories
+    // Cache ONLY active categories for this admin
     $cat_map = [];
-    $res = $conn->query("SELECT id, name FROM categories WHERE user_id = $admin_id");
-    while($row = $res->fetch_assoc()) { $cat_map[strtolower(trim($row['name']))] = $row['id']; }
+    $res = $conn->query("SELECT id, name FROM categories WHERE user_id = $admin_id AND is_deleted = 0");
+    if ($res) {
+        while($row = $res->fetch_assoc()) { 
+            $cat_map[strtolower(trim($row['name']))] = $row['id']; 
+        }
+    }
 
     // Use 0 for unlimited line length in fgetcsv
     while (($data = fgetcsv($handle, 0, $delimiter)) !== FALSE) {
@@ -237,6 +241,16 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
   <style>
+    /* Prevent unwanted horizontal scroll globally */
+    body, html { overflow-x: hidden; width: 100%; position: relative; margin: 0; padding: 0; }
+    
+    /* Ensure main content fits correctly with the sidebar */
+    .main { width: calc(100% - 260px); margin-left: 260px; min-height: 100vh; overflow-x: hidden; position: relative; transition: margin 0.3s ease; }
+    @media (max-width: 992px) {
+      .main { width: 100%; margin-left: 0; }
+    }
+    .content { padding: 24px; max-width: 100%; position: relative; }
+    
     .import-card { border: 2px dashed #e2e8f0; padding: 40px; text-align: center; border-radius: 16px; background: #f8fafc; transition: all 0.3s ease; }
     .import-card:hover { border-color: var(--accent); background: #f0f4ff; }
     .file-hint { font-size: 0.85rem; color: #64748b; margin-top: 10px; }
@@ -244,9 +258,13 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     .status-processing { background: #fef3c7; color: #92400e; }
     .status-completed { background: #dcfce7; color: #166534; }
     .status-failed { background: #fee2e2; color: #991b1b; }
-    .format-guide { background: #eff6ff; padding: 20px; border-radius: 12px; margin-top: 30px; }
-    .format-guide table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .format-guide { background: #eff6ff; padding: 20px; border-radius: 12px; margin-top: 30px; overflow-x: auto; }
+    .format-guide table { min-width: 800px; border-collapse: collapse; margin-top: 10px; background: white; }
     .format-guide th, .format-guide td { border: 1px solid #bfdbfe; padding: 8px; font-size: 0.85rem; text-align: left; }
+    
+    /* Success Slide Animation */
+    .flash-import { animation: slideDown 0.4s ease-out; }
+    @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 <body>

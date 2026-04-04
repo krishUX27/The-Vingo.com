@@ -108,16 +108,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user_id) {
         <p class="sub">Hello <strong><?= htmlspecialchars($username) ?></strong>, please set a strong password to activate your Vingo Menu access.</p>
 
         <form method="POST">
-            <div class="form-group">
+            <div class="form-group" style="position:relative">
                 <label>New Password</label>
-                <input type="password" name="p1" required placeholder="Min. 8 characters" autofocus>
+                <input type="password" id="p1" name="p1" required placeholder="Min. 8 characters" autofocus style="padding-right:45px">
+                <span id="t1" style="position:absolute; right:15px; top:36px; cursor:pointer; font-size:1rem; opacity:0.6">👁️</span>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="position:relative">
                 <label>Confirm Password</label>
-                <input type="password" name="p2" required placeholder="Repeat password">
+                <input type="password" id="p2" name="p2" required placeholder="Repeat password" style="padding-right:45px">
+                <span id="t2" style="position:absolute; right:15px; top:36px; cursor:pointer; font-size:1rem; opacity:0.6">👁️</span>
             </div>
             <button type="submit" class="btn-setup">Activate Account</button>
         </form>
+
+        <script>
+            function bindToggle(btnId, inputId) {
+                const btn = document.getElementById(btnId);
+                const input = document.getElementById(inputId);
+                btn.onclick = function() {
+                    const type = input.type === 'password' ? 'text' : 'password';
+                    input.type = type;
+                    btn.textContent = (type === 'password') ? '👁️' : '🙈';
+                };
+            }
+            bindToggle('t1', 'p1');
+            bindToggle('t2', 'p2');
+        </script>
     <?php endif; ?>
 </div>
 

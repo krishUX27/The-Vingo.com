@@ -6,9 +6,9 @@ require_once __DIR__ . '/../includes/db.php';
 $flash  = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
-// Enable error reporting
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+// Production Error Handling
+ini_set('display_errors', 0);
+error_reporting(E_ALL & ~E_NOTICE);
 
 // Custom logging function
 function offers_log($msg) {
