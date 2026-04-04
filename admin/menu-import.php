@@ -130,6 +130,7 @@ function process_csv_import($file_path, $admin_id, $conn) {
         try {
             $stmt = null;
             $cat_id = 0;
+            // 1. Ensure Category (Admin Isolated & Active)
             if (!empty($cat_name)) {
                 $cat_key = strtolower($cat_name);
                 if (!isset($cat_map[$cat_key])) {
@@ -154,11 +155,14 @@ function process_csv_import($file_path, $admin_id, $conn) {
                 }
             }
 
-            // 2. Insert Dish
+            // 2. Dynamic Currency from Admin Settings
+            $currency = menu_get_setting('currency', 'INR', $admin_id);
+
+            // 3. Insert Dish (Strict Admin Isolation)
             $sql = "INSERT INTO dishes (user_id, category_id, name, price, description, veg_type, available_breakfast, available_lunch, available_dinner, availability, currency) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Available', 'INR')";
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Available', ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("iisdssiii", $admin_id, $cat_id, $dish_name, $price, $desc, $veg_type, $avail_b, $avail_l, $avail_d);
+            $stmt->bind_param("iisdssiiis", $admin_id, $cat_id, $dish_name, $price, $desc, $veg_type, $avail_b, $avail_l, $avail_d, $currency);
             
             if ($stmt->execute()) {
                 $stats['success']++;
