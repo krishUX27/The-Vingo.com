@@ -33,53 +33,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($u) || empty($p)) {
         $error = 'Please enter both username and password.';
     } else {
-        $stmt = $conn->prepare("SELECT id, username, password, role, is_active, status FROM users WHERE (username = ? OR email = ?) AND role = 'admin' AND is_deleted = 0 LIMIT 1");
-        if (!$stmt) {
-            login_log("Query error: " . $conn->error);
-            $error = 'Internal server error. Please check logs.';
-        } else {
+        try {
+            $stmt = $conn->prepare("SELECT id, username, password, role, is_active, status FROM users WHERE (username = ? OR email = ?) AND role = 'admin' AND is_deleted = 0 LIMIT 1");
+            if (!$stmt) {
+                login_log("Prepare failed: " . $conn->error);
+                $error = 'System connectivity error.';
+            } else {
+                $stmt->bind_param('ss', $u, $u);
+                $stmt->execute();
+                $result = $stmt->get_result();
+            }
+        } catch (Exception $e) {
+            login_log("Login Query Exception: " . $e->getMessage());
+            // Fallback for cases where is_deleted doesn't exist yet
+            $stmt = $conn->prepare("SELECT id, username, password, role, is_active, status FROM users WHERE (username = ? OR email = ?) AND role = 'admin' LIMIT 1");
             $stmt->bind_param('ss', $u, $u);
             $stmt->execute();
             $result = $stmt->get_result();
+        }
 
-            if ($row = $result->fetch_assoc()) {
-                if (password_verify($p, $row['password'])) {
-                    // [Hold Feature Check]
-                    if (($row['status'] ?? 'active') === 'hold') {
-                        $error = 'Your Vingo service is currently on hold because the payment has not been completed. Please complete the payment to restore access.';
-                        login_log("Login blocked: User '{$row['username']}' is on hold.");
-                    } elseif ($row['is_active'] != 1) {
-                        $error = 'Your account is not yet activated. Please check your email.';
-                    } else {
-                        login_log("User '$u' logged in successfully.");
-                        $_SESSION['admin_logged_in'] = true;
-                        $_SESSION['admin_username']  = $row['username'];
-                        $_SESSION['admin_id']        = $row['id'];
-                        $_SESSION['admin_status']    = $row['status'] ?? 'active';
-                        header('Location: dashboard.php');
-                        exit;
-                    }
+        if (isset($result) && ($row = $result->fetch_assoc())) {
+            if (password_verify($p, $row['password'])) {
+                // [Hold Feature Check]
+                if (($row['status'] ?? 'active') === 'hold') {
+                    $error = 'Your Vingo service is currently on hold because the payment has not been completed. Please complete the payment to restore access.';
+                    login_log("Login blocked: User '{$row['username']}' is on hold.");
+                } elseif ($row['is_active'] != 1) {
+                    $error = 'Your account is not yet activated. Please check your email.';
                 } else {
-                    $error = 'Incorrect password.';
+                    login_log("User '$u' logged in successfully.");
+                    $_SESSION['admin_logged_in'] = true;
+                    $_SESSION['admin_username']  = $row['username'];
+                    $_SESSION['admin_id']        = $row['id'];
+                    $_SESSION['admin_status']    = $row['status'] ?? 'active';
+                    header('Location: dashboard.php');
+                    exit;
                 }
             } else {
-                // Better descriptive error for roles
-                $check = $conn->prepare("SELECT role FROM users WHERE username = ? LIMIT 1");
-                $check->bind_param('s', $u);
-                $check->execute();
-                $res = $check->get_result();
-                if ($r = $res->fetch_assoc()) {
-                    if ($r['role'] === 'superadmin') {
-                        $error = 'This account is a Super Admin. Please login at the Master Root Console.';
-                    } else {
-                        $error = 'Account not found.';
-                    }
+                $error = 'Incorrect password.';
+            }
+        } else {
+            // Better descriptive error for roles
+            $check = $conn->prepare("SELECT role FROM users WHERE (username = ? OR email = ?) LIMIT 1");
+            $check->bind_param('ss', $u, $u);
+            $check->execute();
+            $res_check = $check->get_result();
+            if ($r = $res_check->fetch_assoc()) {
+                if ($r['role'] === 'superadmin') {
+                    $error = 'This account is a Super Admin. Please login at the Master Root Console.';
                 } else {
                     $error = 'Account not found.';
                 }
+            } else {
+                $error = 'Account not found.';
             }
-            $stmt->close();
         }
+        if (isset($stmt)) $stmt->close();
     }
 }
 
@@ -174,6 +183,19 @@ if (isset($_SESSION['admin_logged_in'])) {
     © <?= date('Y') ?> Vingo Menu Manager v2
   </p>
 </div>
+
+<script>
+  // Ensure animations play on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    const card = document.getElementById('loginCard');
+    // If we have a shake class, we trigger it explicitly
+    if (card && card.classList.contains('shake')) {
+      card.style.animation = 'none';
+      card.offsetHeight; /* trigger reflow */
+      card.style.animation = null;
+    }
+  });
+</script>
 
 </body>
 </html>
