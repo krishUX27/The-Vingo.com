@@ -73,11 +73,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Handle Delete Admin
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
-    // Safety: ensure we only delete 'admin' roles from this specific page
-    $stmt = $conn->prepare("DELETE FROM users WHERE id = ? AND role = 'admin'");
+    // Soft Delete: set is_deleted = 1
+    $stmt = $conn->prepare("UPDATE users SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND role = 'admin'");
     $stmt->bind_param('i', $id);
     if ($stmt->execute()) {
-        $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin account deleted."];
+        $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin account moved to Trash."];
+    }
+    header('Location: manage-admins.php');
+    exit;
+}
+
+// Handle Bulk Delete Admin
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'bulk_delete_admins') {
+    $ids = $_POST['admin_ids'] ?? [];
+    if (!empty($ids)) {
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $conn->prepare("UPDATE users SET is_deleted = 1, deleted_at = NOW() WHERE id IN ($placeholders) AND role = 'admin'");
+        $types = str_repeat('i', count($ids));
+        $params = array_map('intval', $ids);
+        $stmt->bind_param($types, ...$params);
+        if ($stmt->execute()) {
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => count($ids) . " admin accounts moved to Trash."];
+        }
     }
     header('Location: manage-admins.php');
     exit;
@@ -112,8 +129,8 @@ if (isset($_GET['status_toggle']) && isset($_GET['status'])) {
     exit;
 }
 
-// Fetch all admins
-$admins = $conn->query("SELECT id, username, email, role, status, created_at FROM users WHERE role = 'admin' ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
+// Fetch all admins (only non-deleted)
+$admins = $conn->query("SELECT id, username, email, role, status, created_at FROM users WHERE role = 'admin' AND is_deleted = 0 ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
 
 $cur = 'manage-admins.php';
 ?>
@@ -187,6 +204,7 @@ $cur = 'manage-admins.php';
           <table style="width:100%">
             <thead>
               <tr style="text-align:left">
+                <th><input type="checkbox" id="select-all"></th>
                 <th>Username</th>
                 <th>Email</th>
                 <th>Status</th>
@@ -225,6 +243,32 @@ $cur = 'manage-admins.php';
               <?php endif; ?>
             </tbody>
           </table>
+          </form>
+          <script>
+          document.addEventListener('DOMContentLoaded', function() {
+              const selectAll = document.getElementById('select-all');
+              const checkboxes = document.querySelectorAll('.admin-checkbox');
+              const bulkControls = document.getElementById('bulk-controls');
+              const selectCountDisplay = document.getElementById('select-count');
+
+              function updateUI() {
+                  const checkedCount = document.querySelectorAll('.admin-checkbox:checked').length;
+                  bulkControls.style.display = checkedCount > 0 ? 'flex' : 'none';
+                  selectCountDisplay.textContent = `${checkedCount} selected`;
+              }
+
+              if (selectAll) {
+                  selectAll.addEventListener('change', function() {
+                      checkboxes.forEach(cb => cb.checked = this.checked);
+                      updateUI();
+                  });
+              }
+
+              checkboxes.forEach(cb => {
+                  cb.addEventListener('change', updateUI);
+              });
+          });
+          </script>
         </div>
       </div>
 

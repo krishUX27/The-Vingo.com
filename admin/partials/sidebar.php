@@ -26,6 +26,7 @@ $prefix = $prefix ?? '';
       <span class="nav-icon">📄</span> Download PDF
     </a>
     <?= nav_a('settings.php', '⚙️', 'Restaurant Settings', $cur) ?>
+    <?= nav_a('trash.php', '🗑️', 'Trash Bin', $cur) ?>
   </nav>
   <div class="sidebar-footer">Vingo Menu v2</div>
 </aside>

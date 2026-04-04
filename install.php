@@ -9,13 +9,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($step === 1) {
         // Step 1: Core Tables Initialization
         $tables = [
-            "users" => "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) UNIQUE, email VARCHAR(100), password VARCHAR(255), role ENUM('superadmin', 'admin') DEFAULT 'admin', is_active TINYINT DEFAULT 1, status ENUM('active','hold') DEFAULT 'active', activation_token VARCHAR(128) DEFAULT NULL, token_expiry DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)",
-            "categories" => "CREATE TABLE IF NOT EXISTS categories (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT, name VARCHAR(100), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)",
-            "dishes" => "CREATE TABLE IF NOT EXISTS dishes (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT, category_id INT, name VARCHAR(100), price DECIMAL(10,2), description TEXT, image VARCHAR(255), availability ENUM('Available', 'Not Available') DEFAULT 'Available', currency VARCHAR(10) DEFAULT 'INR', offer_id INT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)",
+            "users" => "CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY, 
+                username VARCHAR(50) UNIQUE, 
+                email VARCHAR(100), 
+                password VARCHAR(255), 
+                role ENUM('superadmin', 'admin') DEFAULT 'admin', 
+                is_active TINYINT DEFAULT 1, 
+                status ENUM('active','hold') DEFAULT 'active', 
+                is_deleted TINYINT(1) DEFAULT 0,
+                deleted_at DATETIME NULL,
+                activation_token VARCHAR(128) DEFAULT NULL, 
+                token_expiry DATETIME DEFAULT NULL, 
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )",
+            "categories" => "CREATE TABLE IF NOT EXISTS categories (
+                id INT AUTO_INCREMENT PRIMARY KEY, 
+                user_id INT, 
+                name VARCHAR(100), 
+                is_deleted TINYINT(1) DEFAULT 0,
+                deleted_at DATETIME NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )",
+            "dishes" => "CREATE TABLE IF NOT EXISTS dishes (
+                id INT AUTO_INCREMENT PRIMARY KEY, 
+                user_id INT, 
+                category_id INT, 
+                name VARCHAR(100), 
+                price DECIMAL(10,2), 
+                description TEXT, 
+                image VARCHAR(255), 
+                availability ENUM('Available', 'Not Available') DEFAULT 'Available', 
+                veg_type ENUM('veg','non_veg') NOT NULL DEFAULT 'veg',
+                available_breakfast TINYINT(1) DEFAULT 1,
+                available_lunch TINYINT(1) DEFAULT 1,
+                available_dinner TINYINT(1) DEFAULT 1,
+                currency VARCHAR(10) DEFAULT 'INR', 
+                offer_id INT NULL, 
+                is_deleted TINYINT(1) DEFAULT 0,
+                deleted_at DATETIME NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )",
             "settings" => "CREATE TABLE IF NOT EXISTS settings (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, setting_key VARCHAR(50), setting_value TEXT, UNIQUE KEY u_user_setting (user_id, setting_key))",
             "seasonal_offers" => "CREATE TABLE IF NOT EXISTS seasonal_offers (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT, title VARCHAR(100), description TEXT, discount VARCHAR(50), active TINYINT DEFAULT 1, expires_at DATE NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)",
             "qr_scans" => "CREATE TABLE IF NOT EXISTS qr_scans (user_id INT PRIMARY KEY, scan_count INT DEFAULT 0)",
-            "menu_imports" => "CREATE TABLE IF NOT EXISTS menu_imports (id INT AUTO_INCREMENT PRIMARY KEY, admin_id INT NOT NULL, file_name VARCHAR(255), file_type VARCHAR(20), file_path VARCHAR(255), uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP, status ENUM('processing','completed','failed') DEFAULT 'processing')"
+            "menu_imports" => "CREATE TABLE IF NOT EXISTS menu_imports (id INT AUTO_INCREMENT PRIMARY KEY, admin_id INT NOT NULL, file_name VARCHAR(255), file_type VARCHAR(20), file_path VARCHAR(255), uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP, status ENUM('processing','completed','failed') DEFAULT 'processing')",
+            "trash_logs" => "CREATE TABLE IF NOT EXISTS trash_logs (id INT AUTO_INCREMENT PRIMARY KEY, item_type VARCHAR(50), item_id INT, original_data JSON, deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
         ];
 
         try {

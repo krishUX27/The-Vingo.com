@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($u) || empty($p)) {
         $error = 'Please enter both System ID and Root Key.';
     } else {
-        $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE (username = ? OR email = ?) AND role = 'superadmin' LIMIT 1");
+        $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE (username = ? OR email = ?) AND role = 'superadmin' AND is_deleted = 0 LIMIT 1");
         if (!$stmt) {
             super_log("Query error: " . $conn->error);
             $error = 'System fault. Check logs.';

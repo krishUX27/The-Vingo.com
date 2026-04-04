@@ -22,6 +22,8 @@ dashboard_log("Dashboard hit. " . ($_SERVER['REQUEST_METHOD'] === 'POST' ? 'Acti
 $search     = trim($_GET['q']         ?? '');
 $cat_filter = intval($_GET['cat']     ?? 0);
 $avail      = $_GET['avail']          ?? '';
+$veg_type   = $_GET['veg_type']       ?? '';
+$meal_time  = $_GET['meal_time']      ?? '';
 $price_min  = $_GET['price_min']      ?? '';
 $price_max  = $_GET['price_max']      ?? '';
 
@@ -43,6 +45,16 @@ if ($avail !== '') {
     $conditions[] = 'd.availability = ?';
     $params[]     = $avail;
     $types       .= 's';
+}
+if ($veg_type !== '') {
+    $conditions[] = 'd.veg_type = ?';
+    $params[]     = $veg_type;
+    $types       .= 's';
+}
+if ($meal_time !== '') {
+    if ($meal_time === 'breakfast') $conditions[] = 'd.available_breakfast = 1';
+    if ($meal_time === 'lunch')     $conditions[] = 'd.available_lunch = 1';
+    if ($meal_time === 'dinner')    $conditions[] = 'd.available_dinner = 1';
 }
 if ($price_min !== '') {
     $conditions[] = 'd.price >= ?';
@@ -70,9 +82,9 @@ function get_stat_count($conn, $sql, $uid) {
     return $r ? (int)$r[0] : 0;
 }
 
-$total_dishes = get_stat_count($conn, "SELECT COUNT(*) FROM dishes WHERE user_id = ?", $admin_sess_id);
-$avail_cnt    = get_stat_count($conn, "SELECT COUNT(*) FROM dishes WHERE availability='Available' AND user_id = ?", $admin_sess_id);
-$total_cats   = get_stat_count($conn, "SELECT COUNT(*) FROM categories WHERE user_id = ?", $admin_sess_id);
+$total_dishes = get_stat_count($conn, "SELECT COUNT(*) FROM dishes WHERE user_id = ? AND is_deleted = 0", $admin_sess_id);
+$avail_cnt    = get_stat_count($conn, "SELECT COUNT(*) FROM dishes WHERE availability='Available' AND user_id = ? AND is_deleted = 0", $admin_sess_id);
+$total_cats   = get_stat_count($conn, "SELECT COUNT(*) FROM categories WHERE user_id = ? AND is_deleted = 0", $admin_sess_id);
 
 /* ── Handle Add Dish (Modal POST) ── */
 $errors = [];
@@ -81,6 +93,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $price        = $_POST['price']              ?? '';
     $cat_id       = intval($_POST['category_id'] ?? 0);
     $availability = $_POST['availability']       ?? 'Available';
+    $break        = isset($_POST['available_breakfast']) ? 1 : 0;
+    $lunch        = isset($_POST['available_lunch'])     ? 1 : 0;
+    $dinner       = isset($_POST['available_dinner'])    ? 1 : 0;
+    $veg_type_val = $_POST['veg_type']           ?? 'veg';
     $currency     = $_POST['currency']           ?? 'INR';
     $offer_id     = !empty($_POST['offer_id'])   ? (int)$_POST['offer_id'] : null;
 
@@ -107,14 +123,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     if (empty($errors)) {
-        dashboard_log("Attempting to insert dish: $name, $price, $cat_id for User $admin_sess_id");
-        $s = $conn->prepare("INSERT INTO dishes (name,price,category_id,image,availability,currency,offer_id,user_id) VALUES (?,?,?,?,?,?,?,?)");
+        dashboard_log("Attempting to insert dish: $name, $price, $cat_id, $veg_type_val for User $admin_sess_id");
+        $s = $conn->prepare("INSERT INTO dishes (name,price,category_id,veg_type,available_breakfast,available_lunch,available_dinner,image,availability,currency,offer_id,user_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
         if (!$s) {
             $err_msg = 'Prepare failed: ' . $conn->error;
             dashboard_log($err_msg);
             $errors[] = $err_msg;
         } else {
-            $s->bind_param('sdisssii', $name, $price, $cat_id, $image_name, $availability, $currency, $offer_id, $admin_sess_id);
+            $s->bind_param('sdisiiisssii', $name, $price, $cat_id, $veg_type_val, $break, $lunch, $dinner, $image_name, $availability, $currency, $offer_id, $admin_sess_id);
             if ($s->execute()) {
                 $new_id = $conn->insert_id;
                 dashboard_log("Dish '{$name}' added successfully. ID: {$new_id}");
@@ -132,12 +148,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+/* ── Handle Bulk Delete ── */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'bulk_delete') {
+    $ids = $_POST['dish_ids'] ?? [];
+    if (!empty($ids)) {
+        $id_placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $conn->prepare("UPDATE dishes SET is_deleted = 1, deleted_at = NOW() WHERE id IN ($id_placeholders) AND user_id = ?");
+        $types = str_repeat('i', count($ids)) . 'i';
+        $params = array_map('intval', $ids);
+        $params[] = $admin_sess_id;
+        $stmt->bind_param($types, ...$params);
+        if ($stmt->execute()) {
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => count($ids) . " dishes moved to Trash."];
+        }
+        $stmt->close();
+    }
+    header("Location: dashboard.php");
+    exit;
+}
+
 /* ── Dish list (Owner filtered) ── */
 $sql  = "SELECT d.*, c.name AS cat_name, o.title AS offer_title, o.discount AS offer_discount
          FROM dishes d
          JOIN categories c ON c.id = d.category_id
          LEFT JOIN seasonal_offers o ON o.id = d.offer_id
-         WHERE d.user_id = ? " . ($where ? "AND " . str_replace('WHERE','',$where) : "") . "
+         WHERE d.user_id = ? AND d.is_deleted = 0 " . ($where ? "AND " . str_replace('WHERE','',$where) : "") . "
          ORDER BY d.created_at DESC";
 $stmt = $conn->prepare($sql);
 
@@ -266,6 +301,23 @@ if (!$offer_res) {
             </select>
           </div>
           <div class="form-group">
+            <label>Dish Type</label>
+            <select name="veg_type">
+              <option value="">All</option>
+              <option value="veg"     <?= $veg_type==='veg'     ? 'selected':'' ?>>🟢 Veg</option>
+              <option value="non_veg" <?= $veg_type==='non_veg' ? 'selected':'' ?>>🔴 Non-Veg</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Meal Time</label>
+            <select name="meal_time">
+              <option value="">All Times</option>
+              <option value="breakfast" <?= $meal_time==='breakfast' ? 'selected':'' ?>>🌅 Breakfast</option>
+              <option value="lunch"     <?= $meal_time==='lunch'     ? 'selected':'' ?>>☀️ Lunch</option>
+              <option value="dinner"    <?= $meal_time==='dinner'    ? 'selected':'' ?>>🌙 Dinner</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label>Min ₹</label>
             <input type="number" name="price_min" min="0" step="0.01" placeholder="0" value="<?= htmlspecialchars($price_min) ?>">
           </div>
@@ -280,26 +332,37 @@ if (!$offer_res) {
         </div>
       </form>
 
-      <div class="btn-grp" style="margin-bottom:12px">
-        <button type="button" class="btn btn-primary" id="open-add-dish">
-           <span style="font-size:1rem">➕</span> Add New Dish
-        </button>
-      </div>
+      <form method="POST" id="bulk-action-form">
+        <input type="hidden" name="action" value="bulk_delete">
+        <div class="btn-grp" style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+          <button type="button" class="btn btn-primary" id="open-add-dish">
+             <span style="font-size:1rem">➕</span> Add New Dish
+          </button>
+          <div id="bulk-controls" style="display:none; gap:10px; align-items:center;">
+            <span id="select-count" style="font-size:0.85rem; color:var(--muted)">0 selected</span>
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Move selected items to Trash?')">
+              🗑️ Delete Selected
+            </button>
+          </div>
+        </div>
 
       <!-- Table -->
       <div class="table-wrap">
         <?php if (empty($dishes)): ?>
           <div class="no-data">
             <span class="nd-icon">🍽️</span>
-            No dishes found. <a href="add-item.php">Add your first dish!</a>
+            No dishes found. <a href="javascript:void(0)" id="open-add-first-dish">Add your first dish!</a>
           </div>
         <?php else: ?>
         <table>
           <thead>
             <tr>
+              <th><input type="checkbox" id="select-all"></th>
               <th>#</th>
               <th>Image</th>
               <th>Name</th>
+              <th>Type</th>
+              <th>Meal Times</th>
               <th>Price</th>
               <th>Category</th>
               <th>Availability</th>
@@ -313,6 +376,7 @@ if (!$offer_res) {
             ?>
             <?php foreach ($dishes as $i => $d): ?>
             <tr class="<?= ($d['id'] == $new_id) ? 'row-highlight' : '' ?>">
+              <td><input type="checkbox" name="dish_ids[]" value="<?= $d['id'] ?>" class="dish-checkbox"></td>
               <td><?= $i + 1 ?></td>
               <td>
                 <?php if ($d['image'] && file_exists(__DIR__ . '/../uploads/' . $d['image'])): ?>
@@ -322,6 +386,20 @@ if (!$offer_res) {
                 <?php endif; ?>
               </td>
               <td><strong><?= htmlspecialchars($d['name']) ?></strong></td>
+              <td>
+                <?php if ($d['veg_type'] === 'veg'): ?>
+                  <span class="badge badge-success" style="background:#dcfce7; color:#166534">🟢 Veg</span>
+                <?php else: ?>
+                  <span class="badge badge-danger" style="background:#fee2e2; color:#991b1b">🔴 Non-Veg</span>
+                <?php endif; ?>
+              </td>
+              <td>
+                <div style="display:flex; flex-wrap:wrap; gap:4px; max-width:140px">
+                  <?php if ($d['available_breakfast']): ?><span class="badge" style="background:#fef3c7; color:#92400e; font-size:0.65rem">🌅 B</span><?php endif; ?>
+                  <?php if ($d['available_lunch']):     ?><span class="badge" style="background:#ffedd5; color:#9a3412; font-size:0.65rem">☀️ L</span><?php endif; ?>
+                  <?php if ($d['available_dinner']):    ?><span class="badge" style="background:#ede9fe; color:#5b21b6; font-size:0.65rem">🌙 D</span><?php endif; ?>
+                </div>
+              </td>
               <td><?= ($d['currency'] === 'USD' ? '$' : '₹') . number_format($d['price'], 2) ?></td>
               <td><span class="badge badge-info"><?= htmlspecialchars($d['cat_name']) ?></span></td>
               <td>
@@ -346,12 +424,42 @@ if (!$offer_res) {
             <?php endforeach; ?>
           </tbody>
         </table>
+        </form>
         <?php endif; ?>
       </div>
     </div>
 
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal script (already there, but I need to make sure I don't break it)
+    // Actually, I'll just append my script.
+    
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.dish-checkbox');
+    const bulkControls = document.getElementById('bulk-controls');
+    const selectCountDisplay = document.getElementById('select-count');
+
+    function updateBulkUI() {
+        const checkedCount = document.querySelectorAll('.dish-checkbox:checked').length;
+        if (bulkControls) bulkControls.style.display = checkedCount > 0 ? 'flex' : 'none';
+        if (selectCountDisplay) selectCountDisplay.textContent = `${checkedCount} selected`;
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateBulkUI();
+        });
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateBulkUI);
+    });
+});
+</script>
 
 <!-- Add Dish Modal -->
 <div id="dish-modal-overlay" class="modal-overlay"></div>
@@ -375,6 +483,28 @@ if (!$offer_res) {
             <option value="USD">USD ($)</option>
           </select>
           <input type="number" name="price" required min="0" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Dish Type (Veg / Non-Veg) *</label>
+        <select name="veg_type" required>
+          <option value="veg" selected>🟢 Veg (Vegetarian)</option>
+          <option value="non_veg">🔴 Non-Veg (Non-Vegetarian)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Available During (Meal Times)</label>
+        <div style="display:flex; gap:15px; margin-top:5px; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid var(--border)">
+          <label style="display:flex; align-items:center; gap:5px; font-weight:normal; margin:0; cursor:pointer">
+            <input type="checkbox" name="available_breakfast" checked> Breakfast
+          </label>
+          <label style="display:flex; align-items:center; gap:5px; font-weight:normal; margin:0; cursor:pointer">
+            <input type="checkbox" name="available_lunch" checked> Lunch
+          </label>
+          <label style="display:flex; align-items:center; gap:5px; font-weight:normal; margin:0; cursor:pointer">
+            <input type="checkbox" name="available_dinner" checked> Dinner
+          </label>
         </div>
       </div>
       <div class="form-group">
@@ -453,7 +583,10 @@ if (!$offer_res) {
     r.readAsDataURL(f);
   });
 
-  openBtn.addEventListener('click', showModal);
+  if (openBtn) openBtn.addEventListener('click', showModal);
+  const openFirstBtn = document.getElementById('open-add-first-dish');
+  if (openFirstBtn) openFirstBtn.addEventListener('click', showModal);
+  
   closeBtn.addEventListener('click', hideModal);
   cancelBtn.addEventListener('click', hideModal);
   overlay.addEventListener('click', hideModal);

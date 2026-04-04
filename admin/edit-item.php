@@ -26,6 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price        = $_POST['price']              ?? '';
     $cat_id       = intval($_POST['category_id'] ?? 0);
     $availability = $_POST['availability']       ?? 'Available';
+    $break        = isset($_POST['available_breakfast']) ? 1 : 0;
+    $lunch        = isset($_POST['available_lunch'])     ? 1 : 0;
+    $dinner       = isset($_POST['available_dinner'])    ? 1 : 0;
+    $veg_type     = $_POST['veg_type']           ?? 'veg';
     $currency     = $_POST['currency']           ?? 'INR';
     $offer_id     = !empty($_POST['offer_id'])   ? (int)$_POST['offer_id'] : null;
 
@@ -56,8 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, image=?, availability=?, currency=?, offer_id=? WHERE id=? AND user_id=?");
-        $upd->bind_param('sdisssiii', $name, $price, $cat_id, $image_name, $availability, $currency, $offer_id, $id, $admin_sess_id);
+        $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, veg_type=?, available_breakfast=?, available_lunch=?, available_dinner=?, image=?, availability=?, currency=?, offer_id=? WHERE id=? AND user_id=?");
+        $upd->bind_param('sdisiiiisssii', $name, $price, $cat_id, $veg_type, $break, $lunch, $dinner, $image_name, $availability, $currency, $offer_id, $id, $admin_sess_id);
         if ($upd->execute()) {
             $_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish '{$name}' updated."];
             header('Location: dashboard.php');
@@ -67,7 +71,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $upd->close();
     }
     // Reflect changes
-    $dish = array_merge($dish, compact('name','price','availability', 'currency', 'offer_id'));
+    $dish = array_merge($dish, [
+        'name' => $name, 
+        'price' => $price, 
+        'availability' => $availability, 
+        'currency' => $currency, 
+        'offer_id' => $offer_id, 
+        'veg_type' => $veg_type,
+        'available_breakfast' => $break,
+        'available_lunch' => $lunch,
+        'available_dinner' => $dinner
+    ]);
     $dish['category_id'] = $cat_id;
 }
 
@@ -142,6 +156,29 @@ $offers     = $conn->query("SELECT id, title FROM seasonal_offers WHERE active=1
                 <?php endforeach; ?>
               </select>
               <button type="button" id="btn-add-category" class="btn btn-outline btn-sm">＋ Add Category</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="veg_type">Dish Type (Veg / Non-Veg) <span class="req">*</span></label>
+            <select id="veg_type" name="veg_type" required>
+              <option value="veg"     <?= ($dish['veg_type'] ?? 'veg') === 'veg'     ? 'selected' : '' ?>>🟢 Veg (Vegetarian)</option>
+              <option value="non_veg" <?= ($dish['veg_type'] ?? 'veg') === 'non_veg' ? 'selected' : '' ?>>🔴 Non-Veg (Non-Vegetarian)</option>
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label>Available During (Meal Times)</label>
+            <div style="display:flex; gap:20px; background:#f8fafc; padding:15px; border-radius:12px; border:1px solid var(--border)">
+              <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin:0; cursor:pointer">
+                <input type="checkbox" name="available_breakfast" <?= ($dish['available_breakfast'] ?? 0) ? 'checked' : '' ?>> Breakfast
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin:0; cursor:pointer">
+                <input type="checkbox" name="available_lunch" <?= ($dish['available_lunch'] ?? 0) ? 'checked' : '' ?>> Lunch
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin:0; cursor:pointer">
+                <input type="checkbox" name="available_dinner" <?= ($dish['available_dinner'] ?? 0) ? 'checked' : '' ?>> Dinner
+              </label>
             </div>
           </div>
 

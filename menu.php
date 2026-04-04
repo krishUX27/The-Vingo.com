@@ -455,6 +455,30 @@ if ($user_id) {
       .restaurant-name { font-size: 1.25rem; }
       .cat-title { font-size: 0.95rem; }
     }
+
+    /* ── Meal Tabs ── */
+    .meal-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+      padding: 0 10px;
+    }
+    .meal-tab {
+      padding: 10px 18px;
+      border-radius: 50px;
+      background: #f1f5f9;
+      color: #64748b;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .meal-tab.active {
+      background: var(--header-bg);
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -553,6 +577,14 @@ function syncSearch(val) {
   <button class="pill active" data-cat="all">All</button>
 </div>
 
+<!-- Meal Selections -->
+<div class="meal-tabs">
+  <button class="meal-tab active" data-meal="all">All Menu</button>
+  <button class="meal-tab" data-meal="breakfast">🌅 Breakfast</button>
+  <button class="meal-tab" data-meal="lunch">☀️ Lunch</button>
+  <button class="meal-tab" data-meal="dinner">🌙 Dinner</button>
+</div>
+
 <!-- Menu Body -->
 <div class="menu-body" id="menu-body">
   <!-- Skeleton -->
@@ -593,6 +625,7 @@ function catDot(name) {
 let lastHash     = '';
 let fullData     = null; // All dishes from API
 let activeFilter = 'all';
+let activeMeal   = 'all';
 
 /* ── HTML escape ── */
 function esc(s) {
@@ -644,7 +677,10 @@ function dishRow(d, dotClass) {
         ${imgHtml}
       </div>
       <div class="dish-info">
-        <div class="dish-name">${esc(d.name)}</div>
+        <div class="dish-name">
+          ${d.veg_type === 'veg' ? '<span style="color:#16a34a; font-size:0.75rem">🟩</span>' : '<span style="color:#dc2626; font-size:0.75rem">🟥</span>'}
+          ${esc(d.name)}
+        </div>
         <div class="dish-badge">
           <span class="bdot ${dotClass}"></span>${esc(d.category)}
         </div>
@@ -688,7 +724,13 @@ function applyAdvancedFilters() {
       if (q !== '' && !d.name.toLowerCase().includes(q)) return false;
       // 3. Availability
       if (avail !== 'all' && d.availability !== avail) return false;
-      // 4. Price
+      // 4. Meal Time
+      if (activeMeal !== 'all') {
+        if (activeMeal === 'breakfast' && !d.available_breakfast) return false;
+        if (activeMeal === 'lunch'     && !d.available_lunch)     return false;
+        if (activeMeal === 'dinner'    && !d.available_dinner)    return false;
+      }
+      // 5. Price
       if (d.price < min || d.price > max) return false;
       return true;
     });
@@ -794,6 +836,16 @@ document.getElementById('btn-reset').onclick = () => {
 // Also apply on enter key for numeric inputs
 ['f-min','f-max'].forEach(id => {
   document.getElementById(id).onkeyup = e => { if (e.key === 'Enter') { applyAdvancedFilters(); toggleModal(false); } };
+});
+
+// Meal Tab Clicks
+document.querySelectorAll('.meal-tab').forEach(tab => {
+  tab.onclick = function() {
+    document.querySelectorAll('.meal-tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+    activeMeal = this.getAttribute('data-meal');
+    applyAdvancedFilters();
+  };
 });
 
 // Carousel Logic for Reference Redesign

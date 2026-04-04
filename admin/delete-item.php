@@ -20,18 +20,13 @@ if (!$dish) {
     exit;
 }
 
-// Delete image file
-if ($dish['image'] && file_exists(__DIR__ . '/../uploads/' . $dish['image'])) {
-    unlink(__DIR__ . '/../uploads/' . $dish['image']);
-}
-
-// Delete record
-$del = $conn->prepare("DELETE FROM dishes WHERE id = ? AND user_id = ?");
+// Soft Delete record
+$del = $conn->prepare("UPDATE dishes SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND user_id = ?");
 $del->bind_param('ii', $id, $admin_sess_id);
 $del->execute();
 $del->close();
 
-$_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish '{$dish['name']}' deleted."];
+$_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish '{$dish['name']}' moved to Trash."];
 header('Location: dashboard.php');
 exit;
 

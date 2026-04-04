@@ -9,11 +9,11 @@ require_once __DIR__ . '/../includes/logger.php';
 $conn->query("CREATE TABLE IF NOT EXISTS qr_scans (user_id INT PRIMARY KEY, scan_count INT DEFAULT 0)");
 
 // Total Hotels (Admins)
-$hotel_res = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
+$hotel_res = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'admin' AND is_deleted = 0");
 $total_hotels = $hotel_res ? $hotel_res->fetch_row()[0] : 0;
 
 // Total Dishes
-$dish_res = $conn->query("SELECT COUNT(*) FROM dishes");
+$dish_res = $conn->query("SELECT COUNT(*) FROM dishes WHERE is_deleted = 0");
 $total_dishes = ($dish_res && $res = $dish_res->fetch_row()) ? $res[0] : 0;
 
 // Total QR Scans
@@ -21,11 +21,11 @@ $scan_res = $conn->query("SELECT SUM(scan_count) FROM qr_scans");
 $total_scans = ($scan_res && $res = $scan_res->fetch_row()) ? (int)$res[0] : 0;
 
 // Total Active Menus (Hotels with at least 1 dish)
-$active_res = $conn->query("SELECT COUNT(DISTINCT user_id) FROM dishes");
+$active_res = $conn->query("SELECT COUNT(DISTINCT user_id) FROM dishes WHERE is_deleted = 0");
 $total_active = ($active_res && $res = $active_res->fetch_row()) ? $res[0] : 0;
 
 // Admin accounts for the modal
-$admin_res = $conn->query("SELECT id, username, email FROM users WHERE role = 'admin' ORDER BY username");
+$admin_res = $conn->query("SELECT id, username, email FROM users WHERE role = 'admin' AND is_deleted = 0 ORDER BY username");
 $all_admins = $admin_res ? $admin_res->fetch_all(MYSQLI_ASSOC) : [];
 
 $cur = 'index.php';

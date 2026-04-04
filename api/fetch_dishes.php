@@ -17,15 +17,20 @@ $sql = "SELECT d.id,
                d.price,
                d.image,
                d.availability,
+               d.veg_type,
                d.currency,
                c.id          AS category_id,
                c.name        AS category_name,
                o.title       AS offer_title,
-               o.discount    AS offer_discount
+               o.discount    AS offer_discount,
+               d.available_breakfast,
+               d.available_lunch,
+               d.available_dinner
         FROM   dishes     d
         JOIN   categories c ON c.id = d.category_id
         LEFT JOIN seasonal_offers o ON o.id = d.offer_id
-        WHERE  d.user_id = ?
+        WHERE  d.user_id = ? AND d.is_deleted = 0
+" . (isset($_GET['veg_type']) && in_array($_GET['veg_type'], ['veg','non_veg']) ? " AND d.veg_type = '" . $conn->real_escape_string($_GET['veg_type']) . "'" : "") . "
         ORDER  BY c.name, d.name";
 
 $stmt = $conn->prepare($sql);
@@ -54,9 +59,13 @@ while ($row = $result->fetch_assoc()) {
         'currency'       => $row['currency'],
         'image'          => $row['image'],
         'availability'   => $row['availability'],
+        'veg_type'       => $row['veg_type'],
         'category'       => $cat,
         'offer_title'    => $row['offer_title'],
         'offer_discount' => $row['offer_discount'],
+        'available_breakfast' => (int)$row['available_breakfast'],
+        'available_lunch'     => (int)$row['available_lunch'],
+        'available_dinner'    => (int)$row['available_dinner'],
     ];
 }
 

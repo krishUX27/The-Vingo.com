@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($u) || empty($p)) {
         $error = 'Please enter both username and password.';
     } else {
-        $stmt = $conn->prepare("SELECT id, username, password, role, is_active, status FROM users WHERE (username = ? OR email = ?) AND role = 'admin' LIMIT 1");
+        $stmt = $conn->prepare("SELECT id, username, password, role, is_active, status FROM users WHERE (username = ? OR email = ?) AND role = 'admin' AND is_deleted = 0 LIMIT 1");
         if (!$stmt) {
             login_log("Query error: " . $conn->error);
             $error = 'Internal server error. Please check logs.';
@@ -96,35 +96,79 @@ if (isset($_SESSION['admin_logged_in'])) {
   <title>Login — Vingo Menu Manager</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
+  <style>
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .shake { animation: shake 0.5s ease-in-out; }
+
+    @keyframes flipIn {
+      0% { transform: perspective(1000px) rotateX(-90deg); opacity: 0; }
+      100% { transform: perspective(1000px) rotateX(0deg); opacity: 1; }
+    }
+    .flip-active { animation: flipIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+
+    .hold-container { 
+      display: flex; flex-direction: column; align-items: center; justify-content: center; 
+      padding: 20px 0; text-align: center;
+    }
+    .hold-icon { font-size: 3rem; margin-bottom: 15px; }
+    .hold-title { font-weight: 800; font-size: 1.2rem; color: #991b1b; margin-bottom: 10px; }
+    .hold-text { font-size: 0.9rem; color: #4b5563; line-height: 1.5; margin-bottom: 25px; }
+  </style>
 </head>
 <body class="login-screen">
 
-<div class="login-card">
-  <div class="login-header">
-    <div class="logo">🍴</div>
-    <h2>Vingo Menu</h2>
-    <p>Sign in to manage your menu</p>
-  </div>
+<?php 
+  $is_hold = (strpos($error, 'on hold') !== false); 
+  $is_shake = ($error !== '' && !$is_hold);
+?>
 
-  <?php if ($error): ?>
-    <div class="flash flash-danger" style="margin-bottom:20px; text-align:center">
-      ❌ <?= htmlspecialchars($error) ?>
+<div class="login-card <?= $is_shake ? 'shake' : '' ?> <?= $is_hold ? 'flip-active' : '' ?>" id="loginCard">
+  
+  <?php if ($is_hold): ?>
+    <!-- Account Hold View -->
+    <div class="hold-container">
+      <div class="hold-icon">⚠️</div>
+      <div class="hold-title">Account On Hold</div>
+      <p class="hold-text">
+        Your account is currently on hold due to pending payment.<br>
+        Please contact the <strong>Super Admin</strong> to restore access.
+      </p>
+      <a href="index.php" class="btn btn-outline" style="width:100%; justify-content:center; padding:14px; border-radius:12px">
+        🔄 Retry Login
+      </a>
     </div>
+  <?php else: ?>
+    <!-- Normal Login Form -->
+    <div class="login-header">
+      <div class="logo">🍴</div>
+      <h2>Vingo Menu</h2>
+      <p>Sign in to manage your menu</p>
+    </div>
+
+    <?php if ($error): ?>
+      <div class="flash flash-danger" style="margin-bottom:20px; text-align:center; border-radius:10px">
+        ❌ <?= htmlspecialchars($error) ?>
+      </div>
+    <?php endif; ?>
+
+    <form method="POST">
+      <div class="form-group" style="margin-bottom:20px">
+        <label for="username">Username or Email</label>
+        <input type="text" id="username" name="username" placeholder="Enter username or email" required autofocus>
+      </div>
+      <div class="form-group" style="margin-bottom:24px">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:16px; border-radius:12px">
+        🚀 Sign In
+      </button>
+    </form>
   <?php endif; ?>
-
-  <form method="POST">
-    <div class="form-group" style="margin-bottom:20px">
-      <label for="username">Username or Email</label>
-      <input type="text" id="username" name="username" placeholder="Enter username or email" required autofocus>
-    </div>
-    <div class="form-group" style="margin-bottom:24px">
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" placeholder="••••••••" required>
-    </div>
-    <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:16px">
-      🚀 Sign In
-    </button>
-  </form>
 
   <p style="text-align:center; font-size:0.75rem; color:var(--text-light); margin-top:30px">
     © <?= date('Y') ?> Vingo Menu Manager v2
