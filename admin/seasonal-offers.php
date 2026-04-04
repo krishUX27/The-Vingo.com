@@ -19,7 +19,14 @@ function offers_log($msg) {
 
 $errors = [];
 
-$admin_sess_id = $_SESSION['admin_id'] ?? 0;
+$admin_sess_id = $_SESSION['admin_sess_id'] ?? ($_SESSION['admin_id'] ?? 0);
+
+// Robust Schema Auto-Fix (Version Agnostic)
+$check = $conn->query("SHOW COLUMNS FROM seasonal_offers LIKE 'is_deleted'");
+if ($check && $check->num_rows === 0) {
+    $conn->query("ALTER TABLE seasonal_offers ADD is_deleted TINYINT(1) DEFAULT 0 AFTER discount");
+    $conn->query("ALTER TABLE seasonal_offers ADD deleted_at DATETIME NULL AFTER is_deleted");
+}
 
 // ADD OFFER
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add') {

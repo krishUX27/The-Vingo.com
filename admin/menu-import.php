@@ -16,11 +16,18 @@ $prefix = ''; // Relative path prefix
 $error = '';
 $success = '';
 
-// ── Directory Setup ──────────────────────────────────────────
+// ── Directory Setup & Schema Auto-Fix ──────────────────────────
 $upload_dir = __DIR__ . '/../uploads/menu_imports/';
-if (!is_dir($upload_dir)) {
-    mkdir($upload_dir, 0755, true);
-}
+if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+
+// Robust Schema Auto-Fix: Ensure Admin Data Isolation Columns exist on live DB
+$conn->query("ALTER TABLE categories ADD COLUMN IF NOT EXISTS user_id INT DEFAULT 0 AFTER name");
+$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS user_id INT DEFAULT 0 AFTER id");
+$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS is_deleted TINYINT(1) DEFAULT 0 AFTER currency");
+$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS deleted_at DATETIME NULL AFTER is_deleted");
+$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS available_breakfast TINYINT(1) DEFAULT 1 AFTER veg_type");
+$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS available_lunch TINYINT(1) DEFAULT 1 AFTER available_breakfast");
+$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS available_dinner TINYINT(1) DEFAULT 1 AFTER available_lunch");
 
 // ── Image Processing Logic (GD) ───────────────────────────────
 function process_and_compress_image($source, $dest) {
