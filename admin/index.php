@@ -18,6 +18,13 @@ function login_log($msg) {
 }
 
 $error = '';
+if (isset($_GET['msg'])) {
+    if ($_GET['msg'] === 'on_hold') {
+        $error = 'Your Vingo service is currently on hold because the payment has not been completed. Please complete the payment to restore access.';
+    } elseif ($_GET['msg'] === 'account_disabled') {
+        $error = 'Your account has been deactivated. Please contact the Super Admin.';
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $u = trim($_POST['username'] ?? '');
@@ -26,23 +33,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($u) || empty($p)) {
         $error = 'Please enter both username and password.';
     } else {
-        $stmt = $conn->prepare("SELECT id, username, password, role, is_active FROM users WHERE username = ? AND role = 'admin' AND is_active = 1 LIMIT 1");
+        $stmt = $conn->prepare("SELECT id, username, password, role, is_active, status FROM users WHERE (username = ? OR email = ?) AND role = 'admin' LIMIT 1");
         if (!$stmt) {
             login_log("Query error: " . $conn->error);
             $error = 'Internal server error. Please check logs.';
         } else {
-            $stmt->bind_param('s', $u);
+            $stmt->bind_param('ss', $u, $u);
             $stmt->execute();
             $result = $stmt->get_result();
 
             if ($row = $result->fetch_assoc()) {
                 if (password_verify($p, $row['password'])) {
-                    login_log("User '$u' logged in successfully.");
-                    $_SESSION['admin_logged_in'] = true;
-                    $_SESSION['admin_username']  = $row['username'];
-                    $_SESSION['admin_id']        = $row['id'];
-                    header('Location: dashboard.php');
-                    exit;
+                    // [Hold Feature Check]
+                    if (($row['status'] ?? 'active') === 'hold') {
+                        $error = 'Your Vingo service is currently on hold because the payment has not been completed. Please complete the payment to restore access.';
+                        login_log("Login blocked: User '{$row['username']}' is on hold.");
+                    } elseif ($row['is_active'] != 1) {
+                        $error = 'Your account is not yet activated. Please check your email.';
+                    } else {
+                        login_log("User '$u' logged in successfully.");
+                        $_SESSION['admin_logged_in'] = true;
+                        $_SESSION['admin_username']  = $row['username'];
+                        $_SESSION['admin_id']        = $row['id'];
+                        $_SESSION['admin_status']    = $row['status'] ?? 'active';
+                        header('Location: dashboard.php');
+                        exit;
+                    }
                 } else {
                     $error = 'Incorrect password.';
                 }
@@ -98,8 +114,8 @@ if (isset($_SESSION['admin_logged_in'])) {
 
   <form method="POST">
     <div class="form-group" style="margin-bottom:20px">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" placeholder="Enter username" required autofocus>
+      <label for="username">Username or Email</label>
+      <input type="text" id="username" name="username" placeholder="Enter username or email" required autofocus>
     </div>
     <div class="form-group" style="margin-bottom:24px">
       <label for="password">Password</label>

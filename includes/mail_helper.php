@@ -90,3 +90,61 @@ function sendSetupEmail($to_email, $username, $token) {
     
     return $sent;
 }
+
+/**
+ * Sends a notification email when an account is placed on hold.
+ */
+function sendHoldEmail($to_email, $username) {
+    $from = "sales@thevingo.com";
+    $subject = "Vingo Service Temporarily On Hold";
+    
+    $headers = "MIME-Version: 1.0" . "\r\n";
+    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+    $headers .= "From: Vingo System <$from>" . "\r\n";
+    $headers .= "Reply-To: $from" . "\r\n";
+    $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+
+    $message = "
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset='UTF-8'>
+        <title>Service On Hold</title>
+    </head>
+    <body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;'>
+        <table border='0' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f8fafc; padding: 40px 0;'>
+            <tr>
+                <td align='center'>
+                    <div style='max-width: 600px; background-color: #ffffff; border-radius: 16px; padding: 40px; border: 1px solid #edf2f7; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);'>
+                        <div style='text-align: center; margin-bottom: 30px;'>
+                           <h2 style='color: #dc2626; margin: 0;'>Vingo Menu</h2>
+                           <p style='color: #718096; font-size: 14px; margin-top: 5px;'>Service Notification</p>
+                        </div>
+                        
+                        <p style='color: #2d3748; font-size: 16px; line-height: 24px;'>Hello <strong>$username</strong>,</p>
+                        <p style='color: #4a5568; font-size: 16px; line-height: 24px; margin-bottom: 20px;'>
+                            Your Vingo service has been temporarily placed on hold because the payment has not been completed.
+                        </p>
+                        <p style='color: #4a5568; font-size: 16px; line-height: 24px; margin-bottom: 20px;'>
+                            Please complete the payment to restore access to your account and continue using the Vingo platform.
+                        </p>
+                        <p style='color: #718096; font-size: 14px; line-height: 22px;'>
+                            If you believe this is a mistake, please contact support.
+                        </p>
+                        
+                        <hr style='border: 0; border-top: 1px solid #edf2f7; margin: 30px 0;'>
+                        
+                        <p style='font-size: 12px; color: #a0aec0; text-align: center; margin: 0;'>
+                            &copy; " . date('Y') . " Vingo.com | Support Team
+                        </p>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    ";
+
+    return mail($to_email, $subject, $message, $headers);
+}
+

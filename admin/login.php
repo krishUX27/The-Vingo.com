@@ -18,6 +18,13 @@ function login_log($msg) {
 }
 
 $error = '';
+if (isset($_GET['msg'])) {
+    if ($_GET['msg'] === 'on_hold') {
+        $error = 'Your Vingo service is currently on hold because the payment has not been completed. Please complete the payment to restore access.';
+    } elseif ($_GET['msg'] === 'account_disabled') {
+        $error = 'Your account has been deactivated. Please contact the Super Admin.';
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $u = trim($_POST['username'] ?? '');
@@ -26,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($u) || empty($p)) {
         $error = 'Please enter both username and password.';
     } else {
-        $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE (username = ? OR email = ?) AND role = 'admin' LIMIT 1");
+        $stmt = $conn->prepare("SELECT id, username, password, role, status FROM users WHERE (username = ? OR email = ?) AND role = 'admin' LIMIT 1");
         if (!$stmt) {
             login_log("Query error: " . $conn->error);
             $error = 'Internal server error. Please check logs.';
@@ -37,12 +44,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($row = $result->fetch_assoc()) {
                 if (password_verify($p, $row['password'])) {
-                    login_log("User '$u' logged in successfully.");
-                    $_SESSION['admin_logged_in'] = true;
-                    $_SESSION['admin_username']  = $row['username'];
-                    $_SESSION['admin_id']        = $row['id'];
-                    header('Location: dashboard.php');
-                    exit;
+                    if (($row['status'] ?? 'active') === 'hold') {
+                        $error = 'Your Vingo service is currently on hold because the payment has not been completed. Please complete the payment to restore access.';
+                        login_log("Login blocked: User '{$row['username']}' is on hold.");
+                    } else {
+                        login_log("User '$u' logged in successfully.");
+                        $_SESSION['admin_logged_in'] = true;
+                        $_SESSION['admin_username']  = $row['username'];
+                        $_SESSION['admin_id']        = $row['id'];
+                        $_SESSION['admin_status']    = $row['status'];
+                        header('Location: dashboard.php');
+                        exit;
+                    }
                 } else {
                     $error = 'Incorrect password.';
                 }

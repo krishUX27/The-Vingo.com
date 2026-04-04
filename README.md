@@ -43,3 +43,8 @@ If the page doesn't load on your phone:
 
 
 http://localhost/vingo/public_html/admin/dashboard.php
+
+
+C:\xampp\php\php.exe -S localhost:8000
+C:\xampp\php\php.exe reconstruct_settings.php
+

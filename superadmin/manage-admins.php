@@ -8,6 +8,7 @@ require_once __DIR__ . '/../includes/logger.php';
 // Auto-Fix: Ensure the email and activation columns exist in the users table
 $conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) AFTER username");
 $conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active TINYINT DEFAULT 1 AFTER role");
+$conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS status ENUM('active','hold') DEFAULT 'active'");
 $conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS activation_token VARCHAR(128) DEFAULT NULL");
 $conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS token_expiry DATETIME DEFAULT NULL");
 
@@ -82,8 +83,37 @@ if (isset($_GET['delete'])) {
     exit;
 }
 
+// Handle Status Toggle (Hold/Activate)
+if (isset($_GET['status_toggle']) && isset($_GET['status'])) {
+    $id = (int)$_GET['status_toggle'];
+    $new_status = $_GET['status'] === 'hold' ? 'hold' : 'active';
+    
+    // Safety: ensure we only target 'admin' users
+    $stmt = $conn->prepare("UPDATE users SET status = ? WHERE id = ? AND role = 'admin'");
+    $stmt->bind_param('si', $new_status, $id);
+    
+    if ($stmt->execute()) {
+        if ($new_status === 'hold') {
+            // Fetch admin email/name for notification
+            $u_stmt = $conn->prepare("SELECT username, email FROM users WHERE id = ?");
+            $u_stmt->bind_param('i', $id);
+            $u_stmt->execute();
+            $admin_data = $u_stmt->get_result()->fetch_assoc();
+            
+            if ($admin_data) {
+                sendHoldEmail($admin_data['email'], $admin_data['username']);
+            }
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin account has been placed on hold."];
+        } else {
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => "Admin account has been re-activated."];
+        }
+    }
+    header('Location: manage-admins.php');
+    exit;
+}
+
 // Fetch all admins
-$admins = $conn->query("SELECT id, username, email, role, created_at FROM users WHERE role = 'admin' ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
+$admins = $conn->query("SELECT id, username, email, role, status, created_at FROM users WHERE role = 'admin' ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
 
 $cur = 'manage-admins.php';
 ?>
@@ -159,6 +189,7 @@ $cur = 'manage-admins.php';
               <tr style="text-align:left">
                 <th>Username</th>
                 <th>Email</th>
+                <th>Status</th>
                 <th>Created</th>
                 <th style="text-align:right">Actions</th>
               </tr>
@@ -168,8 +199,23 @@ $cur = 'manage-admins.php';
               <tr>
                 <td><strong><?= htmlspecialchars($a['username']) ?></strong></td>
                 <td style="font-size:0.85rem; color:#64748b"><?= htmlspecialchars($a['email'] ?? 'N/A') ?></td>
+                <td>
+                  <?php if (($a['status'] ?? 'active') === 'active'): ?>
+                    <span style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">● Active</span>
+                  <?php else: ?>
+                    <span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">● On Hold</span>
+                  <?php endif; ?>
+                </td>
                 <td style="font-size:0.85rem; color:var(--text-light)"><?= date('M d, Y', strtotime($a['created_at'])) ?></td>
                 <td style="text-align:right">
+                  <a href="edit-admin.php?id=<?= $a['id'] ?>" class="btn btn-outline btn-sm" style="margin-right:5px">✏️ Edit</a>
+                  
+                  <?php if (($a['status'] ?? 'active') === 'active'): ?>
+                    <a href="?status_toggle=<?= $a['id'] ?>&status=hold" class="btn btn-warning btn-sm" style="margin-right:5px; background:#fef3c7; color:#92400e; border:1px solid #fde68a" onclick="return confirm('Place this account on hold?')">⏸️ Hold</a>
+                  <?php else: ?>
+                    <a href="?status_toggle=<?= $a['id'] ?>&status=active" class="btn btn-success btn-sm" style="margin-right:5px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0" onclick="return confirm('Re-activate this account?')">▶️ Activate</a>
+                  <?php endif; ?>
+
                   <a href="?delete=<?= $a['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete this admin account?')">🗑️ Delete</a>
                 </td>
               </tr>

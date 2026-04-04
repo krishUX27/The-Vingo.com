@@ -21,6 +21,7 @@ $prefix = $prefix ?? '';
     </a>
     <?= nav_a('print-menu.php', '🖨️', 'Print Menu', $cur) ?>
     <?= nav_a('qr.php', '📱', 'QR Code', $cur) ?>
+    <?= nav_a('menu-import.php', '📥', 'Menu Import', $cur) ?>
     <a href="<?= $prefix ?>generate_pdf.php" target="_blank">
       <span class="nav-icon">📄</span> Download PDF
     </a>

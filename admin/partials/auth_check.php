@@ -14,17 +14,18 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 require_once __DIR__ . '/../../includes/db.php';
 
 $check_id = (int)($_SESSION['admin_id'] ?? 0);
-$stmt = $conn->prepare("SELECT id, is_active FROM users WHERE id = ? AND role = 'admin' LIMIT 1");
+$stmt = $conn->prepare("SELECT id, is_active, status FROM users WHERE id = ? AND role = 'admin' LIMIT 1");
 $stmt->bind_param('i', $check_id);
 $stmt->execute();
 $res = $stmt->get_result();
 $user = $res->fetch_assoc();
 
-if (!$user || $user['is_active'] != 1) {
-    // User was deleted or deactivated! Force logout.
+if (!$user || $user['is_active'] != 1 || ($user['status'] ?? 'active') === 'hold') {
+    // Account deactivated or on hold
+    $msg = ($user && $user['status'] === 'hold') ? 'on_hold' : 'account_disabled';
     session_unset();
     session_destroy();
-    header('Location: index.php?msg=account_disabled');
+    header('Location: index.php?msg=' . $msg);
     exit;
 }
 $stmt->close();
