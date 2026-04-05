@@ -552,13 +552,6 @@ function syncSearch(val) {
 
     <div class="filter-grid-2">
       <div class="filter-group">
-        <label>Status</label>
-        <select id="f-avail">
-          <option value="all">All</option>
-          <option value="Available">Available</option>
-        </select>
-      </div>
-      <div class="filter-group">
         <label>Price Range</label>
         <div style="display:flex; align-items:center; gap:8px">
           <input type="number" id="f-min" placeholder="Min" style="width:50%; padding: 10px">
@@ -636,16 +629,11 @@ function esc(s) {
 /* ── Build dish row ── */
 function dishRow(d, dotClass) {
   const symbol = d.currency === 'USD' ? '$' : '₹';
-  const avail = d.availability === 'Available';
   const imgUrl = d.image ? `uploads/${d.image}` : '';
   
   const imgHtml = imgUrl 
     ? `<img src="${esc(imgUrl)}" alt="${esc(d.name)}">`
     : `<span class="dish-picon">🍽️</span>`;
-
-  const btn = avail
-    ? `<button class="add-btn" title="Add ${esc(d.name)}">+</button>`
-    : `<button class="add-btn na" disabled title="Not available">+</button>`;
 
   let priceHtml = `<span class="dish-price" style="flex-shrink:0">${symbol}${parseFloat(d.price).toFixed(2)}</span>`;
   
@@ -722,8 +710,6 @@ function applyAdvancedFilters() {
     const matches = fullData[categoryName].filter(d => {
       // 2. Search
       if (q !== '' && !d.name.toLowerCase().includes(q)) return false;
-      // 3. Availability
-      if (avail !== 'all' && d.availability !== avail) return false;
       // 4. Meal Time
       if (activeMeal !== 'all') {
         if (activeMeal === 'breakfast' && !d.available_breakfast) return false;
@@ -826,7 +812,6 @@ document.getElementById('btn-reset').onclick = () => {
     document.getElementById('f-search').value = '';
     document.getElementById('refSearch').value = '';
     document.getElementById('f-category').value = 'all';
-    document.getElementById('f-avail').value = 'all';
     document.getElementById('f-min').value = '';
     document.getElementById('f-max').value = '';
     applyAdvancedFilters();

@@ -173,8 +173,8 @@ function process_csv_import($file_path, $admin_id, $conn) {
             $currency = menu_get_setting('currency', 'INR', $admin_id);
 
             // 3. Insert Dish (Strict Admin Isolation)
-            $sql = "INSERT INTO dishes (user_id, category_id, name, price, description, veg_type, available_breakfast, available_lunch, available_dinner, availability, currency) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Available', ?)";
+            $sql = "INSERT INTO dishes (user_id, category_id, name, price, description, veg_type, available_breakfast, available_lunch, available_dinner, currency) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("iisdssiiis", $admin_id, $cat_id, $dish_name, $price, $desc, $veg_type, $avail_b, $avail_l, $avail_d, $currency);
             

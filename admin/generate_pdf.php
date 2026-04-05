@@ -20,10 +20,10 @@ $restaurant_sub  = get_set('restaurant_sub',  'Signature Selection', $admin_id);
 
 // Fetch dishes grouped by category
 $result = $conn->query(
-    "SELECT d.name, d.price, d.image, d.availability, c.name AS category
+    "SELECT d.name, d.price, d.image, c.name AS category
      FROM dishes d
      JOIN categories c ON c.id = d.category_id
-     WHERE d.user_id = $admin_id
+     WHERE d.user_id = $admin_id AND d.is_deleted = 0
      ORDER BY c.name, d.name"
 );
 $dishes  = $result->fetch_all(MYSQLI_ASSOC);

@@ -7,10 +7,10 @@ $restaurant_name = menu_get_setting('restaurant_name', 'My Restaurant', $admin_i
 $tagline         = menu_get_setting('restaurant_sub',  'Delicious meals, crafted with love', $admin_id);
 
 $result = $conn->query(
-    "SELECT d.name, d.price, d.availability, c.name AS category
+    "SELECT d.name, d.price, c.name AS category
      FROM dishes d
      JOIN categories c ON c.id = d.category_id
-     WHERE d.availability = 'Available' AND d.user_id = $admin_id AND d.is_deleted = 0
+     WHERE d.user_id = $admin_id AND d.is_deleted = 0
      ORDER BY c.name, d.name"
 );
 

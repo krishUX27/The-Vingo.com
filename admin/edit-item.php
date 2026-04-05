@@ -25,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name         = trim($_POST['name']          ?? '');
     $price        = $_POST['price']              ?? '';
     $cat_id       = intval($_POST['category_id'] ?? 0);
-    $availability = $_POST['availability']       ?? 'Available';
     $break        = isset($_POST['available_breakfast']) ? 1 : 0;
     $lunch        = isset($_POST['available_lunch'])     ? 1 : 0;
     $dinner       = isset($_POST['available_dinner'])    ? 1 : 0;
@@ -60,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, veg_type=?, available_breakfast=?, available_lunch=?, available_dinner=?, image=?, availability=?, currency=?, offer_id=? WHERE id=? AND user_id=?");
-        $upd->bind_param('sdisiiiisssii', $name, $price, $cat_id, $veg_type, $break, $lunch, $dinner, $image_name, $availability, $currency, $offer_id, $id, $admin_sess_id);
+        $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, veg_type=?, available_breakfast=?, available_lunch=?, available_dinner=?, image=?, currency=?, offer_id=? WHERE id=? AND user_id=?");
+        $upd->bind_param('sdisiiisssii', $name, $price, $cat_id, $veg_type, $break, $lunch, $dinner, $image_name, $currency, $offer_id, $id, $admin_sess_id);
         if ($upd->execute()) {
             $_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish '{$name}' updated."];
             header('Location: dashboard.php');
@@ -74,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dish = array_merge($dish, [
         'name' => $name, 
         'price' => $price, 
-        'availability' => $availability, 
         'currency' => $currency, 
         'offer_id' => $offer_id, 
         'veg_type' => $veg_type,

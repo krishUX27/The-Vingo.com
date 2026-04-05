@@ -2,6 +2,10 @@
 require_once __DIR__ . '/partials/auth_check.php';
 require_once __DIR__ . '/../includes/db.php';
 
+// One-time Schema Clean-up: Remove obsolete availability column
+$chk = $conn->query("SHOW COLUMNS FROM dishes LIKE 'availability'");
+if ($chk && $chk->num_rows > 0) { $conn->query("ALTER TABLE dishes DROP COLUMN availability"); }
+
 // Production Error Handling
 ini_set('display_errors', 0);
 error_reporting(E_ALL & ~E_NOTICE);
@@ -21,7 +25,6 @@ dashboard_log("Dashboard hit. " . ($_SERVER['REQUEST_METHOD'] === 'POST' ? 'Acti
 /* ── Filters ── */
 $search     = trim($_GET['q']         ?? '');
 $cat_filter = intval($_GET['cat']     ?? 0);
-$avail      = $_GET['avail']          ?? '';
 $veg_type   = $_GET['veg_type']       ?? '';
 $meal_time  = $_GET['meal_time']      ?? '';
 $price_min  = $_GET['price_min']      ?? '';
@@ -40,11 +43,6 @@ if ($cat_filter > 0) {
     $conditions[] = 'd.category_id = ?';
     $params[]     = $cat_filter;
     $types       .= 'i';
-}
-if ($avail !== '') {
-    $conditions[] = 'd.availability = ?';
-    $params[]     = $avail;
-    $types       .= 's';
 }
 if ($veg_type !== '') {
     $conditions[] = 'd.veg_type = ?';
@@ -88,7 +86,6 @@ function get_stat_count($conn, $sql, $uid) {
 }
 
 $total_dishes = get_stat_count($conn, "SELECT COUNT(*) FROM dishes WHERE user_id = ? AND is_deleted = 0", $admin_sess_id);
-$avail_cnt    = get_stat_count($conn, "SELECT COUNT(*) FROM dishes WHERE availability='Available' AND user_id = ? AND is_deleted = 0", $admin_sess_id);
 $total_cats   = get_stat_count($conn, "SELECT COUNT(*) FROM categories WHERE user_id = ? AND is_deleted = 0", $admin_sess_id);
 
 /* ── Handle Add Dish (Modal POST) ── */
@@ -97,7 +94,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $name         = trim($_POST['name']          ?? '');
     $price        = $_POST['price']              ?? '';
     $cat_id       = intval($_POST['category_id'] ?? 0);
-    $availability = $_POST['availability']       ?? 'Available';
     $break        = isset($_POST['available_breakfast']) ? 1 : 0;
     $lunch        = isset($_POST['available_lunch'])     ? 1 : 0;
     $dinner       = isset($_POST['available_dinner'])    ? 1 : 0;
@@ -129,13 +125,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     if (empty($errors)) {
         dashboard_log("Attempting to insert dish: $name, $price, $cat_id, $veg_type_val for User $admin_sess_id");
-        $s = $conn->prepare("INSERT INTO dishes (name,price,category_id,veg_type,available_breakfast,available_lunch,available_dinner,image,availability,currency,offer_id,user_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+        $s = $conn->prepare("INSERT INTO dishes (name,price,category_id,veg_type,available_breakfast,available_lunch,available_dinner,image,currency,offer_id,user_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
         if (!$s) {
             $err_msg = 'Prepare failed: ' . $conn->error;
             dashboard_log($err_msg);
             $errors[] = $err_msg;
         } else {
-            $s->bind_param('sdisiiisssii', $name, $price, $cat_id, $veg_type_val, $break, $lunch, $dinner, $image_name, $availability, $currency, $offer_id, $admin_sess_id);
+            $s->bind_param('sdisiiisssi', $name, $price, $cat_id, $veg_type_val, $break, $lunch, $dinner, $image_name, $currency, $offer_id, $admin_sess_id);
             if ($s->execute()) {
                 $new_id = $conn->insert_id;
                 dashboard_log("Dish '{$name}' added successfully. ID: {$new_id}");
@@ -258,21 +254,15 @@ if (!$offer_res) {
     <!-- Stats -->
     <div class="stats-grid">
       <div class="stat-box">
-        <div class="stat-icon si-purple">🍽️</div>
+        <div class="stat-icon si-green">🍔</div>
         <div><div class="stat-val"><?= $total_dishes ?></div><div class="stat-label">Total Dishes</div></div>
       </div>
       <div class="stat-box">
-        <div class="stat-icon si-green">✅</div>
-        <div><div class="stat-val"><?= $avail_cnt ?></div><div class="stat-label">Available</div></div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-icon si-red">❌</div>
-        <div><div class="stat-val"><?= $total_dishes - $avail_cnt ?></div><div class="stat-label">Not Available</div></div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-icon si-orange">📂</div>
+        <div class="stat-icon si-red">📁</div>
         <div><div class="stat-val"><?= $total_cats ?></div><div class="stat-label">Categories</div></div>
       </div>
+      <div class="stat-box" style="visibility:hidden"></div>
+      <div class="stat-box" style="visibility:hidden"></div>
     </div>
 
     <!-- Dish Table -->
@@ -295,14 +285,6 @@ if (!$offer_res) {
                   <?= htmlspecialchars($c['name']) ?>
                 </option>
               <?php endforeach; ?>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Availability</label>
-            <select name="avail">
-              <option value="">All</option>
-              <option value="Available"     <?= $avail==='Available'     ? 'selected':'' ?>>Available</option>
-              <option value="Not Available" <?= $avail==='Not Available' ? 'selected':'' ?>>Not Available</option>
             </select>
           </div>
           <div class="form-group">
@@ -375,7 +357,6 @@ if (!$offer_res) {
               <th>Meal Times</th>
               <th>Price</th>
               <th>Category</th>
-              <th>Availability</th>
               <th>Added</th>
               <th>Actions</th>
             </tr>
@@ -412,13 +393,6 @@ if (!$offer_res) {
               </td>
               <td><?= ($d['currency'] === 'USD' ? '$' : '₹') . number_format($d['price'], 2) ?></td>
               <td><span class="badge badge-info"><?= htmlspecialchars($d['cat_name']) ?></span></td>
-              <td>
-                <?php if ($d['availability'] === 'Available'): ?>
-                  <span class="badge badge-success">✅ Available</span>
-                <?php else: ?>
-                  <span class="badge badge-danger">❌ Not Available</span>
-                <?php endif; ?>
-              </td>
               <td style="color:var(--muted);font-size:.78rem"><?= date('d M Y', strtotime($d['created_at'])) ?></td>
               <td>
                 <div class="btn-grp">
