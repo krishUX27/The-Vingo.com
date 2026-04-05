@@ -2,14 +2,15 @@
 require_once __DIR__ . '/partials/auth_check.php';
 require_once __DIR__ . '/../includes/db.php';
 
-$restaurant_name = menu_get_setting('restaurant_name', 'My Restaurant');
-$tagline         = menu_get_setting('restaurant_sub',  'Delicious meals, crafted with love');
+$admin_id = $_SESSION['admin_id'] ?? 0;
+$restaurant_name = menu_get_setting('restaurant_name', 'My Restaurant', $admin_id);
+$tagline         = menu_get_setting('restaurant_sub',  'Delicious meals, crafted with love', $admin_id);
 
 $result = $conn->query(
     "SELECT d.name, d.price, d.availability, c.name AS category
      FROM dishes d
      JOIN categories c ON c.id = d.category_id
-     WHERE d.availability = 'Available'
+     WHERE d.availability = 'Available' AND d.user_id = $admin_id AND d.is_deleted = 0
      ORDER BY c.name, d.name"
 );
 
@@ -238,6 +239,37 @@ while ($row = $result->fetch_assoc()) {
 
 </div>
 
+<script>
+const ADMIN_ID = <?= $admin_id ?>;
+const FETCH_URL = '../api/fetch_dishes.php?user_id=' + ADMIN_ID;
+const POLL_MS = 3000;
+let lastHash = '<?= md5(serialize($grouped)) ?>';
+
+async function checkSync() {
+  try {
+    const r = await fetch(FETCH_URL + '&_=' + Date.now());
+    const json = await r.json();
+    if (!json.success) return;
+    
+    const hash = b64EncodeUnicode(JSON.stringify(json.data)); 
+    // We use a simple hash comparison to detect changes
+    if (lastHash !== '' && lastHash !== hash) {
+       window.location.reload();
+    }
+    lastHash = hash;
+  } catch(e) {}
+}
+
+function b64EncodeUnicode(str) {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+        return String.fromCharCode('0x' + p1);
+    }));
+}
+
+if (ADMIN_ID > 0) {
+  setInterval(checkSync, POLL_MS);
+}
+</script>
 </body>
 </html>
 

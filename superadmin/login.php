@@ -127,7 +127,7 @@ if (isset($_SESSION['super_logged_in'])) {
       <label>Root Key</label>
       <div style="position:relative">
         <input type="password" id="p" name="p" placeholder="••••••••" required style="width:100%; padding-right:45px">
-        <span id="togglePassword" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.1rem; opacity:0.6; transition:0.2s">👁️</span>
+        <span id="togglePassword" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.1rem; opacity:0.9; transition:0.2s">👁️</span>
       </div>
     </div>
     <button type="submit">Initialize Root Console</button>

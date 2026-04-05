@@ -783,7 +783,7 @@ function showToast() {
 /* ── Fetch & poll ── */
 async function fetchMenu() {
   try {
-    const r    = await fetch(FETCH_URL + '?_=' + Date.now());
+    const r    = await fetch(FETCH_URL + (FETCH_URL.includes('?') ? '&' : '?') + '_=' + Date.now());
     const json = await r.json();
     if (!json.success) return;
 

@@ -528,13 +528,6 @@ document.addEventListener('DOMContentLoaded', function() {
         </select>
       </div>
       <div class="form-group">
-        <label>Availability</label>
-        <select name="availability">
-          <option value="Available">Available</option>
-          <option value="Not Available">Not Available</option>
-        </select>
-      </div>
-      <div class="form-group">
         <label>Seasonal Offer (Optional)</label>
         <select name="offer_id">
           <option value="">No Active Offer</option>
@@ -600,7 +593,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   closeBtn.addEventListener('click', hideModal);
   cancelBtn.addEventListener('click', hideModal);
-  overlay.addEventListener('click', hideModal);
 
   // Auto-open modal if URL contains ?add=1 or there are errors
   if (window.location.search.includes('add=1')) {

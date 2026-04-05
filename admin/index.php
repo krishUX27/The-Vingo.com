@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $res_check = $check->get_result();
             if ($r = $res_check->fetch_assoc()) {
                 if ($r['role'] === 'superadmin') {
-                    $error = 'This account is a Super Admin. Please login at the Master Root Console.';
+                    $error = '';
                 } else {
                     $error = 'Account not found.';
                 }
@@ -171,7 +171,10 @@ if (isset($_SESSION['admin_logged_in'])) {
       </div>
       <div class="form-group" style="margin-bottom:24px">
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="••••••••" required>
+        <div style="position:relative">
+          <input type="password" id="password" name="password" placeholder="••••••••" required style="width:100%; padding-right:45px">
+          <span id="togglePassword" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.1rem; opacity:0.9; transition:0.2s">👁️</span>
+        </div>
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:16px; border-radius:12px">
         🚀 Sign In
@@ -193,6 +196,16 @@ if (isset($_SESSION['admin_logged_in'])) {
       card.style.animation = 'none';
       card.offsetHeight; /* trigger reflow */
       card.style.animation = null;
+    }
+
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#password');
+    if (togglePassword && password) {
+      togglePassword.addEventListener('click', function (e) {
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        this.textContent = type === 'password' ? '👁️' : '🙈';
+      });
     }
   });
 </script>

@@ -188,6 +188,8 @@ input, select, textarea {
   transition: var(--transition);
 }
 input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(59, 130, 241, 0.1); }
+input::-ms-reveal, input::-ms-clear { display: none !important; }
+input::-webkit-contacts-auto-fill-button, input::-webkit-credentials-auto-fill-button { display: none !important; visibility: hidden; pointer-events: none; }
 
 /* Horizontal Filter Bar */
 .filter-bar {

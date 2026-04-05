@@ -183,14 +183,6 @@ $offers     = $conn->query("SELECT id, title FROM seasonal_offers WHERE user_id 
           </div>
 
           <div class="form-group">
-            <label for="availability">Availability</label>
-            <select id="availability" name="availability">
-              <option value="Available"     <?= $dish['availability']==='Available'     ? 'selected':'' ?>>Available</option>
-              <option value="Not Available" <?= $dish['availability']==='Not Available' ? 'selected':'' ?>>Not Available</option>
-            </select>
-          </div>
-
-          <div class="form-group">
             <label for="offer_id">Seasonal Offer</label>
             <select id="offer_id" name="offer_id">
               <option value="">No Active Offer</option>

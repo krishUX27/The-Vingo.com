@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $res = $check->get_result();
         if ($r = $res->fetch_assoc()) {
           if ($r['role'] === 'superadmin') {
-            $error = 'This account is a Super Admin. Please login at the Master Root Console.';
+            $error = '';
           } else {
             $error = 'Account not found.';
           }
@@ -136,7 +136,7 @@ if (isset($_SESSION['admin_logged_in'])) {
           <input type="password" id="password" name="password" placeholder="••••••••" required
             style="width:100%; padding-right:45px">
           <span id="togglePassword"
-            style="position:absolute; right:15px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.1rem; opacity:0.6; transition:0.2s">👁️</span>
+            style="position:absolute; right:15px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.1rem; opacity:0.9; transition:0.2s">👁️</span>
         </div>
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:16px">
