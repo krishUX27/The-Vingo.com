@@ -21,13 +21,13 @@ $sql = "SELECT d.id,
                c.id          AS category_id,
                c.name        AS category_name,
                o.title       AS offer_title,
-               o.discount    AS offer_discount,
+               CONCAT(o.discount_percentage, '%') AS offer_discount,
                d.available_breakfast,
                d.available_lunch,
                d.available_dinner
         FROM   dishes     d
         JOIN   categories c ON c.id = d.category_id
-        LEFT JOIN seasonal_offers o ON o.id = d.offer_id
+        LEFT JOIN offers o ON o.id = d.offer_id AND o.offer_type = 'seasonal' AND o.status = 'active' AND CURRENT_DATE BETWEEN o.start_date AND o.end_date
         WHERE  d.user_id = ? AND d.is_deleted = 0
 " . (isset($_GET['veg_type']) && in_array($_GET['veg_type'], ['veg','non_veg']) ? " AND d.veg_type = '" . $conn->real_escape_string($_GET['veg_type']) . "'" : "") . "
         ORDER  BY c.name, d.name";

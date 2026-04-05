@@ -169,10 +169,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 /* ── Dish list (Owner filtered) ── */
-$sql  = "SELECT d.*, c.name AS cat_name, o.title AS offer_title, o.discount AS offer_discount
+$sql  = "SELECT d.*, c.name AS cat_name, o.title AS offer_title, o.discount_percentage AS offer_discount
          FROM dishes d
          JOIN categories c ON c.id = d.category_id
-         LEFT JOIN seasonal_offers o ON o.id = d.offer_id
+         LEFT JOIN offers o ON o.id = d.offer_id AND o.offer_type = 'seasonal' AND o.is_deleted = 0
          WHERE d.user_id = ? AND d.is_deleted = 0 " . ($where ? "AND " . str_replace('WHERE','',$where) : "") . "
          ORDER BY d.created_at DESC";
 $stmt = $conn->prepare($sql);
@@ -195,8 +195,8 @@ if (!$cat_res) {
     $categories = $cat_res->fetch_all(MYSQLI_ASSOC);
 }
 
-/* ── Offers dropdown for modal (Owner filtered) ── */
-$offer_res = $conn->query("SELECT id, title FROM seasonal_offers WHERE user_id = $admin_sess_id AND active=1 ORDER BY title");
+/* ── Offers dropdown for modal (Owner filtered, Seasonal type only) ── */
+$offer_res = $conn->query("SELECT id, title FROM offers WHERE user_id = $admin_sess_id AND status='active' AND offer_type='seasonal' AND is_deleted=0 ORDER BY title");
 if (!$offer_res) {
     dashboard_log("Offers query failed: " . $conn->error);
     $offers = [];

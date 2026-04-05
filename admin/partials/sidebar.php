@@ -15,7 +15,7 @@ $prefix = $prefix ?? '';
   <nav>
     <?= nav_a('dashboard.php',   '📊', 'Dashboard',   $cur) ?>
     <?= nav_a('add-category.php',    '📂', 'Categories',  $cur) ?>
-    <?= nav_a('seasonal-offers.php', '🎁', 'Seasonal Offers', $cur) ?>
+    <?= nav_a('offer-zone.php', '🎁', 'Offer Zone', $cur) ?>
     <a href="<?= $prefix ?>../menu.php?id=<?= $_SESSION['admin_id'] ?? 0 ?>" target="_blank">
       <span class="nav-icon">🌐</span> Live Menu ↗
     </a>

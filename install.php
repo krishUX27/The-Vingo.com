@@ -38,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 price DECIMAL(10,2), 
                 description TEXT, 
                 image VARCHAR(255), 
-                availability ENUM('Available', 'Not Available') DEFAULT 'Available', 
                 veg_type ENUM('veg','non_veg') NOT NULL DEFAULT 'veg',
                 available_breakfast TINYINT(1) DEFAULT 1,
                 available_lunch TINYINT(1) DEFAULT 1,
@@ -56,17 +55,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setting_value TEXT, 
                 UNIQUE KEY u_user_setting (user_id, setting_key)
             )",
-            "seasonal_offers" => "CREATE TABLE IF NOT EXISTS seasonal_offers (
+            "offers" => "CREATE TABLE IF NOT EXISTS offers (
                 id INT AUTO_INCREMENT PRIMARY KEY, 
-                user_id INT, 
-                title VARCHAR(100), 
+                user_id INT NOT NULL, 
+                offer_type ENUM('seasonal', 'combo') NOT NULL, 
+                title VARCHAR(255) NOT NULL, 
                 description TEXT, 
-                discount VARCHAR(50), 
-                active TINYINT DEFAULT 1, 
+                discount_percentage DECIMAL(5,2) DEFAULT NULL, 
+                combo_price DECIMAL(10,2) DEFAULT NULL, 
+                start_date DATE NOT NULL, 
+                end_date DATE NOT NULL, 
+                status ENUM('active', 'inactive') DEFAULT 'active', 
                 is_deleted TINYINT(1) DEFAULT 0,
-                deleted_at DATETIME NULL,
-                expires_at DATE NULL, 
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )",
+            "offer_combo_dishes" => "CREATE TABLE IF NOT EXISTS offer_combo_dishes (
+                id INT AUTO_INCREMENT PRIMARY KEY, 
+                offer_id INT NOT NULL, 
+                dish_id INT NOT NULL
             )",
             "qr_scans" => "CREATE TABLE IF NOT EXISTS qr_scans (
                 user_id INT PRIMARY KEY, 

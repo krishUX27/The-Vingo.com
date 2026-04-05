@@ -13,7 +13,9 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Premium Digital Selectio
 // Fetch active offers for this user
 $offers = [];
 if ($user_id) {
-    $off_res = $conn->query("SELECT * FROM seasonal_offers WHERE user_id = $user_id AND is_deleted = 0 ORDER BY created_at DESC");
+    // Current date check for active offers
+    $today = date('Y-m-d');
+    $off_res = $conn->query("SELECT * FROM offers WHERE user_id = $user_id AND status = 'active' AND '$today' BETWEEN start_date AND end_date AND is_deleted = 0 ORDER BY created_at DESC");
     if ($off_res) $offers = $off_res->fetch_all(MYSQLI_ASSOC);
 }
 ?>
@@ -60,29 +62,33 @@ if ($user_id) {
       text-align: center;
       color: #fff;
     }
-    .sticky-controls {
-      position: sticky;
-      top: 0;
-      background: var(--header-bg);
-      z-index: 1000;
-      padding: 12px 20px 18px;
-      margin-top: -1px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.12);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      transition: all 0.3s ease;
-    }
     .restaurant-name {
       font-size: 2.8rem;
       font-weight: 800;
       margin-bottom: 5px;
       letter-spacing: -1px;
     }
+    .sticky-controls {
+      position: sticky;
+      top: 0;
+      background: var(--header-bg);
+      z-index: 1000;
+      padding: 15px 0 20px;
+      margin-top: -1px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.3s ease;
+    }
+    @media(max-width: 768px) {
+      .sticky-controls { padding: 12px 0 15px; }
+    }
     .search-filter-row {
       display: flex;
       gap: 12px;
       align-items: center;
       max-width: 650px;
-      margin: 0 auto 15px;
+      margin: 0 auto 18px;
+      padding: 0 20px;
     }
     .search-input-wrap {
       flex: 1;
@@ -90,7 +96,7 @@ if ($user_id) {
     }
     .search-input-wrap input {
       width: 100%;
-      padding: 12px 20px;
+      padding: 14px 22px;
       border-radius: 50px;
       border: none;
       font-size: 1rem;
@@ -488,12 +494,21 @@ if ($user_id) {
     /* ── Meal Tabs ── */
     .meal-tabs {
       display: flex;
-      justify-content: center;
-      gap: 10px;
+      justify-content: flex-start;
+      gap: 12px;
       margin-bottom: 0;
-      padding: 0;
+      padding: 5px 0 0;
       overflow-x: auto;
       scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .meal-tabs::before, .meal-tabs::after {
+      content: '';
+      flex: 0 0 20px;
+    }
+    @media(min-width: 769px) {
+      .meal-tabs { justify-content: center; }
+      .meal-tabs::before, .meal-tabs::after { display: none; }
     }
     .meal-tabs::-webkit-scrollbar { display: none; }
     .meal-tab {
@@ -531,9 +546,11 @@ if ($user_id) {
         <div class="offer-card-ref">
           <div class="accent-shape"></div>
           <div class="offer-content-ref">
-            <div class="offer-discount-text"><?= htmlspecialchars($off['discount']) ?></div>
+            <div class="offer-discount-text">
+              <?= $off['offer_type']==='seasonal' ? htmlspecialchars($off['discount_percentage']).'%' : '₹'.number_format($off['combo_price'], 0) ?>
+            </div>
             <div class="offer-title-text"><?= htmlspecialchars($off['title']) ?></div>
-            <div class="offer-sub-text"><?= htmlspecialchars($off['description'] ?: 'Summer Offer') ?></div>
+            <div class="offer-sub-text"><?= htmlspecialchars($off['description']) ?></div>
           </div>
         </div>
       <?php endforeach; ?>
