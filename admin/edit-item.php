@@ -36,6 +36,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($price === '' || !is_numeric($price) || $price < 0)    $errors[] = 'A valid price is required.';
     if ($cat_id === 0)                                         $errors[] = 'Please select a category.';
 
+    // Check for duplicate dish name (excluding current ID) - Case-Insensitive
+    if (empty($errors)) {
+        $check_stmt = $conn->prepare("SELECT id FROM dishes WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND user_id = ? AND id != ? AND is_deleted = 0");
+        $check_stmt->bind_param('sii', $name, $admin_sess_id, $id);
+        $check_stmt->execute();
+        if ($check_stmt->get_result()->num_rows > 0) {
+            $errors[] = "This dish already exists.";
+        }
+        $check_stmt->close();
+    }
+
     $image_name = $dish['image'];
     if (!empty($_FILES['image']['name'])) {
         $f   = $_FILES['image'];

@@ -69,13 +69,14 @@ if ($user_id) {
       letter-spacing: -1px;
     }
     .sticky-controls {
+      position: -webkit-sticky;
       position: sticky;
       top: 0;
       background: var(--header-bg);
       z-index: 1000;
       padding: 15px 0 20px;
       margin-top: -1px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
       border-bottom: 1px solid rgba(255,255,255,0.05);
       transition: all 0.3s ease;
     }
@@ -94,9 +95,29 @@ if ($user_id) {
       flex: 1;
       position: relative;
     }
+    .search-inner-btn {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      z-index: 2;
+    }
+    .search-inner-btn:hover { background: #2563eb; transform: translateY(-50%) scale(1.05); }
     .search-input-wrap input {
       width: 100%;
-      padding: 14px 22px;
+      padding: 14px 55px 14px 22px;
       border-radius: 50px;
       border: none;
       font-size: 1rem;
@@ -570,6 +591,7 @@ if ($user_id) {
   <div class="search-filter-row">
     <div class="search-input-wrap">
       <input type="text" id="refSearch" placeholder="Search for dishes..." onkeyup="syncSearch(this.value)">
+      <button class="search-inner-btn" onclick="applyAdvancedFilters()" type="button">🔍</button>
     </div>
     <button class="ref-filter-btn" id="openFilter">
       Filter <span style="font-size: 0.7rem">▼</span>
@@ -747,9 +769,8 @@ function populateCategories(cats) {
 
 /* ── Client-side Filter Logic ── */
 function applyAdvancedFilters() {
-  const q     = document.getElementById('f-search').value.toLowerCase().trim();
+  const q     = (document.getElementById('f-search').value || '').toLowerCase().trim();
   const cat   = document.getElementById('f-category').value;
-  const avail = document.getElementById('f-avail').value;
   const min   = parseFloat(document.getElementById('f-min').value) || 0;
   const max   = parseFloat(document.getElementById('f-max').value) || 999999;
 
@@ -871,9 +892,17 @@ document.getElementById('btn-reset').onclick = () => {
     toggleModal(false);
 };
 
-// Also apply on enter key for numeric inputs
-['f-min','f-max'].forEach(id => {
-  document.getElementById(id).onkeyup = e => { if (e.key === 'Enter') { applyAdvancedFilters(); toggleModal(false); } };
+// Also apply on enter key for all inputs
+['f-min','f-max','refSearch'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.onkeyup = e => { 
+    if (id === 'refSearch') syncSearch(el.value);
+    if (e.key === 'Enter') { 
+      applyAdvancedFilters(); 
+      toggleModal(false); 
+    } 
+  };
 });
 
 // Meal Tab Clicks
