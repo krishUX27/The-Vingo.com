@@ -618,6 +618,15 @@ function syncSearch(val) {
       </select>
     </div>
 
+    <div class="filter-group">
+      <label>Dietary Preference</label>
+      <select id="f-diet">
+        <option value="all">All Dishes</option>
+        <option value="veg">Veg Only 🟩</option>
+        <option value="non_veg">Non-Veg Only 🟥</option>
+      </select>
+    </div>
+
     <div class="filter-grid-2">
       <div class="filter-group">
         <label>Price Range</label>
@@ -846,6 +855,7 @@ function applyAdvancedFilters() {
   const data  = fullData.dishes;
   const q     = (document.getElementById('f-search').value || '').toLowerCase().trim();
   const cat   = document.getElementById('f-category').value;
+  const diet  = document.getElementById('f-diet').value;
   const min   = parseFloat(document.getElementById('f-min').value) || 0;
   const max   = parseFloat(document.getElementById('f-max').value) || 999999;
 
@@ -859,6 +869,8 @@ function applyAdvancedFilters() {
     const matches = data[categoryName].filter(d => {
       // 2. Search
       if (q !== '' && !d.name.toLowerCase().includes(q)) return false;
+      // 3. Diet Preference
+      if (diet !== 'all' && d.veg_type !== diet) return false;
       // 4. Meal Time
       if (activeMeal !== 'all') {
         const mealKey = `available_${activeMeal}`;
@@ -940,6 +952,7 @@ document.getElementById('btn-reset').onclick = () => {
     document.getElementById('f-search').value = '';
     document.getElementById('refSearch').value = '';
     document.getElementById('f-category').value = 'all';
+    document.getElementById('f-diet').value = 'all';
     document.getElementById('f-min').value = '';
     document.getElementById('f-max').value = '';
     applyAdvancedFilters();
