@@ -132,6 +132,21 @@ function get_combo_dishes($conn, $oid) {
     .status-inactive { color: #dc2626; font-weight: 700; }
     
     .multi-select { height: 120px !important; }
+
+    /* Custom Combo Selector */
+    .combo-selector { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+    .selected-tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border-bottom: 1px solid var(--border); background: #f8fafc; min-height: 50px; }
+    .tag { background: var(--header-bg); color: #fff; padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
+    .tag .remove { cursor: pointer; font-weight: 700; opacity: 0.8; }
+    .tag .remove:hover { opacity: 1; }
+    .dish-search-wrap { padding: 10px; position: relative; }
+    .dish-search-wrap input { width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; outline: none; }
+    .dish-results-list { max-height: 200px; overflow-y: auto; border-top: 1px solid var(--border); display: none; }
+    .dish-results-list.show { display: block; }
+    .dish-opt { padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; font-size: 0.9rem; }
+    .dish-opt:hover { background: #f1f5f9; }
+    .dish-opt.selected { background: #eff6ff; color: #3b82f6; font-weight: 700; }
+    .no-match { padding: 15px; text-align: center; color: var(--muted); font-size: 0.85rem; }
   </style>
 </head>
 <body>
@@ -227,13 +242,24 @@ function get_combo_dishes($conn, $oid) {
       <!-- Combo Fields -->
       <div id="comboFields" style="display:none">
         <div class="form-group">
-          <label>Select Dishes (Multi-select)</label>
-          <select name="dish_ids[]" id="fDishes" multiple class="multi-select">
+          <label>Select Dishes *</label>
+          <div class="combo-selector">
+            <div id="selectedTags" class="selected-tags">
+              <span style="color:var(--muted); font-size:0.8rem">No dishes selected yet...</span>
+            </div>
+            <div class="dish-search-wrap">
+              <input type="text" id="dishSearchInput" placeholder="Search dishes..." autocomplete="off">
+              <div id="dishResults" class="dish-results-list">
+                <!-- Filtered dishes appear here -->
+              </div>
+            </div>
+          </div>
+          <!-- Hidden select to store actual values for POST -->
+          <select name="dish_ids[]" id="fDishes" multiple style="display:none">
             <?php foreach ($all_dishes as $d): ?>
               <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['name']) ?></option>
             <?php endforeach; ?>
           </select>
-          <p class="file-hint">Hold Ctrl (Cmd) to select multiple</p>
         </div>
         <div class="form-group">
           <label>Combo Price (₹)</label>
@@ -280,6 +306,11 @@ function openOfferModal(type) {
     document.getElementById('fDiscount').value = '';
     document.getElementById('fPrice').value = '';
     document.getElementById('fStatus').value = 'active';
+
+    // Clear Combo Selector
+    selectedDishIds = [];
+    renderComboTags();
+    syncComboHiddenSelect();
     
     // Toggle Visibility
     document.getElementById('seasonalFields').style.display = type === 'seasonal' ? 'block' : 'none';
@@ -303,10 +334,9 @@ function editOffer(o, dishes) {
     document.getElementById('fStatus').value = o.status;
 
     // Multi-select sync
-    const sel = document.getElementById('fDishes');
-    for (const opt of sel.options) {
-        opt.selected = dishes.includes(parseInt(opt.value));
-    }
+    selectedDishIds = dishes.map(d => parseInt(d));
+    renderComboTags();
+    syncComboHiddenSelect();
 
     document.getElementById('seasonalFields').style.display = o.offer_type === 'seasonal' ? 'block' : 'none';
     document.getElementById('comboFields').style.display = o.offer_type === 'combo' ? 'block' : 'none';
@@ -319,6 +349,87 @@ function closeModal() {
     document.getElementById('offerModal').classList.remove('open');
     document.getElementById('modalOverlay').classList.remove('open');
 }
+
+/* ── Combo Selector Logic ── */
+const allDishes = <?= json_encode($all_dishes) ?>;
+let selectedDishIds = [];
+
+function initComboSelector() {
+    const input = document.getElementById('dishSearchInput');
+    const list = document.getElementById('dishResults');
+
+    input.onfocus = () => { list.classList.add('show'); filterComboDishes(input.value); };
+    input.oninput = () => filterComboDishes(input.value);
+    
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.combo-selector')) list.classList.remove('show');
+    });
+}
+
+function filterComboDishes(query) {
+    const list = document.getElementById('dishResults');
+    const q = query.toLowerCase().trim();
+    
+    // Only show results if query length > 0 OR input focused
+    const filtered = allDishes.filter(d => d.name.toLowerCase().includes(q));
+    
+    if (filtered.length === 0) {
+        list.innerHTML = `<div class="no-match">No matching dishes found.</div>`;
+    } else {
+        list.innerHTML = filtered.map(d => `
+            <div class="dish-opt ${selectedDishIds.includes(parseInt(d.id)) ? 'selected' : ''}" 
+                 onclick="toggleDishInCombo(${d.id}, '${esc(d.name)}')">
+                ${esc(d.name)}
+                ${selectedDishIds.includes(parseInt(d.id)) ? '✓' : '+'}
+            </div>
+        `).join('');
+    }
+}
+
+function toggleDishInCombo(id, name) {
+    id = parseInt(id);
+    const idx = selectedDishIds.indexOf(id);
+    if (idx === -1) {
+        selectedDishIds.push(id);
+    } else {
+        selectedDishIds.splice(idx, 1);
+    }
+    syncComboHiddenSelect();
+    renderComboTags();
+    filterComboDishes(document.getElementById('dishSearchInput').value);
+}
+
+function syncComboHiddenSelect() {
+    const sel = document.getElementById('fDishes');
+    for (const opt of sel.options) {
+        opt.selected = selectedDishIds.includes(parseInt(opt.value));
+    }
+}
+
+function renderComboTags() {
+    const container = document.getElementById('selectedTags');
+    if (selectedDishIds.length === 0) {
+        container.innerHTML = `<span style="color:var(--muted); font-size:0.8rem">No dishes selected yet...</span>`;
+        return;
+    }
+    
+    container.innerHTML = selectedDishIds.map(id => {
+        const dish = allDishes.find(d => d.id == id);
+        return `
+            <div class="tag">
+                ${esc(dish.name)}
+                <span class="remove" onclick="toggleDishInCombo(${id}, '')">×</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.addEventListener('DOMContentLoaded', initComboSelector);
 </script>
 
 </body>

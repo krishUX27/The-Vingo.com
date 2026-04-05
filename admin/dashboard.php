@@ -250,16 +250,10 @@ if (!$offer_res) {
   <div class="content">
 
     <?php if ($flash): ?>
-      <div class="flash flash-<?= $flash['type'] ?>">
+      <div class="flash flash-<?= $flash['type'] ?>" style="margin-bottom:20px">
         <?= $flash['type'] === 'success' ? '✅' : '❌' ?>
         <?= htmlspecialchars($flash['msg']) ?>
       </div>
-    <?php endif; ?>
-
-    <?php if (!empty($errors)): ?>
-      <?php foreach ($errors as $e): ?>
-        <div class="flash flash-danger">❌ <?= htmlspecialchars($e) ?></div>
-      <?php endforeach; ?>
     <?php endif; ?>
 
     <!-- Stats -->
@@ -467,6 +461,14 @@ document.addEventListener('DOMContentLoaded', function() {
   <form method="POST" enctype="multipart/form-data">
     <input type="hidden" name="action" value="add_dish">
     <div class="modal-body">
+      <?php if (!empty($errors)): ?>
+        <div class="error-summary" style="margin-bottom: 20px; border-radius:12px; background:#fff1f1; border:1px solid #fecaca; padding:15px; color:#b91c1c; font-size:0.88rem; font-weight:600">
+          <?php foreach ($errors as $e): ?>
+            <div style="display:flex; gap:8px; margin-bottom:4px"><span>❌</span> <?= htmlspecialchars($e) ?></div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+
       <div class="form-group">
         <label>Dish Name *</label>
         <input type="text" name="name" required placeholder="e.g. Chicken Curry">

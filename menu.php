@@ -559,31 +559,16 @@ if ($user_id) {
 <div class="header-section">
   <div class="restaurant-name"><?= $restaurant_name ?></div>
   
-  <!-- Offer Carousel per Reference -->
-  <?php if (!empty($offers)): ?>
-  <div class="offers-container">
+  <!-- Dynamic Offer Carousel -->
+  <div class="offers-container" id="offers-container" style="display:none">
     <div class="offer-carousel-ref" id="refCarousel">
-      <?php foreach ($offers as $off): ?>
-        <div class="offer-card-ref">
-          <div class="accent-shape"></div>
-          <div class="offer-content-ref">
-            <div class="offer-discount-text">
-              <?= $off['offer_type']==='seasonal' ? htmlspecialchars($off['discount_percentage']).'%' : '₹'.number_format($off['combo_price'], 0) ?>
-            </div>
-            <div class="offer-title-text"><?= htmlspecialchars($off['title']) ?></div>
-            <div class="offer-sub-text"><?= htmlspecialchars($off['description']) ?></div>
-          </div>
-        </div>
-      <?php endforeach; ?>
+       <!-- JS will inject offer-card-ref here -->
     </div>
     
     <div class="dots-container" id="refDots">
-      <?php foreach ($offers as $i => $off): ?>
-        <div class="ref-dot <?= $i===0?'active':'' ?>" data-idx="<?= $i ?>"></div>
-      <?php endforeach; ?>
+       <!-- JS will inject dots here -->
     </div>
   </div>
-  <?php endif; ?>
 </div>
 
 <div class="sticky-controls">
@@ -678,7 +663,6 @@ const URL_PARAMS  = new URLSearchParams(window.location.search);
 const MENU_ID     = URL_PARAMS.get('id') || 0;
 const FETCH_URL   = 'api/fetch_dishes.php?user_id=' + MENU_ID;
 const POLL_MS     = 3000;
-
 /* Dot color pool */
 const DOT_COLORS = ['dc-0','dc-1','dc-2','dc-3','dc-4','dc-5','dc-6','dc-7'];
 const catColorMap = {};
@@ -690,10 +674,83 @@ function catDot(name) {
   return catColorMap[name];
 }
 
-let lastHash     = '';
-let fullData     = null; // All dishes from API
-let activeFilter = 'all';
-let activeMeal   = 'all';
+let lastHash       = '';
+let lastOffersHash = '';
+let fullData       = null; // All dishes from API
+let activeMeal     = 'all';
+
+const fetchOffers = async () => {
+  try {
+    const r = await fetch(`api/get_offers.php?user_id=${MENU_ID}\u0026_=${Date.now()}`);
+    const json = await r.json();
+    if (!json.success) return;
+
+    const hash = JSON.stringify(json.data);
+    if (hash === lastOffersHash) return;
+    lastOffersHash = hash;
+
+    const container = document.getElementById('offers-container');
+    const carousel  = document.getElementById('refCarousel');
+    const dots      = document.getElementById('refDots');
+
+    if (json.data.length === 0) {
+       container.style.display = 'none';
+       return;
+    }
+
+    container.style.display = 'block';
+    carousel.innerHTML = json.data.map(o => {
+        let discountHtml = '';
+        if (o.offer_type === 'seasonal') {
+          discountHtml = `${esc(o.discount_percentage)}% OFF`;
+        } else {
+          discountHtml = `Combo ₹${parseFloat(o.combo_price).toFixed(0)}`;
+        }
+
+        let subText = o.description || '';
+        if (o.offer_type === 'combo' && o.combo_items) {
+           subText = `<div style="font-size:0.75rem; margin-top:5px; opacity:0.9">Includes: ${o.combo_items.join(', ')}</div>`;
+        }
+
+        return `
+          <div class="offer-card-ref">
+            <div class="accent-shape"></div>
+            <div class="offer-content-ref">
+              <div class="offer-discount-text">${discountHtml}</div>
+              <div class="offer-title-text">${esc(o.title)}</div>
+              <div class="offer-sub-text">${subText}</div>
+            </div>
+          </div>`;
+    }).join('');
+
+    dots.innerHTML = json.data.map((_, i) => `<div class="ref-dot ${i===0?'active':''}" data-idx="${i}"></div>`).join('');
+    initCarouselEvents(); // Re-bind scroll events
+  } catch(e) { console.error('[Offers]', e); }
+};
+
+function initCarouselEvents() {
+    const carousel = document.getElementById('refCarousel');
+    const dots     = document.querySelectorAll('#refDots .ref-dot');
+    if (!carousel || dots.length === 0) return;
+
+    const getSlideWidth = () => {
+       const slide = carousel.querySelector('.offer-card-ref');
+       return slide ? slide.offsetWidth : 0;
+    };
+
+    carousel.onscroll = () => {
+        const sw = getSlideWidth();
+        const index = Math.round(carousel.scrollLeft / sw);
+        dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    };
+
+    dots.forEach(dot => {
+        dot.onclick = () => {
+            const idx = parseInt(dot.getAttribute('data-idx'));
+            carousel.scrollTo({ left: idx * getSlideWidth(), behavior: 'smooth' });
+        };
+    });
+}
 
 /* ── HTML escape ── */
 function esc(s) {
@@ -915,33 +972,9 @@ document.querySelectorAll('.meal-tab').forEach(tab => {
   };
 });
 
-// Carousel Logic for Reference Redesign
-document.addEventListener('DOMContentLoaded', () => {
-    const carousel = document.getElementById('refCarousel');
-    const dots     = document.querySelectorAll('#refDots .ref-dot');
-    if (!carousel || dots.length === 0) return;
-
-    const getSlideWidth = () => {
-       const slide = carousel.querySelector('.offer-card-ref');
-       return slide ? slide.offsetWidth : 0;
-    };
-
-    carousel.addEventListener('scroll', () => {
-        const sw = getSlideWidth();
-        const index = Math.round(carousel.scrollLeft / sw);
-        dots.forEach((d, i) => d.classList.toggle('active', i === index));
-    });
-
-    dots.forEach(dot => {
-        dot.onclick = () => {
-            const idx = parseInt(dot.getAttribute('data-idx'));
-            carousel.scrollTo({ left: idx * getSlideWidth(), behavior: 'smooth' });
-        };
-    });
-});
-
 fetchMenu();
-setInterval(fetchMenu, POLL_MS);
+fetchOffers();
+setInterval(() => { fetchMenu(); fetchOffers(); }, POLL_MS);
 </script>
 </body>
 </html>
