@@ -842,6 +842,7 @@ function populateCategories(cats) {
 
 /* ── Client-side Filter Logic ── */
 function applyAdvancedFilters() {
+  if (!fullData || !fullData.dishes) return;
   const data  = fullData.dishes;
   const q     = (document.getElementById('f-search').value || '').toLowerCase().trim();
   const cat   = document.getElementById('f-category').value;
@@ -855,14 +856,13 @@ function applyAdvancedFilters() {
     // 1. Category check
     if (cat !== 'all' && categoryName !== cat) return;
 
-    const matches = fullData[categoryName].filter(d => {
+    const matches = data[categoryName].filter(d => {
       // 2. Search
       if (q !== '' && !d.name.toLowerCase().includes(q)) return false;
       // 4. Meal Time
       if (activeMeal !== 'all') {
-        if (activeMeal === 'breakfast' && !d.available_breakfast) return false;
-        if (activeMeal === 'lunch'     && !d.available_lunch)     return false;
-        if (activeMeal === 'dinner'    && !d.available_dinner)    return false;
+        const mealKey = `available_${activeMeal}`;
+        if (!d[mealKey]) return false;
       }
       // 5. Price
       if (d.price < min || d.price > max) return false;
@@ -915,30 +915,7 @@ function showToast() {
 }
 
 /* ── Fetch & poll ── */
-async function fetchMenu() {
-  try {
-    const r    = await fetch(FETCH_URL + (FETCH_URL.includes('?') ? '&' : '?') + '_=' + Date.now());
-    const json = await r.json();
-    if (!json.success) return;
 
-    const hash = JSON.stringify(json.data);
-    if (hash === lastHash) return;
-
-    const first = lastHash === '';
-    document.getElementById('skeleton-wrap')?.remove();
-    
-    fullData = json.data;
-    renderMenu(fullData, first);
-    
-    if (!first) {
-      showToast();
-      applyAdvancedFilters(); // re-apply current filters to new data
-    }
-    lastHash = hash;
-  } catch(e) {
-    console.warn('[Menu]', e);
-  }
-}
 
 // Modal Control
 const overlay = document.getElementById('modalOverlay');
@@ -949,6 +926,9 @@ const toggleModal = (show) => overlay.classList.toggle('show', show);
 openBtn.onclick = () => toggleModal(true);
 closeBtn.onclick = () => toggleModal(false);
 overlay.onclick = (e) => { if(e.target === overlay) toggleModal(false); };
+if(document.getElementById('refSearchIcon')) {
+    document.getElementById('refSearchIcon').onclick = applyAdvancedFilters;
+}
 
 /* ── Event Listeners ── */
 document.getElementById('btn-apply').onclick = () => {

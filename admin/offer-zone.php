@@ -136,9 +136,9 @@ function get_combo_dishes($conn, $oid) {
     /* Custom Combo Selector */
     .combo-selector { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
     .selected-tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border-bottom: 1px solid var(--border); background: #f8fafc; min-height: 50px; }
-    .tag { background: var(--header-bg); color: #fff; padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
-    .tag .remove { cursor: pointer; font-weight: 700; opacity: 0.8; }
-    .tag .remove:hover { opacity: 1; }
+    .tag { background: var(--accent, #3b82f6); color: #fff; padding: 6px 14px; border-radius: 50px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); transition: all 0.2s; }
+    .tag .remove { cursor: pointer; font-weight: 700; opacity: 0.8; font-size: 1rem; line-height: 1; }
+    .tag .remove:hover { opacity: 1; transform: scale(1.2); }
     .dish-search-wrap { padding: 10px; position: relative; }
     .dish-search-wrap input { width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; outline: none; }
     .dish-results-list { max-height: 200px; overflow-y: auto; border-top: 1px solid var(--border); display: none; }
