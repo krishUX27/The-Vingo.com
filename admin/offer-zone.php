@@ -3,7 +3,7 @@
 require_once __DIR__ . '/partials/auth_check.php';
 require_once __DIR__ . '/../includes/db.php';
 
-$admin_id = $_SESSION['admin_sess_id'] ?? ($_SESSION['admin_id'] ?? 0);
+$admin_id = (int)($_SESSION['admin_id'] ?? 0);
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 

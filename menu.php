@@ -659,10 +659,10 @@ function syncSearch(val) {
 <div id="toast">⚡ Menu updated</div>
 
 <script>
-const URL_PARAMS  = new URLSearchParams(window.location.search);
-const MENU_ID     = URL_PARAMS.get('id') || 0;
-const FETCH_URL   = 'api/fetch_dishes.php?user_id=' + MENU_ID;
-const POLL_MS     = 3000;
+const URL_PARAMS      = new URLSearchParams(window.location.search);
+const MENU_ID         = URL_PARAMS.get('id') || 0;
+const MENU_DATA_URL   = 'api/get_menu_data.php?user_id=' + MENU_ID;
+const POLL_MS         = 6000;
 /* Dot color pool */
 const DOT_COLORS = ['dc-0','dc-1','dc-2','dc-3','dc-4','dc-5','dc-6','dc-7'];
 const catColorMap = {};
@@ -674,42 +674,59 @@ function catDot(name) {
   return catColorMap[name];
 }
 
-let lastHash       = '';
-let lastOffersHash = '';
-let fullData       = null; // All dishes from API
-let activeMeal     = 'all';
+let lastHash     = '';
+let fullData     = null; // Unified menu data
+let activeMeal   = 'all';
 
-const fetchOffers = async () => {
+async function syncVingoMenu() {
   try {
-    const r = await fetch(`api/get_offers.php?user_id=${MENU_ID}\u0026_=${Date.now()}`);
+    const r = await fetch(MENU_DATA_URL + (MENU_DATA_URL.includes('?') ? '&' : '?') + '_=' + Date.now());
     const json = await r.json();
     if (!json.success) return;
 
     const hash = JSON.stringify(json.data);
-    if (hash === lastOffersHash) return;
-    lastOffersHash = hash;
+    if (hash === lastHash) return;
+    lastHash = hash;
 
+    const first = fullData === null;
+    fullData = json.data;
+
+    // 1. Render Offers Slider
+    renderOffers(fullData.offers);
+    
+    // 2. Render Dishes
+    renderMenu(fullData.dishes, first);
+
+    // Re-apply filters if not first load
+    if (!first) {
+      showToast();
+      applyAdvancedFilters(); 
+    }
+  } catch(e) { console.error('[Menu Sync]', e); }
+}
+
+function renderOffers(offers) {
     const container = document.getElementById('offers-container');
     const carousel  = document.getElementById('refCarousel');
     const dots      = document.getElementById('refDots');
 
-    if (json.data.length === 0) {
+    if (!offers || offers.length === 0) {
        container.style.display = 'none';
        return;
     }
 
     container.style.display = 'block';
-    carousel.innerHTML = json.data.map(o => {
+    carousel.innerHTML = offers.map(o => {
         let discountHtml = '';
         if (o.offer_type === 'seasonal') {
-          discountHtml = `${esc(o.discount_percentage)}% OFF`;
+          discountHtml = `${o.discount_percentage}% OFF`;
         } else {
           discountHtml = `Combo ₹${parseFloat(o.combo_price).toFixed(0)}`;
         }
 
         let subText = o.description || '';
-        if (o.offer_type === 'combo' && o.combo_items) {
-           subText = `<div style="font-size:0.75rem; margin-top:5px; opacity:0.9">Includes: ${o.combo_items.join(', ')}</div>`;
+        if (o.offer_type === 'combo' && o.combo_items && o.combo_items.length > 0) {
+           subText = `<div style="font-size:0.75rem; margin-top:5px; opacity:0.9">Includes: ${o.combo_items.join(' + ')}</div>`;
         }
 
         return `
@@ -723,10 +740,9 @@ const fetchOffers = async () => {
           </div>`;
     }).join('');
 
-    dots.innerHTML = json.data.map((_, i) => `<div class="ref-dot ${i===0?'active':''}" data-idx="${i}"></div>`).join('');
-    initCarouselEvents(); // Re-bind scroll events
-  } catch(e) { console.error('[Offers]', e); }
-};
+    dots.innerHTML = offers.map((_, i) => `<div class="ref-dot ${i===0?'active':''}" data-idx="${i}"></div>`).join('');
+    initCarouselEvents();
+}
 
 function initCarouselEvents() {
     const carousel = document.getElementById('refCarousel');
@@ -826,6 +842,7 @@ function populateCategories(cats) {
 
 /* ── Client-side Filter Logic ── */
 function applyAdvancedFilters() {
+  const data  = fullData.dishes;
   const q     = (document.getElementById('f-search').value || '').toLowerCase().trim();
   const cat   = document.getElementById('f-category').value;
   const min   = parseFloat(document.getElementById('f-min').value) || 0;
@@ -833,8 +850,8 @@ function applyAdvancedFilters() {
 
   const filtered = {};
   
-  // fullData is grouped by category: { "Main": [...], "Drinks": [...] }
-  Object.keys(fullData).forEach(categoryName => {
+  // data is grouped by category: { "Main": [...], "Drinks": [...] }
+  Object.keys(data).forEach(categoryName => {
     // 1. Category check
     if (cat !== 'all' && categoryName !== cat) return;
 
@@ -972,9 +989,8 @@ document.querySelectorAll('.meal-tab').forEach(tab => {
   };
 });
 
-fetchMenu();
-fetchOffers();
-setInterval(() => { fetchMenu(); fetchOffers(); }, POLL_MS);
+syncVingoMenu();
+setInterval(syncVingoMenu, POLL_MS);
 </script>
 </body>
 </html>
