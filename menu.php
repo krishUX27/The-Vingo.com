@@ -13,7 +13,7 @@ $restaurant_sub  = menu_get_setting('restaurant_sub',  'Premium Digital Selectio
 // Fetch active offers for this user
 $offers = [];
 if ($user_id) {
-    $off_res = $conn->query("SELECT * FROM seasonal_offers WHERE user_id = $user_id ORDER BY created_at DESC");
+    $off_res = $conn->query("SELECT * FROM seasonal_offers WHERE user_id = $user_id AND is_deleted = 0 ORDER BY created_at DESC");
     if ($off_res) $offers = $off_res->fetch_all(MYSQLI_ASSOC);
 }
 ?>
@@ -43,6 +43,7 @@ if ($user_id) {
     html, body {
       overflow-x: hidden;
       width: 100%;
+      scroll-behavior: smooth;
     }
 
     body {
@@ -55,23 +56,33 @@ if ($user_id) {
     /* ── Reference Redesign Header ── */
     .header-section {
       background: var(--header-bg);
-      padding: 30px 20px 50px;
+      padding: 60px 20px 40px;
       text-align: center;
       color: #fff;
-      /* Full width, no border radius */
+    }
+    .sticky-controls {
+      position: sticky;
+      top: 0;
+      background: var(--header-bg);
+      z-index: 1000;
+      padding: 12px 20px 18px;
+      margin-top: -1px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      transition: all 0.3s ease;
     }
     .restaurant-name {
-      font-size: 2.4rem;
+      font-size: 2.8rem;
       font-weight: 800;
-      margin-bottom: 20px;
-      letter-spacing: -0.5px;
+      margin-bottom: 5px;
+      letter-spacing: -1px;
     }
     .search-filter-row {
       display: flex;
       gap: 12px;
       align-items: center;
-      max-width: 500px;
-      margin: 0 auto 30px;
+      max-width: 650px;
+      margin: 0 auto 15px;
     }
     .search-input-wrap {
       flex: 1;
@@ -151,8 +162,16 @@ if ($user_id) {
       display: flex;
       flex-direction: column;
       gap: 2px;
-      margin-left: 90px; /* Shift everything past the red circle */
-      text-align: left; /* Ensure text is left aligned */
+      margin-left: 90px;
+      text-align: left;
+    }
+    @media(max-width: 500px) {
+      .offer-card-ref { padding: 20px; height: 140px; border-radius: 20px; }
+      .offer-content-ref { margin-left: 70px; }
+      .offer-discount-text { font-size: 2.2rem; }
+      .offer-title-text { font-size: 1.05rem; }
+      .offer-sub-text { font-size: 0.8rem; }
+      .offer-card-ref .accent-shape { width: 110px; height: 110px; top: -20px; left: -20px; }
     }
     .offer-discount-text {
       font-size: 2.8rem;
@@ -197,13 +216,17 @@ if ($user_id) {
     .dish-list {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      padding: 0 16px;
+      gap: 20px;
+      padding: 0;
     }
     
+    @media(min-width: 1024px) {
+      .dish-list { grid-template-columns: repeat(3, 1fr); }
+    }
+
     @media(max-width: 768px) {
       .dish-list { grid-template-columns: 1fr 1fr; gap: 12px; }
-      .menu-body { padding: 40px 15px 100px; }
+      .menu-body { padding: 30px 15px 80px; }
     }
 
     @media(max-width: 480px) {
@@ -253,6 +276,12 @@ if ($user_id) {
       align-items: center;
       justify-content: center;
       border: 1px solid var(--border);
+    }
+    @media(max-width: 400px) {
+      .dish-img-wrap { width: 60px; height: 60px; }
+      .dish-row { gap: 8px; padding: 12px; }
+      .dish-name { font-size: 0.82rem; }
+      .dish-price { font-size: 0.85rem; }
     }
     .dish-img-wrap img {
       width: 100%;
@@ -460,24 +489,31 @@ if ($user_id) {
     .meal-tabs {
       display: flex;
       justify-content: center;
-      gap: 15px;
-      margin-bottom: 25px;
-      padding: 0 10px;
+      gap: 10px;
+      margin-bottom: 0;
+      padding: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
+    .meal-tabs::-webkit-scrollbar { display: none; }
     .meal-tab {
-      padding: 10px 18px;
+      padding: 11px 22px;
       border-radius: 50px;
-      background: #f1f5f9;
-      color: #64748b;
-      font-weight: 700;
-      font-size: 0.85rem;
-      cursor: pointer;
-      border: none;
-      transition: all 0.2s;
-    }
-    .meal-tab.active {
-      background: var(--header-bg);
+      background: rgba(255,255,255,0.1); /* Glassmorphism style */
       color: #fff;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .meal-tab:hover { background: rgba(255,255,255,0.2); transform: translateY(-1px); }
+    .meal-tab.active {
+      background: #fff !important;
+      color: var(--header-bg) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
   </style>
 </head>
@@ -487,16 +523,6 @@ if ($user_id) {
 <div class="header-section">
   <div class="restaurant-name"><?= $restaurant_name ?></div>
   
-  <!-- Search & Filter Row -->
-  <div class="search-filter-row">
-    <div class="search-input-wrap">
-      <input type="text" id="refSearch" placeholder="Search for dishes..." onkeyup="syncSearch(this.value)">
-    </div>
-    <button class="ref-filter-btn" id="openFilter">
-      Filter <span style="font-size: 0.7rem">▼</span>
-    </button>
-  </div>
-
   <!-- Offer Carousel per Reference -->
   <?php if (!empty($offers)): ?>
   <div class="offers-container">
@@ -522,6 +548,26 @@ if ($user_id) {
   <?php endif; ?>
 </div>
 
+<div class="sticky-controls">
+  <!-- Search & Filter Row -->
+  <div class="search-filter-row">
+    <div class="search-input-wrap">
+      <input type="text" id="refSearch" placeholder="Search for dishes..." onkeyup="syncSearch(this.value)">
+    </div>
+    <button class="ref-filter-btn" id="openFilter">
+      Filter <span style="font-size: 0.7rem">▼</span>
+    </button>
+  </div>
+
+  <!-- Meal Selections -->
+  <div class="meal-tabs">
+    <button class="meal-tab active" data-meal="all">All Menu</button>
+    <button class="meal-tab" data-meal="breakfast">🌅 Breakfast</button>
+    <button class="meal-tab" data-meal="lunch">☀️ Lunch</button>
+    <button class="meal-tab" data-meal="dinner">🌙 Dinner</button>
+  </div>
+</div>
+
 <script>
 // Sync reference search with the hidden advanced filter search
 function syncSearch(val) {
@@ -529,8 +575,6 @@ function syncSearch(val) {
   applyAdvancedFilters();
 }
 </script>
-
-
 
 <!-- Filter Modal Overlay -->
 <div id="modalOverlay">
@@ -568,14 +612,6 @@ function syncSearch(val) {
 <!-- Filter Pills -->
 <div class="filter-row" id="filter-row" style="display:none">
   <button class="pill active" data-cat="all">All</button>
-</div>
-
-<!-- Meal Selections -->
-<div class="meal-tabs">
-  <button class="meal-tab active" data-meal="all">All Menu</button>
-  <button class="meal-tab" data-meal="breakfast">🌅 Breakfast</button>
-  <button class="meal-tab" data-meal="lunch">☀️ Lunch</button>
-  <button class="meal-tab" data-meal="dinner">🌙 Dinner</button>
 </div>
 
 <!-- Menu Body -->
