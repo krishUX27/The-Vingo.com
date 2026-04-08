@@ -281,30 +281,34 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     
     .content { 
       padding: 30px 40px; 
-      max-width: 100%; 
+      max-width: 1400px; 
       width: 100%; 
-      margin: 0; 
+      margin: 0 auto; 
       transition: all 0.3s ease; 
     }
     
     @media (max-width: 1024px) {
-      .main { 
-        margin-left: 0 !important; 
-        width: 100% !important; 
-        max-width: 100% !important; 
-        overflow-x: hidden; /* Localize any accidental overflow */
-      }
+      .main { margin-left: 0 !important; width: 100% !important; min-width: 0 !important; }
       .content { padding: 15px; width: 100% !important; }
-      .import-grid { grid-template-columns: 1fr !important; gap: 20px !important; width: 100%; }
+      .import-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
       
-      /* Optimize Cards */
+      /* Better Card Padding for Mobile */
       .card { 
-        padding: 20px !important; 
+        padding: 20px 15px !important; 
         margin-bottom: 20px !important; 
         width: 100% !important; 
-        max-width: 100% !important; 
-        box-sizing: border-box; 
+        border-radius: 12px !important;
       }
+      .card-title { font-size: 1.1rem; margin-bottom: 15px; }
+      
+      /* Compact & Wrapped Upload area */
+      .import-card { 
+        padding: 20px !important; 
+        min-height: auto !important;
+      }
+      .import-card div { font-size: 2rem !important; margin-bottom: 10px !important; }
+      .import-card p { font-size: 0.8rem; line-height: 1.4; word-break: normal; overflow-wrap: break-word; width: 100%; }
+      .file-hint { font-size: 0.75rem !important; }
       
       /* Precision Scrollable Tables */
       .scroll-mobile { 
@@ -312,23 +316,26 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
         max-width: 100%;
         overflow-x: auto !important; 
         display: block;
-        border-radius: 10px;
+        border-radius: 8px;
         border: 1px solid var(--border);
         margin: 10px 0;
+        background: #fff;
       }
       .scroll-mobile table { 
-        min-width: 600px; /* Reduced to avoid extreme overflow */
+        min-width: 600px; 
         width: 100%;
+        table-layout: auto;
       }
+      .scroll-mobile th, .scroll-mobile td { padding: 10px 8px !important; font-size: 0.75rem !important; }
     }
     
     @media (max-width: 480px) {
-      .content { padding: 12px; }
-      .topbar { padding: 0 15px !important; height: 70px !important; }
-      .topbar h1 { font-size: 0.95rem !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
-      .import-card { padding: 20px 10px !important; }
-      .import-card div { font-size: 1.8rem !important; }
-      .format-guide { padding: 15px !important; border-radius: 10px; }
+      .content { padding: 10px; }
+      .topbar { padding: 0 10px !important; height: 65px !important; }
+      .topbar-left { gap: 8px !important; }
+      .topbar h1 { font-size: 0.9rem !important; max-width: 150px; }
+      .import-card { padding: 15px 10px !important; }
+      .format-guide { padding: 12px !important; }
     }
     
     /* ── DESKTOP & SHARED STYLES ── */
