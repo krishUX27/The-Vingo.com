@@ -93,9 +93,22 @@ unset($_SESSION['flash']);
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Trash — Menu Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
+  <style>
+    .content { padding: 40px; max-width: 1400px; width: 100%; margin: 0 auto; transition: padding 0.3s ease; }
+    
+    @media (max-width: 1024px) {
+      .content { padding: 20px; }
+      .btn-grp { flex-wrap: wrap; }
+      .hide-mobile { display: none; }
+    }
+    
+    @media (max-width: 480px) {
+        .trash-actions { display: flex; flex-direction: column; gap: 5px; }
+        .btn-sm { width: 100%; justify-content: center; }
+    }
+  </style>
 </head>
 <body>
 <?php include __DIR__ . '/partials/sidebar.php'; ?>
@@ -120,19 +133,19 @@ unset($_SESSION['flash']);
         <p class="meta" style="margin-bottom:20px">Items in the trash can be restored or permanently deleted.</p>
 
         <form method="POST" id="trash-bulk-form">
-        <div class="btn-grp" id="bulk-controls" style="display:none; margin-bottom:15px; gap:10px">
+        <div class="trash-actions" id="bulk-controls" style="display:none; margin-bottom:15px; gap:10px">
             <button type="submit" name="action" value="bulk_restore" class="btn btn-primary btn-sm">♻️ Restore Selected</button>
             <button type="submit" name="action" value="bulk_pdelete" class="btn btn-danger btn-sm" onclick="return confirm('Permanently delete selected?')">❌ Delete Permanently</button>
         </div>
 
         <div class="table-wrap">
-            <table style="width:100%">
+            <table>
                 <thead>
                     <tr>
                         <th><input type="checkbox" id="select-all"></th>
                         <th>Image</th>
                         <th>Name</th>
-                        <th>Deleted On</th>
+                        <th class="hide-mobile">Deleted On</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -151,10 +164,10 @@ unset($_SESSION['flash']);
                             <?php endif; ?>
                         </td>
                         <td><strong><?= htmlspecialchars($item['name']) ?></strong></td>
-                        <td style="font-size:0.8rem"><?= date('d M Y, H:i', strtotime($item['deleted_at'])) ?></td>
+                        <td class="hide-mobile" style="font-size:0.8rem"><?= date('d M Y, H:i', strtotime($item['deleted_at'])) ?></td>
                         <td>
                             <div class="btn-grp">
-                                <a href="trash.php?restore=<?= $item['id'] ?>" class="btn btn-primary btn-sm">♻️ Restore</a>
+                                <a href="trash.php?restore=<?= $item['id'] ?>" class="btn btn-primary btn-sm">♻️ <span>Restore</span></a>
                                 <a href="trash.php?pdelete=<?= $item['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Permanently delete this dish?')">🗑️</a>
                             </div>
                         </td>

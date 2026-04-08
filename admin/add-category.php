@@ -18,14 +18,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($name === '') {
             $errors[] = 'Category name is required.';
         } else {
-            // Check for duplicate for THIS user only
-            $chk = $conn->prepare("SELECT id FROM categories WHERE name = ? AND user_id = ?");
+            // Check for duplicate for THIS user only (Active and Deleted)
+            $chk = $conn->prepare("SELECT id, is_deleted FROM categories WHERE name = ? AND user_id = ?");
             $chk->bind_param('si', $name, $admin_sess_id);
             $chk->execute();
-            if ($chk->get_result()->num_rows > 0) {
-                $errors[] = "'{$name}' already exists in your menu.";
+            $res = $chk->get_result();
+            
+            if ($res->num_rows > 0) {
+                $existing = $res->fetch_assoc();
+                if ($existing['is_deleted'] == 1) {
+                    // Reactivate soft-deleted category
+                    $upd = $conn->prepare("UPDATE categories SET is_deleted = 0, deleted_at = NULL WHERE id = ?");
+                    $upd->bind_param('i', $existing['id']);
+                    $upd->execute();
+                    $upd->close();
+                    $_SESSION['flash'] = ['type' => 'success', 'msg' => "Category '{$name}' restored."];
+                    header('Location: add-category.php');
+                    exit;
+                } else {
+                    $errors[] = "'{$name}' already exists in your menu.";
+                }
             } else {
-                $ins = $conn->prepare("INSERT INTO categories (name, user_id) VALUES (?, ?)");
+                $ins = $conn->prepare("INSERT INTO categories (name, user_id, is_deleted) VALUES (?, ?, 0)");
                 $ins->bind_param('si', $name, $admin_sess_id);
                 $ins->execute();
                 $ins->close();
@@ -62,9 +76,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $categories = $conn->query(
-    "SELECT c.*, (SELECT COUNT(*) FROM dishes WHERE category_id = c.id) AS dish_count
+    "SELECT c.*, (SELECT COUNT(*) FROM dishes WHERE category_id = c.id AND is_deleted = 0) AS dish_count
      FROM categories c
-     WHERE c.user_id = $admin_sess_id
+     WHERE c.user_id = $admin_sess_id AND c.is_deleted = 0
      ORDER BY c.name"
 )->fetch_all(MYSQLI_ASSOC);
 ?>
@@ -134,7 +148,7 @@ $categories = $conn->query(
           <ul class="cat-list">
             <?php foreach ($categories as $c): ?>
               <?php
-                $cnt = $conn->query("SELECT COUNT(*) FROM dishes WHERE category_id = {$c['id']}")->fetch_row()[0];
+                $cnt = $c['dish_count']; 
               ?>
               <li>
                 <div class="cat-name-box">

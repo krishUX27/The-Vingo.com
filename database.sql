@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS categories (
   id      INT          NOT NULL AUTO_INCREMENT,
   user_id INT          NOT NULL DEFAULT 0,
   name    VARCHAR(100) NOT NULL,
+  is_deleted TINYINT(1) DEFAULT 0,
+  deleted_at DATETIME NULL,
   PRIMARY KEY (id),
   INDEX idx_user_cat (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

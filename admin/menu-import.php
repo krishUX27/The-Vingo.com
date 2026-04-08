@@ -271,24 +271,26 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
-    /* Prevent unwanted horizontal scroll globally */
-    body, html { overflow-x: hidden; width: 100%; position: relative; margin: 0; padding: 0; }
-    
     /* Ensure main content fits correctly with the sidebar */
-    .main { width: calc(100% - 260px); margin-left: 260px; min-height: 100vh; overflow-x: hidden; position: relative; transition: margin 0.3s ease; }
-    @media (max-width: 992px) {
-      .main { width: 100%; margin-left: 0; }
-    }
-    .content { padding: 24px; max-width: 100%; position: relative; }
+    .content { padding: 40px; max-width: 1400px; width: 100%; margin: 0 auto; transition: padding 0.3s ease; }
     
-    .import-card { border: 2px dashed #e2e8f0; padding: 40px; text-align: center; border-radius: 16px; background: #f8fafc; transition: all 0.3s ease; }
+    @media (max-width: 1024px) {
+      .content { padding: 20px; }
+      .import-grid { grid-template-columns: 1fr !important; }
+      .import-card { padding: 20px; }
+    }
+    
+    .import-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+    
+    .import-card { border: 2px dashed #e2e8f0; padding: 40px; text-align: center; border-radius: 16px; background: #f8fafc; transition: all 0.3s ease; cursor: pointer; }
     .import-card:hover { border-color: var(--accent); background: #f0f4ff; }
     .file-hint { font-size: 0.85rem; color: #64748b; margin-top: 10px; }
     .status-badge { padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
     .status-processing { background: #fef3c7; color: #92400e; }
     .status-completed { background: #dcfce7; color: #166534; }
     .status-failed { background: #fee2e2; color: #991b1b; }
-    .format-guide { background: #eff6ff; padding: 20px; border-radius: 12px; margin-top: 30px; overflow-x: auto; }
+    
+    .format-guide { background: #eff6ff; padding: 20px; border-radius: 12px; margin-top: 30px; }
     .format-guide table { min-width: 800px; border-collapse: collapse; margin-top: 10px; background: white; }
     .format-guide th, .format-guide td { border: 1px solid #bfdbfe; padding: 8px; font-size: 0.85rem; text-align: left; }
     
@@ -320,7 +322,7 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
       <div class="flash flash-danger">❌ <?= $error ?></div>
     <?php endif; ?>
 
-    <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+    <div class="import-grid">
       
       <div>
         <div class="card">
@@ -373,7 +375,7 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
               <thead>
                 <tr>
                   <th>File Name</th>
-                  <th>Type</th>
+                  <th class="hide-mobile">Type</th>
                   <th>Date</th>
                   <th>Status</th>
                 </tr>
@@ -382,7 +384,7 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
                 <?php foreach ($history as $h): ?>
                 <tr>
                   <td><?= htmlspecialchars($h['file_name']) ?></td>
-                  <td><small style="text-transform: uppercase;"><?= $h['file_type'] ?></small></td>
+                  <td class="hide-mobile"><small style="text-transform: uppercase;"><?= $h['file_type'] ?></small></td>
                   <td><?= date('M d, H:i', strtotime($h['uploaded_at'])) ?></td>
                   <td>
                     <span class="status-badge status-<?= $h['status'] ?>">

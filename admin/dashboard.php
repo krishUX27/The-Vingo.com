@@ -104,6 +104,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if ($name === '')                                           $errors[] = 'Dish name is required.';
     if ($price === '' || !is_numeric($price) || $price < 0)    $errors[] = 'A valid price is required.';
     if ($cat_id === 0)                                         $errors[] = 'Please select a category.';
+    
+    // Verify Category Ownership
+    if ($cat_id > 0) {
+        $cat_check = $conn->prepare("SELECT id FROM categories WHERE id = ? AND user_id = ? AND is_deleted = 0");
+        $cat_check->bind_param('ii', $cat_id, $admin_sess_id);
+        $cat_check->execute();
+        if ($cat_check->get_result()->num_rows === 0) {
+            $errors[] = 'Invalid category selection.';
+        }
+        $cat_check->close();
+    }
 
     // Check for duplicate dish name for this user (Case-Insensitive)
     if (empty($errors)) {
@@ -197,8 +208,8 @@ $stmt->execute();
 $dishes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-/* ── Category dropdown (Owner filtered) ── */
-$cat_res = $conn->query("SELECT * FROM categories WHERE user_id = $admin_sess_id ORDER BY name");
+/* ── Category dropdown (Owner filtered & Active) ── */
+$cat_res = $conn->query("SELECT * FROM categories WHERE user_id = $admin_sess_id AND is_deleted = 0 ORDER BY name");
 if (!$cat_res) {
     dashboard_log("Category query failed: " . $conn->error);
     $categories = [];

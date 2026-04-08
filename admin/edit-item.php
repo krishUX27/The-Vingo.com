@@ -36,6 +36,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($price === '' || !is_numeric($price) || $price < 0)    $errors[] = 'A valid price is required.';
     if ($cat_id === 0)                                         $errors[] = 'Please select a category.';
 
+    // Verify Category Ownership
+    if ($cat_id > 0) {
+        $cat_check = $conn->prepare("SELECT id FROM categories WHERE id = ? AND user_id = ? AND is_deleted = 0");
+        $cat_check->bind_param('ii', $cat_id, $admin_sess_id);
+        $cat_check->execute();
+        if ($cat_check->get_result()->num_rows === 0) {
+            $errors[] = 'Invalid category selection.';
+        }
+        $cat_check->close();
+    }
+
     // Check for duplicate dish name (excluding current ID) - Case-Insensitive
     if (empty($errors)) {
         $check_stmt = $conn->prepare("SELECT id FROM dishes WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND user_id = ? AND id != ? AND is_deleted = 0");
@@ -94,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dish['category_id'] = $cat_id;
 }
 
-$categories = $conn->query("SELECT * FROM categories WHERE user_id = $admin_sess_id ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+$categories = $conn->query("SELECT * FROM categories WHERE user_id = $admin_sess_id AND is_deleted = 0 ORDER BY name")->fetch_all(MYSQLI_ASSOC);
 $offers     = $conn->query("SELECT id, title FROM offers WHERE user_id = $admin_sess_id AND status='active' AND offer_type='seasonal' AND is_deleted=0 ORDER BY title")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
