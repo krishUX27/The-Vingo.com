@@ -277,51 +277,49 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
     /* ── BASE RESPONSIVE OVERRIDES ── */
+    *, *::before, *::after { box-sizing: border-box; }
+    
     .content { 
       padding: 30px 40px; 
-      max-width: 1400px; 
+      max-width: 100%; 
       width: 100%; 
-      margin: 0 auto; 
+      margin: 0; 
       transition: all 0.3s ease; 
-      box-sizing: border-box;
     }
     
     @media (max-width: 1024px) {
-      .main { margin-left: 0 !important; width: 100% !important; min-width: 100% !important; }
-      .content { padding: 15px; width: 100% !important; max-width: 100% !important; }
-      .import-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
-      
-      /* Optimize Cards for Mobile */
-      .card { padding: 20px !important; margin-bottom: 20px !important; width: 100% !important; box-sizing: border-box; }
-      .card-title { font-size: 1.1rem; margin-bottom: 15px; }
-      
-      /* Compact Upload area */
-      .import-card { 
-        padding: 25px 15px !important; 
-        min-height: auto !important; 
-        border-width: 1.5px !important; 
+      .main { 
+        margin-left: 0 !important; 
+        width: 100% !important; 
+        max-width: 100% !important; 
+        overflow-x: hidden; /* Localize any accidental overflow */
       }
-      .import-card div { font-size: 2.2rem !important; margin-bottom: 8px !important; }
-      .import-card p { font-size: 0.85rem; line-height: 1.4; color: var(--text-light); }
+      .content { padding: 15px; width: 100% !important; }
+      .import-grid { grid-template-columns: 1fr !important; gap: 20px !important; width: 100%; }
+      
+      /* Optimize Cards */
+      .card { 
+        padding: 20px !important; 
+        margin-bottom: 20px !important; 
+        width: 100% !important; 
+        max-width: 100% !important; 
+        box-sizing: border-box; 
+      }
       
       /* Precision Scrollable Tables */
       .scroll-mobile { 
         width: 100%;
         max-width: 100%;
         overflow-x: auto !important; 
-        -webkit-overflow-scrolling: touch; 
-        margin-bottom: 10px;
+        display: block;
         border-radius: 10px;
         border: 1px solid var(--border);
-        background: #fff;
-        display: block;
+        margin: 10px 0;
       }
       .scroll-mobile table { 
-        min-width: 650px; 
+        min-width: 600px; /* Reduced to avoid extreme overflow */
         width: 100%;
-        border-collapse: collapse;
       }
-      .scroll-mobile th, .scroll-mobile td { padding: 10px 12px !important; font-size: 0.8rem !important; }
     }
     
     @media (max-width: 480px) {
@@ -368,7 +366,8 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     }
     
     /* Strict body containment */
-    body { width: 100%; min-height: 100vh; overflow-x: hidden; position: relative; }
+    body { width: 100%; min-height: 100vh; overflow-x: hidden; margin: 0; padding: 0; }
+    .main { min-width: 0; }
   </style>
 </head>
 <body>
@@ -377,9 +376,9 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
 
 <div class="main">
   <div class="topbar">
-    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
+    <div class="topbar-left" style="display:flex; align-items:center; gap:16px; min-width:0; flex:1;">
       <div class="menu-toggle" id="menuToggle">☰</div>
-      <h1>📥 Menu Import Center</h1>
+      <h1 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">📥 Menu Import Center</h1>
     </div>
     <div class="topbar-right">
       <?php include __DIR__ . '/partials/topbar_user.php'; ?>
