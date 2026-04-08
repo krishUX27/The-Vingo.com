@@ -3,6 +3,11 @@
 require_once __DIR__ . '/partials/auth_check.php';
 require_once __DIR__ . '/../includes/db.php';
 
+// ── Pre-flight Cache Control ──────────────────────────────────
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
 $admin_sess_id = (int)($_SESSION['admin_id'] ?? 0);
 
 // Handle Restore
@@ -181,6 +186,7 @@ unset($_SESSION['flash']);
   </div>
 </div>
 
+<script src="../assets/js/menu-script.js?v=<?= time() ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const selectAll = document.getElementById('select-all');

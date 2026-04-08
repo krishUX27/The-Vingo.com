@@ -13,6 +13,11 @@ ini_set('memory_limit', '256M');
 $admin_id = $_SESSION['admin_id'] ?? 0;
 $prefix = ''; // Relative path prefix
 
+// ── Pre-flight Cache Control ──────────────────────────────────
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
 $error = '';
 $success = '';
 
@@ -457,6 +462,7 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
   </div>
 </div>
 
+<script src="../assets/js/menu-script.js?v=<?= time() ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const card = document.querySelector('.import-card');
