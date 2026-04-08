@@ -303,12 +303,19 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
       
       /* Compact & Wrapped Upload area */
       .import-card { 
-        padding: 20px !important; 
-        min-height: auto !important;
+        padding: 15px !important; 
+        min-height: 120px !important;
       }
-      .import-card div { font-size: 2rem !important; margin-bottom: 10px !important; }
-      .import-card p { font-size: 0.8rem; line-height: 1.4; word-break: normal; overflow-wrap: break-word; width: 100%; }
-      .file-hint { font-size: 0.75rem !important; }
+      .import-card div { font-size: 1.8rem !important; margin-bottom: 5px !important; }
+      .import-card p { font-size: 0.75rem; line-height: 1.3; }
+      .file-hint { font-size: 0.7rem !important; margin-top: 5px !important; }
+      
+      /* Tips Card Optimization */
+      .tips-card { padding: 15px !important; border-radius: 12px !important; }
+      .tips-card h3 { font-size: 1rem !important; margin-bottom: 8px !important; }
+      .tips-card p { font-size: 0.8rem !important; line-height: 1.4 !important; }
+      .tips-card ul { margin-top: 10px !important; font-size: 0.75rem !important; }
+      .tips-card li { margin-bottom: 5px !important; }
       
       /* Precision Scrollable Tables */
       .scroll-mobile { 
@@ -481,7 +488,7 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
       </div>
 
       <div>
-        <div class="card" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white;">
+        <div class="card tips-card" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white;">
           <h3 style="margin-bottom:15px">Why use Import?</h3>
           <p style="font-size: 0.9rem; line-height: 1.5; opacity: 0.9;">
             Avoid manual entry! Upload your existing price list or a photo of your menu. Our system will analyze the content and populate your digital menu card automatically.
