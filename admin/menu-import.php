@@ -289,60 +289,54 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     
     @media (max-width: 1024px) {
       .main { margin-left: 0 !important; width: 100% !important; min-width: 0 !important; }
-      .content { padding: 15px; width: 100% !important; }
+      .content { padding: 20px 10px; width: 100% !important; }
       .import-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
       
-      /* Better Card Padding for Mobile */
+      /* Decrease card width for better fit/alignment */
       .card { 
         padding: 20px 15px !important; 
-        margin-bottom: 20px !important; 
-        width: 100% !important; 
+        margin: 0 auto 20px auto !important;
+        width: 96% !important; /* Slightly narrower to avoid touching edges */
+        max-width: 100% !important;
         border-radius: 12px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
       }
-      .card-title { font-size: 1.1rem; margin-bottom: 15px; }
       
-      /* Compact & Wrapped Upload area */
+      /* Compact Upload Card */
       .import-card { 
-        padding: 15px !important; 
-        min-height: 120px !important;
+        padding: 20px !important; 
+        width: 90% !important; /* Decrease width as requested */
+        margin: 0 auto !important;
+        min-height: 140px !important;
       }
-      .import-card div { font-size: 1.8rem !important; margin-bottom: 5px !important; }
-      .import-card p { font-size: 0.75rem; line-height: 1.3; }
-      .file-hint { font-size: 0.7rem !important; margin-top: 5px !important; }
+      .import-card div { font-size: 2.2rem !important; }
+      .import-card p { font-size: 0.8rem; line-height: 1.4; color: var(--text-light); }
       
-      /* Tips Card Optimization */
-      .tips-card { padding: 15px !important; border-radius: 12px !important; }
-      .tips-card h3 { font-size: 1rem !important; margin-bottom: 8px !important; }
-      .tips-card p { font-size: 0.8rem !important; line-height: 1.4 !important; }
-      .tips-card ul { margin-top: 10px !important; font-size: 0.75rem !important; }
-      .tips-card li { margin-bottom: 5px !important; }
-      
-      /* Precision Scrollable Tables */
+      /* Table Scroll Containers */
       .scroll-mobile { 
         width: 100%;
         max-width: 100%;
         overflow-x: auto !important; 
+        -webkit-overflow-scrolling: touch;
         display: block;
-        border-radius: 8px;
         border: 1px solid var(--border);
+        border-radius: 8px;
         margin: 10px 0;
         background: #fff;
       }
       .scroll-mobile table { 
         min-width: 600px; 
         width: 100%;
-        table-layout: auto;
+        border-collapse: collapse;
       }
-      .scroll-mobile th, .scroll-mobile td { padding: 10px 8px !important; font-size: 0.75rem !important; }
+      .scroll-mobile th, .scroll-mobile td { font-size: 0.75rem !important; padding: 10px 8px !important; }
     }
     
     @media (max-width: 480px) {
-      .content { padding: 10px; }
       .topbar { padding: 0 10px !important; height: 65px !important; }
-      .topbar-left { gap: 8px !important; }
-      .topbar h1 { font-size: 0.9rem !important; max-width: 150px; }
-      .import-card { padding: 15px 10px !important; }
-      .format-guide { padding: 12px !important; }
+      .topbar h1 { font-size: 1rem !important; }
+      .card { width: 98% !important; padding: 15px 10px !important; }
+      .import-card { width: 100% !important; }
     }
     
     /* ── DESKTOP & SHARED STYLES ── */
@@ -380,7 +374,7 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     }
     
     /* Strict body containment */
-    body { width: 100%; min-height: 100vh; overflow-x: hidden; margin: 0; padding: 0; }
+    body { width: 100%; min-height: 100vh; overflow-x: hidden; margin: 0; padding: 0; position: relative; }
     .main { min-width: 0; }
   </style>
 </head>
@@ -488,7 +482,7 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
       </div>
 
       <div>
-        <div class="card tips-card" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white;">
+        <div class="card" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white;">
           <h3 style="margin-bottom:15px">Why use Import?</h3>
           <p style="font-size: 0.9rem; line-height: 1.5; opacity: 0.9;">
             Avoid manual entry! Upload your existing price list or a photo of your menu. Our system will analyze the content and populate your digital menu card automatically.
