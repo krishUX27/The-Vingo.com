@@ -275,12 +275,14 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     .content { padding: 40px; max-width: 1400px; width: 100%; margin: 0 auto; transition: padding 0.3s ease; }
     
     @media (max-width: 1024px) {
-      .content { padding: 20px; }
-      .import-grid { grid-template-columns: 1fr !important; }
-      .import-card { padding: 20px; }
+      .content { padding: 15px; width: 100vw; overflow-x: hidden; }
+      .import-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+      .import-card { padding: 25px 15px; }
+      .import-card p { font-size: 0.9rem; }
       
       /* Enable scroll on smaller screens */
       .scroll-mobile { 
+        max-width: 100%;
         overflow-x: auto !important; 
         -webkit-overflow-scrolling: touch; 
         margin-bottom: 15px;
@@ -288,7 +290,7 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
         border: 1px solid var(--border);
       }
       .scroll-mobile table { 
-        min-width: 700px; /* Ensure table doesn't collapse too much */
+        min-width: 600px; /* Adjusted for better mobile fit */
         white-space: nowrap; /* Prevent text wrapping */
       }
     }
@@ -315,6 +317,13 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     /* Utility for hiding on mobile */
     @media (max-width: 600px) {
         .hide-mobile { display: none !important; }
+        .content { padding: 10px; } /* Even tighter padding for very small phones */
+    }
+    
+    /* Avoid body horizontal scroll */
+    html, body {
+        max-width: 100%;
+        overflow-x: hidden;
     }
   </style>
 </head>
