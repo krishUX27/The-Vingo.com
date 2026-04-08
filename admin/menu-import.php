@@ -275,24 +275,34 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     .content { padding: 40px; max-width: 1400px; width: 100%; margin: 0 auto; transition: padding 0.3s ease; }
     
     @media (max-width: 1024px) {
-      .content { padding: 15px; width: 100vw; overflow-x: hidden; }
+      .content { padding: 15px; width: 100%; box-sizing: border-box; }
       .import-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
-      .import-card { padding: 25px 15px; }
-      .import-card p { font-size: 0.9rem; }
+      .import-card { padding: 25px 15px; min-height: 180px; }
+      .import-card div { font-size: 2.2rem !important; } /* Smaller icon on mobile */
+      .import-card p { font-size: 0.85rem; line-height: 1.4; }
       
       /* Enable scroll on smaller screens */
       .scroll-mobile { 
-        max-width: 100%;
+        width: 100%;
         overflow-x: auto !important; 
         -webkit-overflow-scrolling: touch; 
         margin-bottom: 15px;
         border-radius: 8px;
         border: 1px solid var(--border);
+        background: #fff;
       }
       .scroll-mobile table { 
-        min-width: 600px; /* Adjusted for better mobile fit */
+        min-width: 650px; /* Force table to maintain width for scroll */
         white-space: nowrap; /* Prevent text wrapping */
       }
+    }
+    
+    @media (max-width: 480px) {
+      .content { padding: 10px; }
+      .import-card { padding: 20px 10px; min-height: 150px; }
+      .import-card div { font-size: 1.8rem !important; margin-bottom: 10px !important; }
+      .format-guide { padding: 15px; }
+      .card-title { font-size: 1rem; }
     }
     
     /* Desktop default: No scroll unless necessary */
@@ -317,12 +327,11 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     /* Utility for hiding on mobile */
     @media (max-width: 600px) {
         .hide-mobile { display: none !important; }
-        .content { padding: 10px; } /* Even tighter padding for very small phones */
     }
     
     /* Avoid body horizontal scroll */
     html, body {
-        max-width: 100%;
+        max-width: 100vw;
         overflow-x: hidden;
     }
   </style>
