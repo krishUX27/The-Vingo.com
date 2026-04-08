@@ -278,8 +278,22 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
       .content { padding: 20px; }
       .import-grid { grid-template-columns: 1fr !important; }
       .import-card { padding: 20px; }
+      
+      /* Enable scroll on smaller screens */
+      .scroll-mobile { 
+        overflow-x: auto !important; 
+        -webkit-overflow-scrolling: touch; 
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+      .scroll-mobile table { 
+        min-width: 700px; /* Ensure table doesn't collapse too much */
+        white-space: nowrap; /* Prevent text wrapping */
+      }
     }
     
+    /* Desktop default: No scroll unless necessary */
     .import-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
     
     .import-card { border: 2px dashed #e2e8f0; padding: 40px; text-align: center; border-radius: 16px; background: #f8fafc; transition: all 0.3s ease; cursor: pointer; }
@@ -291,12 +305,17 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     .status-failed { background: #fee2e2; color: #991b1b; }
     
     .format-guide { background: #eff6ff; padding: 20px; border-radius: 12px; margin-top: 30px; }
-    .format-guide table { min-width: 800px; border-collapse: collapse; margin-top: 10px; background: white; }
-    .format-guide th, .format-guide td { border: 1px solid #bfdbfe; padding: 8px; font-size: 0.85rem; text-align: left; }
+    .format-guide table { border-collapse: collapse; margin-top: 10px; background: white; width: 100%; }
+    .format-guide th, .format-guide td { border: 1px solid #bfdbfe; padding: 12px; font-size: 0.85rem; text-align: left; }
     
     /* Success Slide Animation */
     .flash-import { animation: slideDown 0.4s ease-out; }
     @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    
+    /* Utility for hiding on mobile */
+    @media (max-width: 600px) {
+        .hide-mobile { display: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -339,8 +358,8 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
           <div class="format-guide">
             <strong>📊 Excel/CSV Format Requirement</strong>
             <p style="font-size: 0.8rem; margin: 10px 0;">To ensure your dishes are correctly added, use the following column order:</p>
-            <div style="overflow-x: auto; background: white; border-radius: 8px; border: 1px solid var(--border)">
-              <table style="width: 100%; min-width: 800px; margin-top: 0; border: none">
+            <div class="scroll-mobile">
+              <table style="width: 100%; border: none">
                 <thead>
                   <tr style="background: #f8fafc">
                     <th>Col A</th><th>Col B</th><th>Col C</th><th>Col D</th>
@@ -370,8 +389,8 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
 
         <div class="card" style="margin-top: 30px;">
           <div class="card-title">Recent Imports</div>
-          <div class="table-wrap">
-            <table style="width:100%">
+          <div class="table-wrap scroll-mobile">
+            <table style="width:100%; border-collapse: collapse;">
               <thead>
                 <tr>
                   <th>File Name</th>
