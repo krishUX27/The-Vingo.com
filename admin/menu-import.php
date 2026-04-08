@@ -291,28 +291,26 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
       .main { margin-left: 0 !important; width: 100% !important; min-width: 0 !important; }
       .content { padding: 20px 10px; width: 100% !important; }
       .import-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+      .import-grid > div { min-width: 0 !important; overflow: hidden; } /* Prevent grid items from pushing width */
       
-      /* Decrease card width for better fit/alignment */
+      /* Card Sizing */
       .card { 
         padding: 20px 15px !important; 
         margin: 0 auto 20px auto !important;
-        width: 96% !important; /* Slightly narrower to avoid touching edges */
+        width: 100% !important; 
         max-width: 100% !important;
         border-radius: 12px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
       }
       
-      /* Compact Upload Card */
+      /* Upload Area */
       .import-card { 
         padding: 20px !important; 
-        width: 90% !important; /* Decrease width as requested */
+        width: 100% !important; 
         margin: 0 auto !important;
         min-height: 140px !important;
       }
-      .import-card div { font-size: 2.2rem !important; }
-      .import-card p { font-size: 0.8rem; line-height: 1.4; color: var(--text-light); }
       
-      /* Table Scroll Containers */
+      /* Table Scroll Scaling */
       .scroll-mobile { 
         width: 100%;
         max-width: 100%;
@@ -324,23 +322,17 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
         margin: 10px 0;
         background: #fff;
       }
-      .scroll-mobile table { 
-        min-width: 600px; 
-        width: 100%;
-        border-collapse: collapse;
-      }
-      .scroll-mobile th, .scroll-mobile td { font-size: 0.75rem !important; padding: 10px 8px !important; }
+      .scroll-mobile table { min-width: 600px; width: 100%; border-collapse: collapse; }
     }
     
     @media (max-width: 480px) {
       .topbar { padding: 0 10px !important; height: 65px !important; }
       .topbar h1 { font-size: 1rem !important; }
-      .card { width: 98% !important; padding: 15px 10px !important; }
-      .import-card { width: 100% !important; }
     }
     
     /* ── DESKTOP & SHARED STYLES ── */
     .import-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+    .import-grid > div { min-width: 0; }
     
     .import-card { 
       border: 2px dashed #e2e8f0; 
@@ -354,13 +346,14 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      max-width: 100%;
     }
     .import-card:hover { border-color: var(--accent); background: #f0f4ff; transform: translateY(-2px); }
     
     .file-hint { font-size: 0.85rem; color: #64748b; margin-top: 10px; }
     .status-badge { padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
     
-    .format-guide { background: #eff6ff; padding: 20px; border-radius: 12px; margin-top: 25px; border: 1px solid #dbeafe; }
+    .format-guide { background: #eff6ff; padding: 20px; border-radius: 12px; margin-top: 25px; border: 1px solid #dbeafe; max-width: 100%; }
     .format-guide table { border-collapse: collapse; margin-top: 10px; background: white; width: 100%; }
     .format-guide th, .format-guide td { border: 1px solid #bfdbfe; padding: 12px; font-size: 0.85rem; text-align: left; }
     
