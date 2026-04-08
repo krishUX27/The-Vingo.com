@@ -276,52 +276,85 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
-    /* Ensure main content fits correctly with the sidebar */
-    .content { padding: 40px; max-width: 1400px; width: 100%; margin: 0 auto; transition: padding 0.3s ease; }
+    /* ── BASE RESPONSIVE OVERRIDES ── */
+    .content { 
+      padding: 30px 40px; 
+      max-width: 1400px; 
+      width: 100%; 
+      margin: 0 auto; 
+      transition: all 0.3s ease; 
+      box-sizing: border-box;
+    }
     
     @media (max-width: 1024px) {
-      .content { padding: 15px; width: 100%; box-sizing: border-box; }
+      .main { margin-left: 0 !important; width: 100% !important; min-width: 100% !important; }
+      .content { padding: 15px; width: 100% !important; max-width: 100% !important; }
       .import-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
-      .import-card { padding: 25px 15px; min-height: 180px; }
-      .import-card div { font-size: 2.2rem !important; } /* Smaller icon on mobile */
-      .import-card p { font-size: 0.85rem; line-height: 1.4; }
       
-      /* Enable scroll on smaller screens */
+      /* Optimize Cards for Mobile */
+      .card { padding: 20px !important; margin-bottom: 20px !important; width: 100% !important; box-sizing: border-box; }
+      .card-title { font-size: 1.1rem; margin-bottom: 15px; }
+      
+      /* Compact Upload area */
+      .import-card { 
+        padding: 25px 15px !important; 
+        min-height: auto !important; 
+        border-width: 1.5px !important; 
+      }
+      .import-card div { font-size: 2.2rem !important; margin-bottom: 8px !important; }
+      .import-card p { font-size: 0.85rem; line-height: 1.4; color: var(--text-light); }
+      
+      /* Precision Scrollable Tables */
       .scroll-mobile { 
         width: 100%;
+        max-width: 100%;
         overflow-x: auto !important; 
         -webkit-overflow-scrolling: touch; 
-        margin-bottom: 15px;
-        border-radius: 8px;
+        margin-bottom: 10px;
+        border-radius: 10px;
         border: 1px solid var(--border);
         background: #fff;
+        display: block;
       }
       .scroll-mobile table { 
-        min-width: 650px; /* Force table to maintain width for scroll */
-        white-space: nowrap; /* Prevent text wrapping */
+        min-width: 650px; 
+        width: 100%;
+        border-collapse: collapse;
       }
+      .scroll-mobile th, .scroll-mobile td { padding: 10px 12px !important; font-size: 0.8rem !important; }
     }
     
     @media (max-width: 480px) {
-      .content { padding: 10px; }
-      .import-card { padding: 20px 10px; min-height: 150px; }
-      .import-card div { font-size: 1.8rem !important; margin-bottom: 10px !important; }
-      .format-guide { padding: 15px; }
-      .card-title { font-size: 1rem; }
+      .content { padding: 12px; }
+      .topbar { padding: 0 15px !important; height: 70px !important; }
+      .topbar h1 { font-size: 0.95rem !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+      .import-card { padding: 20px 10px !important; }
+      .import-card div { font-size: 1.8rem !important; }
+      .format-guide { padding: 15px !important; border-radius: 10px; }
     }
     
-    /* Desktop default: No scroll unless necessary */
+    /* ── DESKTOP & SHARED STYLES ── */
     .import-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
     
-    .import-card { border: 2px dashed #e2e8f0; padding: 40px; text-align: center; border-radius: 16px; background: #f8fafc; transition: all 0.3s ease; cursor: pointer; }
-    .import-card:hover { border-color: var(--accent); background: #f0f4ff; }
+    .import-card { 
+      border: 2px dashed #e2e8f0; 
+      padding: 40px; 
+      text-align: center; 
+      border-radius: 16px; 
+      background: #f8fafc; 
+      transition: all 0.3s ease; 
+      cursor: pointer; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .import-card:hover { border-color: var(--accent); background: #f0f4ff; transform: translateY(-2px); }
+    
     .file-hint { font-size: 0.85rem; color: #64748b; margin-top: 10px; }
     .status-badge { padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
-    .status-processing { background: #fef3c7; color: #92400e; }
-    .status-completed { background: #dcfce7; color: #166534; }
-    .status-failed { background: #fee2e2; color: #991b1b; }
     
-    .format-guide { background: #eff6ff; padding: 20px; border-radius: 12px; margin-top: 30px; }
+    .format-guide { background: #eff6ff; padding: 20px; border-radius: 12px; margin-top: 25px; border: 1px solid #dbeafe; }
     .format-guide table { border-collapse: collapse; margin-top: 10px; background: white; width: 100%; }
     .format-guide th, .format-guide td { border: 1px solid #bfdbfe; padding: 12px; font-size: 0.85rem; text-align: left; }
     
@@ -329,16 +362,13 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     .flash-import { animation: slideDown 0.4s ease-out; }
     @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     
-    /* Utility for hiding on mobile */
-    @media (max-width: 600px) {
+    .hide-mobile { display: table-cell; }
+    @media (max-width: 768px) {
         .hide-mobile { display: none !important; }
     }
     
-    /* Avoid body horizontal scroll */
-    html, body {
-        max-width: 100vw;
-        overflow-x: hidden;
-    }
+    /* Strict body containment */
+    body { width: 100%; min-height: 100vh; overflow-x: hidden; position: relative; }
   </style>
 </head>
 <body>
