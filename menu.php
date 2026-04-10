@@ -3,7 +3,7 @@ require_once __DIR__ . '/includes/db.php';
 $user_id = intval($_GET['id'] ?? 0);
 
 // QR Scan Tracking Logic
-if ($user_id > 0) {
+if ($user_id > 0 && ($_GET['src'] ?? '') === 'qr') {
     // 1. Detailed Logging
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
