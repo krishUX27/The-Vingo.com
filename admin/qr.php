@@ -15,7 +15,7 @@ $host     = $_SERVER['HTTP_HOST'];
 $base     = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $error = null;
 $generated = false;
-$qr_url = $proto . '://' . $host . dirname($base) . '/menu.php?id=' . $admin_sess_id;
+$qr_url = $proto . '://' . $host . rtrim(dirname($base), '/\\') . '/menu.php?id=' . $admin_sess_id;
 
 $force     = isset($_GET['regen']);
 $cachedUrl = file_exists($url_file) ? trim(file_get_contents($url_file)) : '';
