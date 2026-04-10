@@ -155,9 +155,12 @@ function get_combo_dishes($conn, $oid) {
 
 <div class="main">
   <div class="topbar">
-    <div class="topbar-left">
-      <h1>🎁 Offer Zone</h1>
-      <p class="meta">Manage Seasonal & Combo Deals</p>
+    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
+      <div class="menu-toggle" id="menuToggle">☰</div>
+      <div>
+        <h1>🎁 Offer Zone</h1>
+        <p class="meta">Manage Seasonal & Combo Deals</p>
+      </div>
     </div>
     <div class="topbar-right">
       <?php include __DIR__ . '/partials/topbar_user.php'; ?>

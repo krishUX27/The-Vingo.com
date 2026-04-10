@@ -87,6 +87,7 @@ function get_stat_count($conn, $sql, $uid) {
 
 $total_dishes = get_stat_count($conn, "SELECT COUNT(*) FROM dishes WHERE user_id = ? AND is_deleted = 0", $admin_sess_id);
 $total_cats   = get_stat_count($conn, "SELECT COUNT(*) FROM categories WHERE user_id = ? AND is_deleted = 0", $admin_sess_id);
+$total_scans  = get_stat_count($conn, "SELECT COUNT(*) FROM qr_scan_logs WHERE admin_id = ?", $admin_sess_id);
 
 /* ── Handle Add Dish (Modal POST) ── */
 $errors = [];
@@ -246,7 +247,7 @@ if (!$offer_res) {
     <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
       <div class="menu-toggle" id="menuToggle">☰</div>
       <div>
-        <h1>Dashboard</h1>
+        <h1>🍳 Kitchen Menu</h1>
         <p class="meta"><?= date('l, d F Y') ?></p>
       </div>
     </div>
@@ -277,7 +278,10 @@ if (!$offer_res) {
         <div class="stat-icon si-red">📁</div>
         <div><div class="stat-val"><?= $total_cats ?></div><div class="stat-label">Categories</div></div>
       </div>
-      <div class="stat-box" style="visibility:hidden"></div>
+      <div class="stat-box">
+        <div class="stat-icon si-blue">📱</div>
+        <div><div class="stat-val" id="qr-scan-count"><?= $total_scans ?></div><div class="stat-label">QR Scan Count</div></div>
+      </div>
       <div class="stat-box" style="visibility:hidden"></div>
     </div>
 
@@ -604,6 +608,25 @@ document.addEventListener('DOMContentLoaded', function() {
   <?php endif; ?>
 </script>
 
+<script>
+  // Dynamic Analytics Refresh
+  async function refreshQRAnalytics() {
+    try {
+      const response = await fetch('../api/analytics.php');
+      const data = await response.json();
+      if (data.success) {
+        const el = document.getElementById('qr-scan-count');
+        if (el) el.innerText = data.qr_scan_count;
+      }
+    } catch (err) {
+      console.error('Failed to fetch analytics:', err);
+    }
+  }
+
+  // Initial refresh and periodic update (every 30 seconds)
+  refreshQRAnalytics();
+  setInterval(refreshQRAnalytics, 30000);
+</script>
 </body>
 </html>
 

@@ -13,7 +13,7 @@ $prefix = $prefix ?? '';
   <div class="sidebar-close" id="sidebarClose">✕</div>
   <div class="sidebar-header"><span>🍴</span> Vingo Menu</div>
   <nav>
-    <?= nav_a('dashboard.php',   '📊', 'Dashboard',   $cur) ?>
+    <?= nav_a('dashboard.php',   '🍳', 'Kitchen menu',   $cur) ?>
     <?= nav_a('add-category.php',    '📂', 'Categories',  $cur) ?>
     <?= nav_a('offer-zone.php', '🎁', 'Offer Zone', $cur) ?>
     <a href="<?= $prefix ?>../menu.php?id=<?= $_SESSION['admin_id'] ?? 0 ?>" target="_blank">

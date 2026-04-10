@@ -111,6 +111,21 @@ if ($chk_old && $chk_old->num_rows > 0) {
         echo "✅ Data migration complete. Old deals moved to 'offers' table.<br>";
     }
 }
+/**
+ * 7. Initialize QR Scan & Log Tables
+ */
+$conn->query("CREATE TABLE IF NOT EXISTS qr_scans (user_id INT PRIMARY KEY, scan_count INT DEFAULT 0)");
+$sql_logs = "CREATE TABLE IF NOT EXISTS qr_scan_logs (
+    scan_id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT NOT NULL,
+    qr_id VARCHAR(50) DEFAULT 'default',
+    ip_address VARCHAR(45),
+    device_info TEXT,
+    scan_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)";
+if ($conn->query($sql_logs)) {
+    echo "✅ QR Scan Tracking tables are active.<br>";
+}
 
 echo "<br><h3>✨ Migration successfully completed.</h3><br>";
 echo "<div style='color:#991b1b; font-weight:bold; border:2px solid #b91c1c; padding:15px; border-radius:8px'>❌ SECURITY WARNING: Please delete this file ('migrate_to_live.php') from your server IMMEDIATELY.</div>";

@@ -4,6 +4,17 @@ $user_id = intval($_GET['id'] ?? 0);
 
 // QR Scan Tracking Logic
 if ($user_id > 0) {
+    // 1. Detailed Logging
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+    $stmt = $conn->prepare("INSERT INTO qr_scan_logs (admin_id, ip_address, device_info) VALUES (?, ?, ?)");
+    if ($stmt) {
+        $stmt->bind_param("iss", $user_id, $ip, $ua);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    // 2. Legacy Summary Update
     $conn->query("INSERT INTO qr_scans (user_id, scan_count) VALUES ($user_id, 1) ON DUPLICATE KEY UPDATE scan_count = scan_count + 1");
 }
 

@@ -119,7 +119,7 @@ unset($_SESSION['flash']);
 <?php include __DIR__ . '/partials/sidebar.php'; ?>
 <div class="main">
   <div class="topbar">
-    <div class="topbar-left">
+    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
       <div class="menu-toggle" id="menuToggle">☰</div>
       <h1>🗑️ Trash Bin</h1>
     </div>
