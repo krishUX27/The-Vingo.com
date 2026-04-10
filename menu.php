@@ -841,6 +841,7 @@ function dishRow(d, dotClass) {
           <span class="bdot ${dotClass}"></span>${esc(d.category)}
         </div>
         ${d.offer_title ? `<div style="font-size:0.7rem; color:#16a34a; font-weight:700; margin-top:2px">🎁 ${esc(d.offer_title)}</div>` : ''}
+        ${d.combo_names ? `<div style="font-size:0.65rem; color:#6366f1; font-weight:700; border-top:1px solid rgba(0,0,0,0.03); margin-top:4px; padding-top:4px">🍱 Part of: ${esc(d.combo_names)}</div>` : ''}
       </div>
       ${priceHtml}
     </div>`;

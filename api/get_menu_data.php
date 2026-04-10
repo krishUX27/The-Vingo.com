@@ -11,9 +11,15 @@ if (!$user_id) {
 }
 
 try {
-    // 1. Fetch Dishes Grouped by Category
+    // 1. Fetch Dishes Grouped by Category with Seasonal and Combo info
     $sql_dishes = "SELECT d.*, c.name AS category_name, o.title AS offer_title, 
-                          CONCAT(o.discount_percentage, '%') AS offer_discount
+                          CONCAT(o.discount_percentage, '%') AS offer_discount,
+                          (SELECT GROUP_CONCAT(o2.title SEPARATOR ', ') 
+                           FROM offer_combo_dishes ocd 
+                           JOIN offers o2 ON o2.id = ocd.offer_id 
+                           WHERE ocd.dish_id = d.id AND o2.offer_type = 'combo' 
+                           AND o2.status = 'active' AND o2.is_deleted = 0
+                           AND CURRENT_DATE BETWEEN o2.start_date AND o2.end_date) AS combo_names
                    FROM dishes d
                    JOIN categories c ON c.id = d.category_id
                    LEFT JOIN offers o ON o.id = d.offer_id 
@@ -41,6 +47,7 @@ try {
             'veg_type'       => $row['veg_type'],
             'offer_title'    => $row['offer_title'],
             'offer_discount' => $row['offer_discount'],
+            'combo_names'    => $row['combo_names'],
             'available_breakfast' => (int)$row['available_breakfast'],
             'available_lunch'     => (int)$row['available_lunch'],
             'available_dinner'    => (int)$row['available_dinner'],
