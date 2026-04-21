@@ -8,11 +8,16 @@ if ($chk && $chk->num_rows > 0) { $conn->query("ALTER TABLE dishes DROP COLUMN a
 
 // Ensure modern columns exist (Fix for 500 errors if columns are missing)
 $cols_to_add = [
+    'user_id'             => "INT DEFAULT 0 AFTER id",
     'veg_type'            => "ENUM('veg','non_veg') DEFAULT 'veg' AFTER category_id",
     'available_breakfast' => "TINYINT(1) DEFAULT 1 AFTER veg_type",
     'available_lunch'     => "TINYINT(1) DEFAULT 1 AFTER available_breakfast",
     'available_dinner'    => "TINYINT(1) DEFAULT 1 AFTER available_lunch",
-    'offer_id'            => "INT DEFAULT NULL AFTER currency"
+    'description'         => "TEXT AFTER price",
+    'currency'            => "VARCHAR(10) DEFAULT 'INR' AFTER description",
+    'offer_id'            => "INT DEFAULT NULL AFTER currency",
+    'is_deleted'          => "TINYINT(1) DEFAULT 0 AFTER offer_id",
+    'deleted_at'          => "DATETIME NULL AFTER is_deleted"
 ];
 foreach($cols_to_add as $col => $def) {
     $check = $conn->query("SHOW COLUMNS FROM dishes LIKE '$col'");
@@ -21,9 +26,9 @@ foreach($cols_to_add as $col => $def) {
     }
 }
 
-// Production Error Handling
-ini_set('display_errors', 0);
-error_reporting(E_ALL & ~E_NOTICE);
+// Production Error Handling (DISABLED TEMPORARILY FOR DEBUG)
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
 // Custom logging function
 function dashboard_log($msg) {
