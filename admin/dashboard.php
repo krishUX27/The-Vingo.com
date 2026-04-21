@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             dashboard_log($err_msg);
             $errors[] = $err_msg;
         } else {
-            $s->bind_param('sdisiiisssi', $name, $price, $cat_id, $veg_type_val, $break, $lunch, $dinner, $image_name, $currency, $offer_id, $admin_sess_id);
+            $s->bind_param('sdisiiissii', $name, $price, $cat_id, $veg_type_val, $break, $lunch, $dinner, $image_name, $currency, $offer_id, $admin_sess_id);
             if ($s->execute()) {
                 $new_id = $conn->insert_id;
                 dashboard_log("Dish '{$name}' added successfully. ID: {$new_id}");
