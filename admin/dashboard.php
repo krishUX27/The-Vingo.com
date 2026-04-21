@@ -6,6 +6,21 @@ require_once __DIR__ . '/../includes/db.php';
 $chk = $conn->query("SHOW COLUMNS FROM dishes LIKE 'availability'");
 if ($chk && $chk->num_rows > 0) { $conn->query("ALTER TABLE dishes DROP COLUMN availability"); }
 
+// Ensure modern columns exist (Fix for 500 errors if columns are missing)
+$cols_to_add = [
+    'veg_type'            => "ENUM('veg','non_veg') DEFAULT 'veg' AFTER category_id",
+    'available_breakfast' => "TINYINT(1) DEFAULT 1 AFTER veg_type",
+    'available_lunch'     => "TINYINT(1) DEFAULT 1 AFTER available_breakfast",
+    'available_dinner'    => "TINYINT(1) DEFAULT 1 AFTER available_lunch",
+    'offer_id'            => "INT DEFAULT NULL AFTER currency"
+];
+foreach($cols_to_add as $col => $def) {
+    $check = $conn->query("SHOW COLUMNS FROM dishes LIKE '$col'");
+    if($check && $check->num_rows === 0) {
+        $conn->query("ALTER TABLE dishes ADD COLUMN $col $def");
+    }
+}
+
 // Production Error Handling
 ini_set('display_errors', 0);
 error_reporting(E_ALL & ~E_NOTICE);
