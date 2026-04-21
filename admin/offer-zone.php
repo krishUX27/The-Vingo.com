@@ -47,6 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (empty($title)) {
             $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Offer title is required.'];
+        } else if ($start_date < date('Y-m-d') && $id == 0) {
+            $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Start date cannot be in the past.'];
+        } else if ($end_date < $start_date) {
+            $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'End date cannot be earlier than start date.'];
         } else {
             if ($id > 0) {
                 // Update
@@ -274,11 +278,11 @@ function get_combo_dishes($conn, $oid) {
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
         <div class="form-group">
           <label>Start Date</label>
-          <input type="date" name="start_date" id="fStart" required value="<?= date('Y-m-d') ?>">
+          <input type="date" name="start_date" id="fStart" required value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>" onchange="document.getElementById('fEnd').min=this.value">
         </div>
         <div class="form-group">
           <label>End Date</label>
-          <input type="date" name="end_date" id="fEnd" required value="<?= date('Y-m-d', strtotime('+7 days')) ?>">
+          <input type="date" name="end_date" id="fEnd" required value="<?= date('Y-m-d', strtotime('+7 days')) ?>" min="<?= date('Y-m-d') ?>">
         </div>
       </div>
 
@@ -320,6 +324,8 @@ function openOfferModal(type) {
     document.getElementById('seasonalFields').style.display = type === 'seasonal' ? 'block' : 'none';
     document.getElementById('comboFields').style.display = type === 'combo' ? 'block' : 'none';
     
+    document.getElementById('fEnd').min = '<?= date('Y-m-d') ?>';
+    
     document.getElementById('offerModal').classList.add('open');
     document.getElementById('modalOverlay').classList.add('open');
 }
@@ -336,6 +342,10 @@ function editOffer(o, dishes) {
     document.getElementById('fStart').value = o.start_date;
     document.getElementById('fEnd').value = o.end_date;
     document.getElementById('fStatus').value = o.status;
+
+    // Allow old dates when editing existing offers, but ensure end >= start
+    document.getElementById('fStart').min = ''; 
+    document.getElementById('fEnd').min = o.start_date;
 
     // Multi-select sync
     selectedDishIds = dishes.map(d => parseInt(d));

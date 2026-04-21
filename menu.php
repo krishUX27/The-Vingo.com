@@ -5,24 +5,31 @@ $user_id = intval($_GET['id'] ?? 0);
 // QR Scan Tracking Logic (Deduplicated per Session)
 if ($user_id > 0 && ($_GET['src'] ?? '') === 'qr') {
     if (session_status() === PHP_SESSION_NONE) session_start();
-    $scan_key = "qr_scanned_{$user_id}";
+    
+    // Do NOT increment count if the visitor is the owner (Admin) or a Super Admin
+    $is_owner = (isset($_SESSION['admin_id']) && (int)$_SESSION['admin_id'] === $user_id);
+    $is_super = (isset($_SESSION['super_logged_in']) && $_SESSION['super_logged_in'] === true);
 
-    if (!isset($_SESSION[$scan_key])) {
-        // 1. Detailed Logging
-        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
-        $stmt = $conn->prepare("INSERT INTO qr_scan_logs (admin_id, ip_address, device_info) VALUES (?, ?, ?)");
-        if ($stmt) {
-            $stmt->bind_param("iss", $user_id, $ip, $ua);
-            $stmt->execute();
-            $stmt->close();
+    if (!$is_owner && !$is_super) {
+        $scan_key = "qr_scanned_{$user_id}";
+
+        if (!isset($_SESSION[$scan_key])) {
+            // 1. Detailed Logging
+            $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+            $stmt = $conn->prepare("INSERT INTO qr_scan_logs (admin_id, ip_address, device_info) VALUES (?, ?, ?)");
+            if ($stmt) {
+                $stmt->bind_param("iss", $user_id, $ip, $ua);
+                $stmt->execute();
+                $stmt->close();
+            }
+
+            // 2. Legacy Summary Update
+            $conn->query("INSERT INTO qr_scans (user_id, scan_count) VALUES ($user_id, 1) ON DUPLICATE KEY UPDATE scan_count = scan_count + 1");
+            
+            // Mark as scanned for this session to prevent count on refresh
+            $_SESSION[$scan_key] = true;
         }
-
-        // 2. Legacy Summary Update
-        $conn->query("INSERT INTO qr_scans (user_id, scan_count) VALUES ($user_id, 1) ON DUPLICATE KEY UPDATE scan_count = scan_count + 1");
-        
-        // Mark as scanned for this session to prevent count on refresh
-        $_SESSION[$scan_key] = true;
     }
 }
 

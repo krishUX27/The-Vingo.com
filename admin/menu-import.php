@@ -41,45 +41,7 @@ $conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS available_breakfast TI
 $conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS available_lunch TINYINT(1) DEFAULT 1 AFTER available_breakfast");
 $conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS available_dinner TINYINT(1) DEFAULT 1 AFTER available_lunch");
 
-// ── Image Processing Logic (GD) ───────────────────────────────
-function process_and_compress_image($source, $dest) {
-    if (!function_exists('imagecreatefromjpeg')) return false;
 
-    list($width, $height, $type) = getimagesize($source);
-    $max_width = 1200;
-    $new_width = $width;
-    $new_height = $height;
-
-    if ($width > $max_width) {
-        $ratio = $max_width / $width;
-        $new_width = $max_width;
-        $new_height = floor($height * $ratio);
-    }
-
-    $image = null;
-    try {
-        switch ($type) {
-            case IMAGETYPE_JPEG: $image = @imagecreatefromjpeg($source); break;
-            case IMAGETYPE_PNG:  $image = @imagecreatefrompng($source);  break;
-            case IMAGETYPE_WEBP: $image = @imagecreatefromwebp($source); break;
-        }
-    } catch (Exception $e) { return false; }
-
-    if (!$image) return false;
-
-    $virtual_image = imagecreatetruecolor($new_width, $new_height);
-    if ($type == IMAGETYPE_PNG || $type == IMAGETYPE_WEBP) {
-        imagealphablending($virtual_image, false);
-        imagesavealpha($virtual_image, true);
-    }
-
-    imagecopyresampled($virtual_image, $image, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
-    $res = imagejpeg($virtual_image, $dest, 80);
-    imagedestroy($image);
-    imagedestroy($virtual_image);
-
-    return $res;
-}
 
 // ── CSV Processing Logic (Strict Mode Robust) ─────────────────
 function process_csv_import($file_path, $admin_id, $conn) {
@@ -205,10 +167,10 @@ function process_csv_import($file_path, $admin_id, $conn) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['menu_file'])) {
     $file = $_FILES['menu_file'];
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    $allowed = ['jpg', 'jpeg', 'png', 'pdf', 'xlsx', 'xls', 'csv'];
+    $allowed = ['csv'];
 
     if (!in_array($ext, $allowed)) {
-        $error = "File type not supported. Please use Images, PDF, Excel, or CSV.";
+        $error = "File type not supported. Please use a CSV file.";
     } elseif ($file['error'] !== UPLOAD_ERR_OK) {
         $error = "Upload failed with error code: " . $file['error'];
     } elseif ($file['size'] > 10 * 1024 * 1024) {
@@ -218,9 +180,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['menu_file'])) {
         $file_path = $upload_dir . $new_name;
 
         if (move_uploaded_file($file['tmp_name'], $file_path)) {
-            $file_type = in_array($ext, ['xlsx', 'xls', 'csv']) ? 'excel' : ($ext === 'pdf' ? 'pdf' : 'image');
-            
             // Log to database
+            $file_type = 'csv';
             $stmt = $conn->prepare("INSERT INTO menu_imports (admin_id, file_name, file_type, file_path, status) VALUES (?, ?, ?, ?, 'processing')");
             $stmt->bind_param("isss", $admin_id, $file['name'], $file_type, $file_path);
             $stmt->execute();
@@ -228,31 +189,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['menu_file'])) {
             $stmt->close();
 
             try {
-                if ($file_type === 'image') {
-                    $compressed_name = 'opt_' . str_replace('.'.$ext, '.jpg', $new_name);
-                    $compressed_path = $upload_dir . $compressed_name;
-                    if (process_and_compress_image($file_path, $compressed_path)) {
-                        $conn->query("UPDATE menu_imports SET status = 'completed', file_path = '$compressed_path' WHERE id = $import_id");
-                        $success = "Menu Image optimized and saved successfully.";
-                    } else {
-                        $conn->query("UPDATE menu_imports SET status = 'completed' WHERE id = $import_id");
-                        $success = "Image saved. (System optimized default size).";
-                    }
-                } elseif ($ext === 'csv') {
-                    $res = process_csv_import($file_path, $admin_id, $conn);
-                    if ($res) {
-                        $conn->query("UPDATE menu_imports SET status = 'completed' WHERE id = $import_id");
-                        $success = "{$res['total']} rows detected. {$res['success']} dishes imported. {$res['skipped']} rows skipped.";
-                        if ($res['skipped'] > 0 && !empty($res['last_err'])) {
-                            $success .= " Last DB Error: " . $res['last_err'];
-                        }
-                    } else {
-                        throw new Exception("Unable to parse CSV file.");
+                $res = process_csv_import($file_path, $admin_id, $conn);
+                if ($res) {
+                    $conn->query("UPDATE menu_imports SET status = 'completed' WHERE id = $import_id");
+                    $success = "{$res['total']} rows detected. {$res['success']} dishes imported successfully. <a href='dashboard.php' class='btn btn-sm btn-primary' style='margin-left:auto; font-size:0.7rem; padding: 6px 12px; color:white;'>View Dishes</a>";
+                    if ($res['skipped'] > 0 && !empty($res['last_err'])) {
+                        $success .= " <br><small>Note: {$res['skipped']} rows skipped. Last error: {$res['last_err']}</small>";
                     }
                 } else {
-                    // Mark as 'completed' (Stored) for Excel/PDF if logic isn't yet active but file is safe
-                    $conn->query("UPDATE menu_imports SET status = 'completed' WHERE id = $import_id");
-                    $success = "File uploaded successfully. We are now processing the " . strtoupper($ext) . " content.";
+                    throw new Exception("Unable to parse CSV file.");
                 }
             } catch (Exception $e) {
                 $conn->query("UPDATE menu_imports SET status = 'failed' WHERE id = $import_id");
@@ -402,14 +347,14 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
           <form method="POST" enctype="multipart/form-data">
             <div class="import-card" onclick="document.getElementById('fileInput').click()">
               <div style="font-size: 3rem; margin-bottom: 15px;">📄</div>
-              <p>Click to browse or drag and drop your menu source</p>
-              <input type="file" name="menu_file" id="fileInput" style="display:none" onchange="this.form.submit()">
-              <p class="file-hint">Supported: .csv, .xlsx, .pdf, .jpg, .png (Max 10MB)</p>
+              <p>Click to browse or drag and drop your CSV file</p>
+              <input type="file" name="menu_file" id="fileInput" style="display:none" accept=".csv" onchange="this.form.submit()">
+              <p class="file-hint">Supported: .csv (Max 10MB)</p>
             </div>
           </form>
 
           <div class="format-guide">
-            <strong>📊 Excel/CSV Format Requirement</strong>
+            <strong>📊 CSV Format Requirement</strong>
             <p style="font-size: 0.8rem; margin: 10px 0;">To ensure your dishes are correctly added, use the following column order:</p>
             <div class="scroll-mobile">
               <table style="width: 100%; border: none">
@@ -426,7 +371,7 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
                   </tr>
                   <tr>
                     <td>Burgers</td><td>Classic Veggie</td><td>299</td><td>Double patty...</td>
-                    <td>veg</td><td>0</td><td>1</td><td>1</td>
+                    <td>veg</td><td>No</td><td>Yes</td><td>Yes</td>
                   </tr>
                 </tbody>
               </table>
@@ -476,9 +421,9 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
 
       <div>
         <div class="card" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white;">
-          <h3 style="margin-bottom:15px">Why use Import?</h3>
+          <h3 style="margin-bottom:15px">Why use CSV Import?</h3>
           <p style="font-size: 0.9rem; line-height: 1.5; opacity: 0.9;">
-            Avoid manual entry! Upload your existing price list or a photo of your menu. Our system will analyze the content and populate your digital menu card automatically.
+            Avoid manual entry! Upload your formatted CSV price list and our system will populate your digital menu card instantly.
           </p>
           <ul style="margin-top: 20px; font-size: 0.85rem; padding-left: 18px;">
             <li style="margin-bottom: 8px;">Bulk add hundreds of dishes</li>

@@ -59,6 +59,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $image_name = $dish['image'];
+    $delete_old_image = false;
+
+    // Handle image removal if checked and NO new image is uploaded
+    if (isset($_POST['remove_image']) && $_POST['remove_image'] == '1' && empty($_FILES['image']['name'])) {
+        $image_name = null;
+        $delete_old_image = true;
+    }
+
     if (!empty($_FILES['image']['name'])) {
         $f   = $_FILES['image'];
         $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
@@ -70,10 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $new_img = uniqid('dish_', true) . '.' . $ext;
             $dest    = __DIR__ . '/../uploads/' . $new_img;
             if (move_uploaded_file($f['tmp_name'], $dest)) {
-                // Remove old image
-                if ($dish['image'] && file_exists(__DIR__ . '/../uploads/' . $dish['image']))
-                    unlink(__DIR__ . '/../uploads/' . $dish['image']);
                 $image_name = $new_img;
+                $delete_old_image = true;
             } else {
                 $errors[] = 'Upload failed.';
             }
@@ -84,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, veg_type=?, available_breakfast=?, available_lunch=?, available_dinner=?, image=?, currency=?, offer_id=? WHERE id=? AND user_id=?");
         $upd->bind_param('sdisiiisssii', $name, $price, $cat_id, $veg_type, $break, $lunch, $dinner, $image_name, $currency, $offer_id, $id, $admin_sess_id);
         if ($upd->execute()) {
+            if ($delete_old_image && $dish['image'] && file_exists(__DIR__ . '/../uploads/' . $dish['image'])) {
+                unlink(__DIR__ . '/../uploads/' . $dish['image']);
+            }
             $_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish '{$name}' updated."];
             header('Location: dashboard.php');
             exit;
@@ -219,9 +228,14 @@ $offers     = $conn->query("SELECT id, title FROM offers WHERE user_id = $admin_
           <div class="form-group full">
             <label>Current Image</label>
             <?php if ($dish['image'] && file_exists(__DIR__ . '/../uploads/' . $dish['image'])): ?>
-              <img src="../uploads/<?= htmlspecialchars($dish['image']) ?>" alt="" class="img-thumb">
+              <div style="display:flex; align-items:start; gap:16px">
+                <img src="../uploads/<?= htmlspecialchars($dish['image']) ?>" alt="" class="img-thumb">
+                <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin-top:10px; cursor:pointer; color:#ef4444; font-size:.85rem">
+                  <input type="checkbox" name="remove_image" value="1"> 🗑️ Remove current image
+                </label>
+              </div>
             <?php else: ?>
-              <span style="color:var(--muted);font-size:.85rem">No image</span>
+              <span style="color:var(--muted);font-size:.85rem">No image uploaded</span>
             <?php endif; ?>
           </div>
 
