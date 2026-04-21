@@ -25,6 +25,7 @@ while ($row = $result->fetch_assoc()) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= htmlspecialchars($restaurant_name) ?> — Print Menu</title>
+  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
   <style>
@@ -190,7 +191,7 @@ while ($row = $result->fetch_assoc()) {
 <div class="toolbar">
   <span>🖨️ Print Menu — <?= htmlspecialchars($restaurant_name) ?></span>
   <div class="t-btns">
-    <a href="../menu.php" class="t-btn t-btn-back">← Live Menu</a>
+    <a href="../menu.php?id=<?= $admin_id ?>" class="t-btn t-btn-back">← Live Menu</a>
     <button class="t-btn t-btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
   </div>
 </div>

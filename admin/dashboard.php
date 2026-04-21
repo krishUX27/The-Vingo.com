@@ -282,7 +282,7 @@ if (!$offer_res) {
         <div class="stat-icon si-blue">📱</div>
         <div><div class="stat-val" id="qr-scan-count"><?= $total_scans ?></div><div class="stat-label">QR Scan Count</div></div>
       </div>
-      <div class="stat-box" style="visibility:hidden"></div>
+
     </div>
 
     <!-- Dish Table -->
@@ -346,9 +346,7 @@ if (!$offer_res) {
             <button type="button" class="btn btn-primary" id="open-add-dish">
                <span style="font-size:1rem">➕</span> Add New Dish
             </button>
-            <a href="trash.php" class="btn btn-outline" title="Recover deleted items">
-               <span>🗑️</span> View Trash
-            </a>
+
           </div>
           <div id="bulk-controls" style="display:none; gap:10px; align-items:center;">
             <span id="select-count" style="font-size:0.85rem; color:var(--muted)">0 selected</span>

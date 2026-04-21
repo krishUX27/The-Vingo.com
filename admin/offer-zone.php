@@ -113,6 +113,7 @@ function get_combo_dishes($conn, $oid) {
   <title>Offer Zone | Vingo Admin</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
+  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
     .offer-type-selection { display: flex; gap: 20px; margin-bottom: 30px; }
     .type-btn { 

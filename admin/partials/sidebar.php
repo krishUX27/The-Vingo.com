@@ -24,11 +24,8 @@ $prefix = $prefix ?? '';
     </a>
     <?= nav_a('qr.php', '📱', 'QR Code', $cur) ?>
     <?= nav_a('menu-import.php', '📥', 'Menu Import', $cur) ?>
-    <a href="<?= $prefix ?>generate_pdf.php" target="_blank">
-      <span class="nav-icon">📄</span> Download PDF
-    </a>
-    <?= nav_a('settings.php', '⚙️', 'Restaurant Settings', $cur) ?>
     <?= nav_a('trash.php', '🗑️', 'Trash Bin', $cur) ?>
+    <?= nav_a('settings.php', '⚙️', 'Restaurant Settings', $cur) ?>
   </nav>
   <div class="sidebar-footer">Vingo Menu v2</div>
 </aside>
@@ -42,17 +39,21 @@ document.addEventListener('DOMContentLoaded', function() {
   const overlay = document.getElementById('sidebarOverlay');
   const menuToggle = document.getElementById('menuToggle');
 
-  function openSidebar() {
+  window.openSidebar = function() {
     sidebar.classList.add('open');
     if(overlay) overlay.classList.add('show');
-  }
+    if(window.closeUserDropdown) window.closeUserDropdown();
+  };
 
-  function closeSidebar() {
-    sidebar.classList.remove('open');
+  window.closeSidebar = function() {
+    if(sidebar) sidebar.classList.remove('open');
     if(overlay) overlay.classList.remove('show');
-  }
+  };
 
-  if(menuToggle) menuToggle.addEventListener('click', openSidebar);
+  if(menuToggle) menuToggle.addEventListener('click', function(e) {
+    e.stopPropagation();
+    openSidebar();
+  });
   if(closeBtn) closeBtn.addEventListener('click', closeSidebar);
   if(overlay) overlay.addEventListener('click', closeSidebar);
 });

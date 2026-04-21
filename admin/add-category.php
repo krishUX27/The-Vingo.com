@@ -105,7 +105,7 @@ $categories = $conn->query(
       </div>
     </div>
     <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
-      <a href="../menu.php" target="_blank" class="btn btn-outline btn-sm">
+      <a href="../menu.php?id=<?= $admin_sess_id ?>" target="_blank" class="btn btn-outline btn-sm">
         <span class="live-dot"></span> Live Menu View
       </a>
       <?php include __DIR__ . '/partials/topbar_user.php'; ?>
@@ -119,7 +119,7 @@ $categories = $conn->query(
       </div>
     <?php endif; ?>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+    <div class="grid-2" style="align-items:start">
 
       <!-- Add Form -->
       <div class="card">

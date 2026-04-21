@@ -98,8 +98,11 @@ unset($_SESSION['flash']);
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <title>Trash Bin | Vingo Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
+  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
     .content { padding: 40px; max-width: 1400px; width: 100%; margin: 0 auto; transition: padding 0.3s ease; }
     
