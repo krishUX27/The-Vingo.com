@@ -2,20 +2,28 @@
 require_once __DIR__ . '/includes/db.php';
 $user_id = intval($_GET['id'] ?? 0);
 
-// QR Scan Tracking Logic
+// QR Scan Tracking Logic (Deduplicated per Session)
 if ($user_id > 0 && ($_GET['src'] ?? '') === 'qr') {
-    // 1. Detailed Logging
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
-    $stmt = $conn->prepare("INSERT INTO qr_scan_logs (admin_id, ip_address, device_info) VALUES (?, ?, ?)");
-    if ($stmt) {
-        $stmt->bind_param("iss", $user_id, $ip, $ua);
-        $stmt->execute();
-        $stmt->close();
-    }
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    $scan_key = "qr_scanned_{$user_id}";
 
-    // 2. Legacy Summary Update
-    $conn->query("INSERT INTO qr_scans (user_id, scan_count) VALUES ($user_id, 1) ON DUPLICATE KEY UPDATE scan_count = scan_count + 1");
+    if (!isset($_SESSION[$scan_key])) {
+        // 1. Detailed Logging
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+        $stmt = $conn->prepare("INSERT INTO qr_scan_logs (admin_id, ip_address, device_info) VALUES (?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("iss", $user_id, $ip, $ua);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        // 2. Legacy Summary Update
+        $conn->query("INSERT INTO qr_scans (user_id, scan_count) VALUES ($user_id, 1) ON DUPLICATE KEY UPDATE scan_count = scan_count + 1");
+        
+        // Mark as scanned for this session to prevent count on refresh
+        $_SESSION[$scan_key] = true;
+    }
 }
 
 $restaurant_name = menu_get_setting('restaurant_name', 'Vingo Menu', $user_id);
