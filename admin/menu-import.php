@@ -298,9 +298,10 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
     .file-hint { font-size: 0.85rem; color: #64748b; margin-top: 10px; }
     .status-badge { padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
     
-    .format-guide { background: #eff6ff; padding: 20px; border-radius: 12px; margin-top: 25px; border: 1px solid #dbeafe; max-width: 100%; }
-    .format-guide table { border-collapse: collapse; margin-top: 10px; background: white; width: 100%; }
-    .format-guide th, .format-guide td { border: 1px solid #bfdbfe; padding: 12px; font-size: 0.85rem; text-align: left; }
+    .format-guide { background: #eff6ff; padding: 20px; border-radius: 12px; margin-top: 25px; border: 1px solid #dbeafe; width: 100%; overflow: hidden; box-sizing: border-box; }
+    .format-guide table { border-collapse: collapse; margin-top: 10px; background: white; width: 100%; min-width: 600px; }
+    .format-guide th, .format-guide td { border: 1px solid #bfdbfe; padding: 10px; font-size: 0.8rem; text-align: left; white-space: nowrap; }
+    .scroll-mobile { overflow-x: auto; width: 100%; margin-bottom: 15px; border-radius: 8px; border: 1px solid #dbeafe; }
     
     /* Success Slide Animation */
     .flash-import { animation: slideDown 0.4s ease-out; }
