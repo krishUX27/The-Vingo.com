@@ -199,14 +199,14 @@ $offers     = $conn->query("SELECT id, title FROM offers WHERE user_id = $admin_
 
           <div class="form-group full">
             <label>Available During (Meal Times)</label>
-            <div style="display:flex; gap:20px; background:#f8fafc; padding:15px; border-radius:12px; border:1px solid var(--border)">
-              <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin:0; cursor:pointer">
+            <div style="display:flex; flex-wrap:wrap; gap:15px 25px; background:#f8fafc; padding:15px; border-radius:12px; border:1px solid var(--border)">
+              <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin:0; cursor:pointer; min-width:100px">
                 <input type="checkbox" name="available_breakfast" <?= ($dish['available_breakfast'] ?? 0) ? 'checked' : '' ?>> Breakfast
               </label>
-              <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin:0; cursor:pointer">
+              <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin:0; cursor:pointer; min-width:100px">
                 <input type="checkbox" name="available_lunch" <?= ($dish['available_lunch'] ?? 0) ? 'checked' : '' ?>> Lunch
               </label>
-              <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin:0; cursor:pointer">
+              <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin:0; cursor:pointer; min-width:100px">
                 <input type="checkbox" name="available_dinner" <?= ($dish['available_dinner'] ?? 0) ? 'checked' : '' ?>> Dinner
               </label>
             </div>
@@ -228,9 +228,9 @@ $offers     = $conn->query("SELECT id, title FROM offers WHERE user_id = $admin_
           <div class="form-group full">
             <label>Current Image</label>
             <?php if ($dish['image'] && file_exists(__DIR__ . '/../uploads/' . $dish['image'])): ?>
-              <div style="display:flex; align-items:start; gap:16px">
+              <div style="display:flex; flex-wrap:wrap; align-items:start; gap:16px">
                 <img src="../uploads/<?= htmlspecialchars($dish['image']) ?>" alt="" class="img-thumb">
-                <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin-top:10px; cursor:pointer; color:#ef4444; font-size:.85rem">
+                <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin-top:10px; cursor:pointer; color:#ef4444; font-size:.85rem; background: #fff1f2; padding: 10px 15px; border-radius: 10px; border: 1px solid #fee2e2;">
                   <input type="checkbox" name="remove_image" value="1"> 🗑️ Remove current image
                 </label>
               </div>
