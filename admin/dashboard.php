@@ -6,6 +6,9 @@ require_once __DIR__ . '/../includes/db.php';
 $chk = $conn->query("SHOW COLUMNS FROM dishes LIKE 'availability'");
 if ($chk && $chk->num_rows > 0) { $conn->query("ALTER TABLE dishes DROP COLUMN availability"); }
 
+// Legacy Fix: Drop old 'fk_dish_offer' if exists (it points to 'seasonal_offers' which is obsolete)
+$conn->query("ALTER TABLE dishes DROP FOREIGN KEY IF EXISTS fk_dish_offer");
+
 // Ensure modern columns exist (Fix for 500 errors if columns are missing)
 $cols_to_add = [
     'user_id'             => "INT DEFAULT 0 AFTER id",
@@ -19,6 +22,23 @@ $cols_to_add = [
     'is_deleted'          => "TINYINT(1) DEFAULT 0 AFTER offer_id",
     'deleted_at'          => "DATETIME NULL AFTER is_deleted"
 ];
+// Ensure categories table is updated
+$check_cat = $conn->query("SHOW COLUMNS FROM categories LIKE 'user_id'");
+if ($check_cat && $check_cat->num_rows === 0) {
+    $conn->query("ALTER TABLE categories ADD COLUMN user_id INT DEFAULT 0 AFTER name");
+    $conn->query("ALTER TABLE categories ADD UNIQUE INDEX u_cat_user (user_id, name)");
+}
+
+// Ensure users table is updated (Account security)
+$check_u_active = $conn->query("SHOW COLUMNS FROM users LIKE 'is_active'");
+if ($check_u_active && $check_u_active->num_rows === 0) {
+    $conn->query("ALTER TABLE users ADD COLUMN is_active TINYINT(1) DEFAULT 1");
+}
+$check_u_status = $conn->query("SHOW COLUMNS FROM users LIKE 'status'");
+if ($check_u_status && $check_u_status->num_rows === 0) {
+    $conn->query("ALTER TABLE users ADD COLUMN status VARCHAR(20) DEFAULT 'active'");
+}
+
 foreach($cols_to_add as $col => $def) {
     $check = $conn->query("SHOW COLUMNS FROM dishes LIKE '$col'");
     if($check && $check->num_rows === 0) {
@@ -26,9 +46,9 @@ foreach($cols_to_add as $col => $def) {
     }
 }
 
-// Production Error Handling (DISABLED TEMPORARILY FOR DEBUG)
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+// Production Error Handling
+ini_set('display_errors', 0);
+error_reporting(E_ALL & ~E_NOTICE);
 
 // Custom logging function
 function dashboard_log($msg) {
