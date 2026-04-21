@@ -29,4 +29,3 @@ if (!$user || $user['is_active'] != 1 || ($user['status'] ?? 'active') === 'hold
     exit;
 }
 $stmt->close();
-?>

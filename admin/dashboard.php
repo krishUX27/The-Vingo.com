@@ -158,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             if ($s->execute()) {
                 $new_id = $conn->insert_id;
                 dashboard_log("Dish '{$name}' added successfully. ID: {$new_id}");
-                $_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish '{$name}' added successfully!"];
+                $_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish added successfully!"];
                 header("Location: dashboard.php?new_id={$new_id}");
                 exit;
             }
@@ -461,6 +461,14 @@ document.addEventListener('DOMContentLoaded', function() {
     checkboxes.forEach(cb => {
         cb.addEventListener('change', updateBulkUI);
     });
+
+    // Auto-scroll to highlighted row if exists
+    const highlightedRow = document.querySelector('.row-highlight');
+    if (highlightedRow) {
+        setTimeout(() => {
+            highlightedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 500);
+    }
 });
 </script>
 
