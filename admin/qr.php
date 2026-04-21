@@ -88,6 +88,7 @@ if ($force || !file_exists($qr_file) || $cachedUrl !== $qr_url) {
     .main { min-height: 100vh; display: flex; flex-direction: column; }
     .content { flex: 1; display: flex; align-items: start; justify-content: center; padding: 20px; overflow-y: auto; }
     .qr-card { max-width: 560px; width: 100%; margin: 20px auto; }
+    .qr-center { display: flex; flex-direction: column; align-items: center; text-align: center; }
     .btn-md { padding: 12px 18px; font-size: 0.9rem; border-radius: 12px; }
     @media (max-width: 600px) {
       .btn-grp { flex-direction: column; width: 100%; }
@@ -152,15 +153,7 @@ include __DIR__ . '/partials/sidebar.php';
             <a href="<?= htmlspecialchars($qr_url) ?>" target="_blank" class="btn btn-outline btn-md">
               🌐 Open Menu
             </a>
-            <a href="qr.php?regen=1" class="btn btn-warn btn-md"
-               onclick="return confirm('Regenerate QR code with current URL?')">
-              🔄 Regenerate
-            </a>
           </div>
-
-          <p style="font-size:.74rem;color:var(--muted);text-align:center;margin-top:4px">
-            Click <strong>🔄 Regenerate</strong> if QR points to the wrong page.
-          </p>
         </div>
 
       <?php else: ?>
