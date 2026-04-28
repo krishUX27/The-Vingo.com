@@ -474,7 +474,7 @@ tbody tr:hover { background: #fdfdfd; }
 }
 .menu-toggle:hover { background: #f1f5f9; border-color: var(--accent); }
 
-/* ── RESPONSIVENESS OVERHAUL ── */
+/* ── RESPONSIVENESS OVERHAUL (Final) ── */
 @media (max-width: 1024px) {
   .menu-toggle { display: flex; }
   .sidebar { 
@@ -485,55 +485,39 @@ tbody tr:hover { background: #fdfdfd; }
   .sidebar.open { transform: translateX(0); box-shadow: 20px 0 60px rgba(0,0,0,0.15); }
   .sidebar-close { display: block !important; }
   
-  .main { margin-left: 0; width: 100%; }
-  .topbar { padding: 0 20px; }
-  .topbar-left h1 { font-size: 1.1rem; }
-  .topbar-left .meta { display: none; }
+  .main { margin-left: 0; width: 100%; min-width: 0; }
+  .topbar { padding: 0 15px; height: 70px; }
+  .topbar h1 { font-size: 1.1rem; }
   .topbar-right .btn-outline { display: none; }
   
   .content { padding: 15px; }
-  .grid-2 { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+  .stat-box { flex: none; width: 100%; margin-bottom: 0; }
+
+  .filter-bar { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+  .filter-bar .form-group { width: 100%; flex: none; }
+  .filter-bar .btn { width: 100%; justify-content: center; height: 48px; }
 
   .table-wrap { 
     overflow-x: auto; 
     -webkit-overflow-scrolling: touch; 
     border-radius: 12px;
     margin-bottom: 20px;
+    border: 1px solid var(--border);
   }
-  .table-wrap table { min-width: 600px; }
+  .table-wrap table { min-width: 500px; }
   
-  .card { padding: 20px; }
-  
+  .card { padding: 15px; overflow: hidden; }
   .user-name, .user-role { display: none; }
-  .user-profile { padding: 6px; }
-
+  .user-profile { padding: 4px; }
   .modal { width: 95% !important; max-height: 90vh !important; }
-
-  /* Horizontal Scroll for Stats on Mobile */
-  .stats-grid {
-    display: flex;
-    overflow-x: auto;
-    gap: 16px;
-    padding: 4px 4px 20px 4px;
-    margin-bottom: 20px;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .stats-grid::-webkit-scrollbar { display: none; }
-  .stat-box {
-    flex: 0 0 260px;
-    scroll-snap-align: start;
-    margin-bottom: 0;
-  }
 }
 
 @media (max-width: 480px) {
   .topbar-right .badge { display: none; }
-  .login-card { padding: 25px 15px; width: 95% !important; }
-  .btn { width: 100%; justify-content: center; }
-  .btn-sm { width: auto; }
-  .stat-card .val { font-size: 1.5rem; }
+  .col-name { min-width: 120px; font-size: 0.85rem; }
+  .col-desc { font-size: 0.72rem; max-width: 150px; }
+  .btn-sm { padding: 8px 12px; font-size: 0.7rem; }
 }
 
 /* Sidebar Close Button (Mobile Only) */
