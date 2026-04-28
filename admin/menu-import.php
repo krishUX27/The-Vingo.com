@@ -409,10 +409,10 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
                 </thead>
                 <tbody>
                   <tr style="background:#f1f5f9; font-weight:700">
-                    <td>Category</td><td>Price</td><td>Veg</td><td>B</td><td>L</td><td>D</td><td>Img</td><td>name_en</td><td>desc_en</td><td>name_XX</td>
+                    <td>Category</td><td>Price</td><td>Veg</td><td>B</td><td>L</td><td>D</td><td>Img</td><td>name_en</td><td>desc_en</td><td>name_XX</td><td>desc_XX</td>
                   </tr>
                   <tr>
-                    <td>Burgers</td><td>299</td><td>veg</td><td>No</td><td>Yes</td><td>Yes</td><td>b.jpg</td><td>Veg Burger</td><td>...</td><td>Other Lang</td>
+                    <td>Burgers</td><td>299</td><td>veg</td><td>No</td><td>Yes</td><td>Yes</td><td>b.jpg</td><td>Veg Burger</td><td>...</td><td>Other Lang</td><td>Other Desc</td>
                   </tr>
                 </tbody>
               </table>
