@@ -68,6 +68,17 @@ $conn->query("CREATE TABLE IF NOT EXISTS dish_translations (
   INDEX idx_dish_lang (dish_id, language_code)
 )");
 
+// Password Reset Support: OTP Table
+$conn->query("CREATE TABLE IF NOT EXISTS password_resets (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  otp VARCHAR(6) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  is_used TINYINT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_email_otp (email, otp)
+)");
+
 // Data Migration: Move existing names/descriptions to 'en' translation if not already moved
 $check_migrated = $conn->query("SELECT COUNT(*) FROM dish_translations");
 $migrated_count = ($check_migrated) ? (int)$check_migrated->fetch_row()[0] : 0;

@@ -17,21 +17,40 @@ $user_data = $u_res->fetch_assoc();
 $admin_email = $user_data['email'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
-    
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Please enter a valid email address.'];
-    } else {
-        // Update the users table directly
-        $stmt = $conn->prepare("UPDATE users SET email = ? WHERE id = ?");
-        $stmt->bind_param('si', $email, $admin_sess_id);
-        
-        if ($stmt->execute()) {
-            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Profile updated successfully!'];
-            header('Location: profile.php');
-            exit;
+    $action = $_POST['action'] ?? '';
+
+    if ($action === 'update_profile') {
+        $email = trim($_POST['email'] ?? '');
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Please enter a valid email address.'];
         } else {
-            $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Failed to update email.'];
+            $stmt = $conn->prepare("UPDATE users SET email = ? WHERE id = ?");
+            $stmt->bind_param('si', $email, $admin_sess_id);
+            if ($stmt->execute()) {
+                $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Profile updated successfully!'];
+                header('Location: profile.php'); exit;
+            } else {
+                $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Failed to update email.'];
+            }
+        }
+    } elseif ($action === 'update_password') {
+        $new_pass = $_POST['new_password'] ?? '';
+        $conf_pass = $_POST['confirm_password'] ?? '';
+
+        if (strlen($new_pass) < 6) {
+            $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Password must be at least 6 characters.'];
+        } elseif ($new_pass !== $conf_pass) {
+            $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Passwords do not match.'];
+        } else {
+            $hashed = password_hash($new_pass, PASSWORD_BCRYPT);
+            $stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+            $stmt->bind_param('si', $hashed, $admin_sess_id);
+            if ($stmt->execute()) {
+                $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Password updated successfully!'];
+                header('Location: profile.php'); exit;
+            } else {
+                $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Failed to update password.'];
+            }
         }
     }
 }
@@ -74,6 +93,7 @@ $cur = 'profile.php';
       <div class="card">
         <div class="card-title">Profile Identity</div>
         <form method="POST">
+          <input type="hidden" name="action" value="update_profile">
           <div class="form-group">
             <label>Username</label>
             <input type="text" value="<?= htmlspecialchars($sess_username) ?>" disabled style="background:#f1f5f9; cursor:not-allowed">
@@ -93,22 +113,25 @@ $cur = 'profile.php';
 
       <div class="card" style="border-color:rgba(239, 68, 68, 0.1)">
         <div class="card-title" style="color:var(--danger)">Security & Access</div>
-        <div style="background:#f1f5f9; color:#475569; padding:16px; border-radius:12px; font-size:0.85rem; margin-bottom:20px">
-          <strong>Security Note:</strong> Contact the Platform Superadmin to reset your master login credentials or password if required.
-        </div>
+        <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:20px">
+          Update your login password below. Ensure it's at least 6 characters long.
+        </p>
         
-        <div class="form-group" style="opacity:0.6; pointer-events:none">
-          <label>New Password</label>
-          <input type="password" placeholder="••••••••" disabled>
-        </div>
-        <div class="form-group" style="margin-top:20px; opacity:0.6; pointer-events:none">
-          <label>Confirm Password</label>
-          <input type="password" placeholder="••••••••" disabled>
-        </div>
+        <form method="POST">
+          <input type="hidden" name="action" value="update_password">
+          <div class="form-group">
+            <label>New Password</label>
+            <input type="password" name="new_password" placeholder="••••••••" required>
+          </div>
+          <div class="form-group" style="margin-top:20px">
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" placeholder="••••••••" required>
+          </div>
 
-        <div style="margin-top:24px">
-          <button disabled class="btn btn-outline" style="cursor:not-allowed; opacity:0.5">Manage Security</button>
-        </div>
+          <div style="margin-top:24px">
+            <button type="submit" class="btn btn-primary">Update Password</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
