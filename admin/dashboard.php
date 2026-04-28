@@ -524,8 +524,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Add Dish Modal -->
-<div id="dish-modal-overlay" class="modal-overlay"></div>
-<div id="dish-modal" class="modal">
+<div id="dish-modal-overlay" class="modal-overlay <?= !empty($errors) ? 'open' : '' ?>"></div>
+<div id="dish-modal" class="modal <?= !empty($errors) ? 'open' : '' ?>">
   <div class="modal-header">
     <h3>🍽️ Add New Dish</h3>
     <button type="button" class="modal-close" id="close-dish-modal">&times;</button>

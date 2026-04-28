@@ -72,8 +72,11 @@ $cur = 'index.php';
     .icon-yellow { background: #fffbeb; color: var(--super-accent); }
 
     /* Responsive Adjustments */
-    @media (max-width: 1024px) {
+    @media (max-width: 1200px) {
       .super-main-grid { grid-template-columns: 1fr !important; }
+    }
+    
+    @media (max-width: 1024px) {
       .overview-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
     }
     
@@ -82,8 +85,11 @@ $cur = 'index.php';
       .topbar { padding: 0 20px; }
       .stat-card-master { padding: 16px; gap: 12px; }
       .m-stat-val { font-size: 1.5rem; }
-      h1 { font-size: 1.4rem; }
+      h1 { font-size: 1.25rem; }
       .topbar-right .hide-mobile { display: none; }
+      .super-main-grid { gap: 20px; }
+      .table-wrap { overflow-x: auto; margin: 0 -15px; padding: 0 15px; }
+      .table-wrap table { min-width: 600px; }
     }
     
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -142,7 +148,7 @@ $cur = 'index.php';
       </div>
     </div>
 
-    <div class="super-main-grid" style="display:grid; grid-template-columns: 2fr 1fr; gap:30px; align-items:start">; align-items:start">
+    <div class="super-main-grid" style="display:grid; grid-template-columns: 2fr 1fr; gap:30px; align-items:start">
       
       <div class="card">
         <div class="card-title">📡 Global Operations Update</div>
@@ -214,6 +220,10 @@ $cur = 'index.php';
 <script>
   const accessModal = document.getElementById('accessModal');
   const accessOverlay = document.getElementById('accessModalOverlay');
+  
+  // Safety: Ensure hidden on load
+  if(accessModal) accessModal.classList.remove('open');
+  if(accessOverlay) accessOverlay.classList.remove('open');
   const closeAccessBtn = document.getElementById('closeAccessModal');
   const hotelSearch = document.getElementById('hotelSearch');
   

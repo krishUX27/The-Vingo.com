@@ -174,6 +174,7 @@ $cur = 'manage-admins.php';
       .content { padding: 20px; }
       .topbar { padding: 0 20px; }
       .table-wrap { overflow-x: auto; margin: 0 -15px; padding: 0 15px; }
+      .table-wrap table { min-width: 800px; }
       h1 { font-size: 1.3rem; }
     }
   </style>
