@@ -34,6 +34,7 @@ $conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS description TEXT AFTER
 $conn->query("ALTER TABLE categories DROP INDEX IF EXISTS uq_cat_name");
 // New Fix: Ensure category uniqueness per user (Multi-Tenant Index)
 $conn->query("ALTER TABLE categories ADD UNIQUE INDEX IF NOT EXISTS u_cat_user (user_id, name)");
+$conn->query("ALTER TABLE categories ADD COLUMN IF NOT EXISTS is_deleted TINYINT(1) DEFAULT 0");
 
 ensure_dish_col($conn, 'is_deleted', 'TINYINT(1) DEFAULT 0', 'currency');
 ensure_dish_col($conn, 'deleted_at', 'DATETIME NULL', 'is_deleted');
@@ -105,93 +106,94 @@ function process_csv_import($file_path, $admin_id, $conn) {
         }
     }
     
-    // Diagnostic Log
-    file_put_contents(__DIR__ . '/import_debug.log', "[" . date('Y-m-d H:i:s') . "] Identified Columns: " . json_encode($col_map) . " | Identified Languages: " . json_encode($langs) . "\n", FILE_APPEND);
+    platform_log("Starting CSV Import Analysis", "MenuImport");
 
     $stats = ['total' => 0, 'success' => 0, 'skipped' => 0];
     
     // 3. Cache categories
     $cat_map = [];
-    $res = $conn->query("SELECT id, name FROM categories WHERE user_id = $admin_id AND is_deleted = 0");
+    $has_deleted_col = $conn->query("SHOW COLUMNS FROM categories LIKE 'is_deleted'")->num_rows > 0;
+    $where_deleted = $has_deleted_col ? "AND is_deleted = 0" : "";
+    $res = $conn->query("SELECT id, name FROM categories WHERE user_id = $admin_id $where_deleted");
     if ($res) { while($row = $res->fetch_assoc()) { $cat_map[strtolower(trim($row['name']))] = $row['id']; } }
 
     // 4. Process Rows
+    $row_count = 0;
     while (($data = fgetcsv($handle, 0, $delimiter)) !== FALSE) {
+        $row_count++;
         $stats['total']++;
         
-        $cat_name    = isset($col_map['cat']) ? trim($data[$col_map['cat']] ?? '') : '';
-        $price_raw   = isset($col_map['price']) ? trim($data[$col_map['price']] ?? '0') : '0';
-        $veg_raw     = isset($col_map['veg']) ? strtolower(trim($data[$col_map['veg']] ?? 'veg')) : 'veg';
-        $avail_b_raw = isset($col_map['b']) ? strtolower(trim($data[$col_map['b']] ?? 'no')) : 'no';
-        $avail_l_raw = isset($col_map['l']) ? strtolower(trim($data[$col_map['l']] ?? 'no')) : 'no';
-        $avail_d_raw = isset($col_map['d']) ? strtolower(trim($data[$col_map['d']] ?? 'no')) : 'no';
-        $image       = isset($col_map['img']) ? trim($data[$col_map['img']] ?? '') : '';
-
-        // Validation: name_en is mandatory as per rules
-        $name_en_idx = $langs['en']['name'] ?? -1;
-        if ($name_en_idx === -1 || empty(trim($data[$name_en_idx] ?? ''))) {
-            $stats['skipped']++;
-            file_put_contents(__DIR__ . '/import_debug.log', "[" . date('Y-m-d H:i:s') . "] Skipped Row: Missing name_en (idx: $name_en_idx) | Data: " . json_encode($data) . "\n", FILE_APPEND);
-            continue;
-        }
-
-        $price    = (float)str_replace(',', '', preg_replace('/[^0-9.,]/', '', $price_raw));
-        $veg_type = (strpos($veg_raw, 'non') !== false) ? 'non_veg' : 'veg';
-        
-        $is_yes = function($v) { return in_array(strtolower(trim($v)), ['1', 'y', 'yes', 'true', 'available']); };
-        $avail_b = $is_yes($avail_b_raw) ? 1 : 0;
-        $avail_l = $is_yes($avail_l_raw) ? 1 : 0;
-        $avail_d = $is_yes($avail_d_raw) ? 1 : 0;
+        // Skip empty rows
+        if (empty(array_filter($data))) continue;
 
         try {
-            $cat_id = 0;
-            if (!empty($cat_name)) {
-                $cat_key = strtolower($cat_name);
-                if (!isset($cat_map[$cat_key])) {
-                    $stmt = $conn->prepare("INSERT INTO categories (name, user_id) VALUES (?, ?)");
-                    $stmt->bind_param("si", $cat_name, $admin_id);
-                    $stmt->execute();
-                    $cat_id = $conn->insert_id;
-                    $cat_map[$cat_key] = $cat_id;
-                    $stmt->close();
-                } else { $cat_id = $cat_map[$cat_key]; }
+            // Validation: name_en is mandatory
+            $name_en_idx = $langs['en']['name'] ?? -1;
+            if ($name_en_idx === -1 || empty(trim($data[$name_en_idx] ?? ''))) {
+                $stats['skipped']++;
+                platform_log("Row $row_count skipped: Missing name_en", "MenuImport", "Warning");
+                continue;
             }
 
-            // Insert Base Dish
-            $currency = menu_get_setting('currency', 'INR', $admin_id);
-            $name_en  = trim($data[$name_en_idx] ?? '');
+            // Extract core fields
+            $name_en  = trim($data[$name_en_idx]);
+            $cat_name = trim($data[$col_map['cat']] ?? 'General');
+            $price    = floatval(preg_replace('/[^0-9.]/', '', $data[$col_map['price']] ?? '0'));
+            $veg_type = (strtolower(trim($data[$col_map['veg']] ?? '')) === 'non-veg') ? 'non_veg' : 'veg';
+            $image    = trim($data[$col_map['img']] ?? '');
+            
+            // Availability
+            $avail_b = (strtolower(trim($data[$col_map['b']] ?? '')) === 'no') ? 0 : 1;
+            $avail_l = (strtolower(trim($data[$col_map['l']] ?? '')) === 'no') ? 0 : 1;
+            $avail_d = (strtolower(trim($data[$col_map['d']] ?? '')) === 'no') ? 0 : 1;
+            $currency = 'INR';
+
+            // Category handling
+            $cat_key = strtolower($cat_name);
+            if (!isset($cat_map[$cat_key])) {
+                $stmt = $conn->prepare("INSERT INTO categories (name, user_id) VALUES (?, ?)");
+                $stmt->bind_param("si", $cat_name, $admin_id);
+                $stmt->execute();
+                $cat_id = $conn->insert_id;
+                $cat_map[$cat_key] = $cat_id;
+                $stmt->close();
+            } else {
+                $cat_id = $cat_map[$cat_key];
+            }
+
+            // Insert Dish
             $stmt = $conn->prepare("INSERT INTO dishes (user_id, category_id, name, price, veg_type, available_breakfast, available_lunch, available_dinner, image, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param("iisdsiiiss", $admin_id, $cat_id, $name_en, $price, $veg_type, $avail_b, $avail_l, $avail_d, $image, $currency);
             
             if ($stmt->execute()) {
                 $dish_id = $conn->insert_id;
                 
-                // Insert Translations Dynamically
+                // Insert Translations
                 $t_stmt = $conn->prepare("INSERT INTO dish_translations (dish_id, language_code, name, description) VALUES (?, ?, ?, ?)");
                 foreach($langs as $lang_code => $indices) {
-                    $name_val = trim($data[$indices['name']] ?? '');
-                    if ($name_val === '' && $lang_code !== 'en') continue; // Skip optional empty translations
+                    $t_name = trim($data[$indices['name']] ?? '');
+                    if ($t_name === '' && $lang_code !== 'en') continue;
                     
-                    $desc_idx = $indices['desc'] ?? -1;
-                    $desc_val = ($desc_idx !== -1) ? trim($data[$desc_idx] ?? '') : '';
+                    $d_idx = $indices['desc'] ?? -1;
+                    $t_desc = ($d_idx !== -1) ? trim($data[$d_idx] ?? '') : '';
                     
-                    $t_stmt->bind_param("isss", $dish_id, $lang_code, $name_val, $desc_val);
+                    $t_stmt->bind_param("isss", $dish_id, $lang_code, $t_name, $t_desc);
                     $t_stmt->execute();
                 }
                 $t_stmt->close();
                 $stats['success']++;
             } else {
                 $stats['skipped']++;
-                file_put_contents(__DIR__ . '/import_errors.log', "[" . date('Y-m-d H:i:s') . "] Insert Failed: " . $conn->error . "\n", FILE_APPEND);
+                platform_log("Insert failed for row $row_count: " . $conn->error, "MenuImport", "Error");
             }
             $stmt->close();
         } catch (Exception $e) {
             $stats['skipped']++;
-            $stats['last_err'] = $e->getMessage();
-            file_put_contents(__DIR__ . '/import_errors.log', "[" . date('Y-m-d H:i:s') . "] Exception: " . $e->getMessage() . "\n", FILE_APPEND);
+            platform_log("Exception on row $row_count: " . $e->getMessage(), "MenuImport", "Error");
         }
     }
     fclose($handle);
+    platform_log("CSV Import Finished. Total: {$stats['total']}, Success: {$stats['success']}", "MenuImport");
     return $stats;
 }
 
