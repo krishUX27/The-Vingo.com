@@ -446,6 +446,13 @@ if (!$offer_res) {
             </select>
           </div>
           <div class="form-group">
+            <label>Preview Lang</label>
+            <select name="lang" onchange="this.form.submit()">
+              <option value="en" <?= $preview_lang==='en' ? 'selected':'' ?>>🇬🇧 English</option>
+              <option value="ta" <?= $preview_lang==='ta' ? 'selected':'' ?>>🇮🇳 Tamil</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label>Min ₹</label>
             <input type="number" name="price_min" min="0" step="0.01" placeholder="0" value="<?= htmlspecialchars($price_min) ?>">
           </div>

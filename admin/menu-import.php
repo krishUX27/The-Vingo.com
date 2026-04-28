@@ -85,6 +85,9 @@ function process_csv_import($file_path, $admin_id, $conn) {
             $langs[$lang_code]['desc'] = $idx;
         }
     }
+    
+    // Diagnostic Log
+    file_put_contents(__DIR__ . '/import_debug.log', "[" . date('Y-m-d H:i:s') . "] Identified Columns: " . json_encode($col_map) . " | Identified Languages: " . json_encode($langs) . "\n", FILE_APPEND);
 
     $stats = ['total' => 0, 'success' => 0, 'skipped' => 0];
     
