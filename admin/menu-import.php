@@ -167,7 +167,6 @@ function process_csv_import($file_path, $admin_id, $conn) {
             $stats['last_err'] = $e->getMessage();
             file_put_contents(__DIR__ . '/import_errors.log', "[" . date('Y-m-d H:i:s') . "] Exception: " . $e->getMessage() . "\n", FILE_APPEND);
         }
-        }
     }
     fclose($handle);
     return $stats;
