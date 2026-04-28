@@ -91,8 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $upd = $conn->prepare("UPDATE dishes SET price=?, category_id=?, veg_type=?, available_breakfast=?, available_lunch=?, available_dinner=?, image=?, currency=?, offer_id=? WHERE id=? AND user_id=?");
-        $upd->bind_param('disiiissiii', $price, $cat_id, $veg_type, $break, $lunch, $dinner, $image_name, $currency, $offer_id, $id, $admin_sess_id);
+        $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, veg_type=?, available_breakfast=?, available_lunch=?, available_dinner=?, image=?, currency=?, offer_id=? WHERE id=? AND user_id=?");
+        $upd->bind_param('sdisiiissiii', $name, $price, $cat_id, $veg_type, $break, $lunch, $dinner, $image_name, $currency, $offer_id, $id, $admin_sess_id);
         if ($upd->execute()) {
             // Update translation (EN)
             $t_upd = $conn->prepare("INSERT INTO dish_translations (dish_id, language_code, name) VALUES (?, 'en', ?) ON DUPLICATE KEY UPDATE name = ?");

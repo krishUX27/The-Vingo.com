@@ -79,6 +79,13 @@ $conn->query("CREATE TABLE IF NOT EXISTS password_resets (
   INDEX idx_email_otp (email, otp)
 )");
 
+// Ensure 'name' and 'description' columns exist in 'dishes' as fallback
+$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS name VARCHAR(255) AFTER category_id");
+$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS description TEXT AFTER name");
+
+// Sync English translations back to base table for compatibility
+$conn->query("UPDATE dishes d JOIN dish_translations t ON t.dish_id = d.id AND t.language_code = 'en' SET d.name = t.name, d.description = t.description WHERE d.name IS NULL OR d.name = ''");
+
 // Data Migration: Move existing names/descriptions to 'en' translation if not already moved
 $check_migrated = $conn->query("SELECT COUNT(*) FROM dish_translations");
 $migrated_count = ($check_migrated) ? (int)$check_migrated->fetch_row()[0] : 0;

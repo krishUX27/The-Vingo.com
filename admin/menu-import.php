@@ -74,8 +74,8 @@ function process_csv_import($file_path, $admin_id, $conn) {
             $lang_code = $m[1];
             $langs[$lang_code]['name'] = $idx;
         }
-        elseif (preg_match('/^description_(.+)$/', $col, $m)) {
-            $lang_code = $m[1];
+        elseif (preg_match('/^(description|desc)_(.+)$/', $col, $m)) {
+            $lang_code = $m[2];
             $langs[$lang_code]['desc'] = $idx;
         }
     }
@@ -130,8 +130,9 @@ function process_csv_import($file_path, $admin_id, $conn) {
 
             // Insert Base Dish
             $currency = menu_get_setting('currency', 'INR', $admin_id);
-            $stmt = $conn->prepare("INSERT INTO dishes (user_id, category_id, price, veg_type, available_breakfast, available_lunch, available_dinner, image, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("iisdiiiss", $admin_id, $cat_id, $price, $veg_type, $avail_b, $avail_l, $avail_d, $image, $currency);
+            $name_en  = trim($data[$name_en_idx] ?? '');
+            $stmt = $conn->prepare("INSERT INTO dishes (user_id, category_id, name, price, veg_type, available_breakfast, available_lunch, available_dinner, image, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("iisdsiiiss", $admin_id, $cat_id, $name_en, $price, $veg_type, $avail_b, $avail_l, $avail_d, $image, $currency);
             
             if ($stmt->execute()) {
                 $dish_id = $conn->insert_id;
