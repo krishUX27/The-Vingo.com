@@ -354,23 +354,6 @@ if (!$offer_res) {
   <title>Dashboard — Menu Manager</title>
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
-  <style>
-    /* Version 5.2 Responsive Patch */
-    @media (max-width: 768px) {
-      .topbar { padding: 0 10px !important; height: 65px !important; gap: 5px !important; }
-      .topbar-left { gap: 10px !important; }
-      .topbar h1 { font-size: 0.9rem !important; }
-      .topbar-right { gap: 5px !important; }
-      .user-avatar { width: 34px !important; height: 34px !important; font-size: 0.9rem !important; }
-      .content { padding: 12px !important; }
-      .stats-grid { gap: 10px !important; }
-      .stat-box { padding: 14px !important; }
-      .stat-val { font-size: 1.4rem !important; }
-      .table-wrap table { font-size: 0.85rem !important; }
-      .btn-grp { flex-direction: column !important; width: 100%; }
-      .btn-grp .btn { width: 100% !important; margin-bottom: 4px; }
-    }
-  </style>
 </head>
 <body>
 
@@ -486,14 +469,14 @@ if (!$offer_res) {
 
       <form method="POST" id="bulk-action-form">
         <input type="hidden" name="action" value="bulk_delete">
-        <div class="action-bar">
-          <div class="action-left">
+        <div class="btn-grp" style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; gap:10px; align-items:center">
             <button type="button" class="btn btn-primary" id="open-add-dish">
                <span style="font-size:1rem">➕</span> Add New Dish
             </button>
 
           </div>
-          <div id="bulk-controls" class="action-right" style="display:none">
+          <div id="bulk-controls" style="display:none; gap:10px; align-items:center;">
             <span id="select-count" style="font-size:0.85rem; color:var(--muted)">0 selected</span>
             <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Move selected items to Trash?')">
               🗑️ Delete Selected
@@ -539,10 +522,10 @@ if (!$offer_res) {
                   <img class="dish-img" src="../assets/images/dish-placeholder.png" alt="No image">
                 <?php endif; ?>
               </td>
-              <td class="col-name">
-                <strong style="display:block"><?= htmlspecialchars($d['name']) ?></strong>
+              <td>
+                <strong><?= htmlspecialchars($d['name']) ?></strong>
                 <?php if (!empty($d['description'])): ?>
-                  <div class="col-desc">
+                  <div style="font-size:0.7rem; color:var(--muted); margin-top:2px; max-width:220px; line-height:1.2">
                     <?= htmlspecialchars($d['description']) ?>
                   </div>
                 <?php endif; ?>

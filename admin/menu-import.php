@@ -295,7 +295,7 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
         min-height: 140px !important;
       }
       
-      .import-grid { grid-template-columns: 1fr; }
+      /* Table Scroll Scaling */
       .scroll-mobile { 
         width: 100%;
         max-width: 100%;

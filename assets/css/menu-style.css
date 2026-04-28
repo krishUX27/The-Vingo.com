@@ -1,7 +1,6 @@
 /* ============================================================
-   Menu Manager — Modern Slate & Ocean Blue (Version 5.2)
+   Menu Manager — Modern Slate & Ocean Blue (Version 4.0)
    Designed for Visual Impact and Professionalism
-   RESPONSIVE OPTIMIZED: 2026-04-28
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap');
@@ -255,17 +254,12 @@ thead th {
   color: #94a3b8; 
   text-transform: uppercase; 
   letter-spacing: 1px;
-  white-space: normal;
 }
-tbody td { padding: 20px; border-top: 1px solid var(--border); vertical-align: middle; word-break: break-word; white-space: normal; min-width: 100px; }
+tbody td { padding: 20px; border-top: 1px solid var(--border); vertical-align: middle; }
 tbody tr:hover { background: #fdfdfd; }
 
-/* Specific Column Handling */
-.col-name { min-width: 200px; font-weight: 700; color: #0f172a; line-height: 1.4; }
-.col-desc { min-width: 250px; color: var(--text-light); font-size: 0.85rem; line-height: 1.5; }
-
-.dish-img { width: 48px; height: 48px; object-fit: cover; border-radius: 10px; flex-shrink: 0; }
-.dish-placeholder { width: 48px; height: 48px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+.dish-img { width: 48px; height: 48px; object-fit: cover; border-radius: 10px; }
+.dish-placeholder { width: 48px; height: 48px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
 
 /* ════════════════════════════════
    BUTTONS
@@ -413,22 +407,6 @@ tbody tr:hover { background: #fdfdfd; }
 .dropdown-item.danger:hover { background: #fff1f2; color: var(--danger); }
 .dropdown-divider { height: 1px; background: var(--border); margin: 8px 10px; }
 
-/* Sidebar Overlay (Mobile) */
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  z-index: 1500;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.sidebar-overlay.show {
-  display: block;
-  opacity: 1;
-}
-
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes modalIn { from { opacity: 0; transform: translate(-50%, -60%); } to { opacity: 1; transform: translate(-50%, -50%); } }
 @keyframes dropdownIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -476,49 +454,66 @@ tbody tr:hover { background: #fdfdfd; }
 }
 .menu-toggle:hover { background: #f1f5f9; border-color: var(--accent); }
 
-/* ── RESPONSIVENESS OVERHAUL (v6.0 - TOTAL FIX) ── */
+/* ── RESPONSIVENESS OVERHAUL ── */
 @media (max-width: 1024px) {
-  :root { --sidebar-w: 0px; }
-  body { overflow-x: hidden; }
-  .sidebar { transform: translateX(-100%); z-index: 5000; }
-  .sidebar.open { transform: translateX(0); }
+  .menu-toggle { display: flex; }
+  .sidebar { 
+    transform: translateX(-100%); 
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2000;
+  }
+  .sidebar.open { transform: translateX(0); box-shadow: 20px 0 60px rgba(0,0,0,0.15); }
   .sidebar-close { display: block !important; }
   
-  .main { margin-left: 0 !important; width: 100% !important; min-width: 100% !important; overflow-x: hidden !important; }
-  .topbar { padding: 0 10px; height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 5px; }
-  .topbar h1 { font-size: 0.9rem; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .topbar-right { gap: 6px !important; }
-  .topbar-right .btn-outline { display: none !important; }
+  .main { margin-left: 0; width: 100%; }
+  .topbar { padding: 0 20px; }
+  .topbar-left h1 { font-size: 1.1rem; }
+  .topbar-left .meta { display: none; }
+  .topbar-right .btn-outline { display: none; }
   
-  .content { padding: 10px !important; }
-  .stats-grid { display: block !important; }
-  .stat-box { margin-bottom: 10px; width: 100% !important; }
+  .content { padding: 15px; }
+  .grid-2 { grid-template-columns: 1fr !important; gap: 16px !important; }
 
-  /* Action Bar (Stacking) */
-  .action-bar { display: flex; flex-direction: column; gap: 10px; align-items: stretch; margin-bottom: 15px; }
-  .action-left, .action-right { display: flex !important; width: 100% !important; gap: 10px; align-items: center; }
-  .action-bar .btn { flex: 1; justify-content: center; height: 46px; }
-
-  /* Filter Bar (Stacking) */
-  .filter-bar { display: flex; flex-direction: column; gap: 10px; align-items: stretch; width: 100%; }
-  .filter-bar .form-group { width: 100% !important; flex: none; }
-  .filter-bar .btn { width: 100% !important; height: 46px; }
-
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--border); background: #fff; }
-  .table-wrap table { min-width: 500px; }
+  .table-wrap { 
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch; 
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+  .table-wrap table { min-width: 600px; }
   
-  .card { padding: 12px; }
+  .card { padding: 20px; }
+  
   .user-name, .user-role { display: none; }
-  .user-profile { padding: 4px; }
+  .user-profile { padding: 6px; }
+
+  .modal { width: 95% !important; max-height: 90vh !important; }
+
+  /* Horizontal Scroll for Stats on Mobile */
+  .stats-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 16px;
+    padding: 4px 4px 20px 4px;
+    margin-bottom: 20px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .stats-grid::-webkit-scrollbar { display: none; }
+  .stat-box {
+    flex: 0 0 260px;
+    scroll-snap-align: start;
+    margin-bottom: 0;
+  }
 }
 
 @media (max-width: 480px) {
-  .topbar h1 { font-size: 0.8rem; }
-  .col-name { min-width: 100px; font-size: 0.8rem; }
-  .col-desc { font-size: 0.65rem; max-width: 120px; }
-  .btn-sm { padding: 6px; font-size: 0.65rem; }
-  .btn-grp { flex-direction: column; gap: 4px !important; }
-  .btn-grp .btn { width: 100%; }
+  .topbar-right .badge { display: none; }
+  .login-card { padding: 25px 15px; width: 95% !important; }
+  .btn { width: 100%; justify-content: center; }
+  .btn-sm { width: auto; }
+  .stat-card .val { font-size: 1.5rem; }
 }
 
 /* Sidebar Close Button (Mobile Only) */

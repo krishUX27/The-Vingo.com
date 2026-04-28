@@ -354,17 +354,6 @@ $can_reorder   = ($is_admin_view && ($is_owner || $is_super));
       font-weight: 700;
       color: var(--text);
       line-height: 1.3;
-      word-break: break-word;
-      white-space: normal;
-    }
-    .dish-desc {
-      font-size: 0.72rem;
-      color: var(--muted);
-      font-weight: 400;
-      margin-top: 2px;
-      line-height: 1.3;
-      word-break: break-word;
-      white-space: normal;
     }
     .dish-badge {
       display: inline-flex;
@@ -379,12 +368,12 @@ $can_reorder   = ($is_admin_view && ($is_owner || $is_super));
       border-radius: 50%;
       flex-shrink: 0;
     }
+
     .dish-price {
       font-size: 0.95rem;
       font-weight: 800;
       color: var(--text);
       flex-shrink: 0;
-      white-space: nowrap;
     }
 
 
@@ -629,13 +618,28 @@ $can_reorder   = ($is_admin_view && ($is_owner || $is_super));
       gap: 10px;
       backdrop-filter: blur(5px);
     }
+    /* ── Tamil Specific Responsive Fixes ── */
+    body.lang-ta .restaurant-name { font-size: 2.2rem; }
+    body.lang-ta .dish-name { line-height: 1.5; font-size: 0.95rem; }
+    body.lang-ta .cat-title { font-size: 1.15rem; }
+    @media(max-width: 480px) {
+      body.lang-ta .restaurant-name { font-size: 1.8rem; }
+      body.lang-ta .meal-tab { padding: 10px 16px; font-size: 0.78rem; }
+      body.lang-ta .dish-name { font-size: 0.88rem; }
+    }
+    @media(max-width: 400px) {
+      .search-filter-row { flex-wrap: wrap; justify-content: center; }
+      .search-input-wrap { flex: 0 0 100%; order: 1; margin-bottom: 5px; }
+      #langSwitch { flex: 1; order: 2; }
+      .ref-filter-btn { flex: 1; order: 3; }
+    }
     <?php endif; ?>
   </style>
   <?php if ($can_reorder): ?>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <?php endif; ?>
 </head>
-<body>
+<body class="lang-en">
 
 <!-- Redesigned Header per Reference -->
 <div class="header-section">
@@ -770,8 +774,10 @@ let currentLang = localStorage.getItem('vingo_lang') || 'en';
 const langSwitch = document.getElementById('langSwitch');
 if(langSwitch) {
     langSwitch.value = currentLang;
+    document.body.className = 'lang-' + currentLang;
     langSwitch.addEventListener('change', (e) => {
         currentLang = e.target.value;
+        document.body.className = 'lang-' + currentLang;
         localStorage.setItem('vingo_lang', currentLang);
         syncVingoMenu(true); // Force update
     });
