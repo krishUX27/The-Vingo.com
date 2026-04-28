@@ -37,6 +37,23 @@ $conn->query("ALTER TABLE categories ADD UNIQUE INDEX IF NOT EXISTS u_cat_user (
 
 ensure_dish_col($conn, 'is_deleted', 'TINYINT(1) DEFAULT 0', 'currency');
 ensure_dish_col($conn, 'deleted_at', 'DATETIME NULL', 'is_deleted');
+ensure_dish_col($conn, 'name', 'VARCHAR(255)', 'category_id');
+ensure_dish_col($conn, 'description', 'TEXT', 'name');
+ensure_dish_col($conn, 'available_breakfast', 'TINYINT(1) DEFAULT 1', 'veg_type');
+ensure_dish_col($conn, 'available_lunch', 'TINYINT(1) DEFAULT 1', 'available_breakfast');
+ensure_dish_col($conn, 'available_dinner', 'TINYINT(1) DEFAULT 1', 'available_lunch');
+
+// Ensure Import History Table Exists
+$conn->query("CREATE TABLE IF NOT EXISTS menu_imports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT NOT NULL,
+    file_name VARCHAR(255),
+    file_type VARCHAR(50),
+    file_path VARCHAR(255),
+    status ENUM('processing', 'completed', 'failed') DEFAULT 'processing',
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
 // Compatible Migration Helper
 function ensure_dish_col($conn, $col, $def, $after) {
     $check = $conn->query("SHOW COLUMNS FROM dishes LIKE '$col'");
@@ -179,6 +196,8 @@ function process_csv_import($file_path, $admin_id, $conn) {
 }
 
 // ── Handle Upload Post ─────────────────────────────────────────
+file_put_contents(__DIR__ . '/import_debug.log', "[" . date('Y-m-d H:i:s') . "] POST Request Received. Files: " . json_encode($_FILES) . "\n", FILE_APPEND);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['menu_file'])) {
     $file = $_FILES['menu_file'];
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
