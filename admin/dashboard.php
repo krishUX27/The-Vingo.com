@@ -486,14 +486,14 @@ if (!$offer_res) {
 
       <form method="POST" id="bulk-action-form">
         <input type="hidden" name="action" value="bulk_delete">
-        <div class="btn-grp" style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex; gap:10px; align-items:center">
+        <div class="action-bar">
+          <div class="action-left">
             <button type="button" class="btn btn-primary" id="open-add-dish">
                <span style="font-size:1rem">➕</span> Add New Dish
             </button>
 
           </div>
-          <div id="bulk-controls" style="display:none; gap:10px; align-items:center;">
+          <div id="bulk-controls" class="action-right" style="display:none">
             <span id="select-count" style="font-size:0.85rem; color:var(--muted)">0 selected</span>
             <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Move selected items to Trash?')">
               🗑️ Delete Selected
