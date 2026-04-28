@@ -1,15 +1,15 @@
 <?php
 require_once __DIR__ . '/includes/db.php';
+if (session_status() === PHP_SESSION_NONE) session_start();
+
 $user_id = intval($_GET['id'] ?? 0);
 
-// QR Scan Tracking Logic (Deduplicated per Session)
-if ($user_id > 0 && ($_GET['src'] ?? '') === 'qr') {
-    if (session_status() === PHP_SESSION_NONE) session_start();
-    
-    // Do NOT increment count if the visitor is the owner (Admin) or a Super Admin
-    $is_owner = (isset($_SESSION['admin_id']) && (int)$_SESSION['admin_id'] === $user_id);
-    $is_super = (isset($_SESSION['super_logged_in']) && $_SESSION['super_logged_in'] === true);
+// 1. Initial Identity Check
+$is_owner = (isset($_SESSION['admin_id']) && (int)$_SESSION['admin_id'] === $user_id);
+$is_super = (isset($_SESSION['super_logged_in']) && $_SESSION['super_logged_in'] === true);
 
+// 2. QR Scan Tracking Logic (Deduplicated per Session)
+if ($user_id > 0 && ($_GET['src'] ?? '') === 'qr') {
     if (!$is_owner && !$is_super) {
         $scan_key = "qr_scanned_{$user_id}";
 
