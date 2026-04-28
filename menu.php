@@ -919,6 +919,7 @@ function dishRow(d, dotClass) {
         <div class="dish-name">
           ${d.veg_type === 'veg' ? '<span style="color:#16a34a; font-size:0.75rem">🟩</span>' : '<span style="color:#dc2626; font-size:0.75rem">🟥</span>'}
           ${esc(d.name)}
+          ${d.description ? `<div class="dish-desc" style="font-size:0.72rem; color:var(--muted); font-weight:400; margin-top:2px; line-height:1.2">${esc(d.description)}</div>` : ''}
         </div>
         <div class="dish-badge">
           <span class="bdot ${dotClass}"></span>${esc(d.category)}

@@ -522,7 +522,14 @@ if (!$offer_res) {
                   <img class="dish-img" src="../assets/images/dish-placeholder.png" alt="No image">
                 <?php endif; ?>
               </td>
-              <td><strong><?= htmlspecialchars($d['name']) ?></strong></td>
+              <td>
+                <strong><?= htmlspecialchars($d['name']) ?></strong>
+                <?php if (!empty($d['description'])): ?>
+                  <div style="font-size:0.7rem; color:var(--muted); margin-top:2px; max-width:220px; line-height:1.2">
+                    <?= htmlspecialchars($d['description']) ?>
+                  </div>
+                <?php endif; ?>
+              </td>
               <td>
                 <?php if ($d['veg_type'] === 'veg'): ?>
                   <span class="badge badge-success" style="background:#dcfce7; color:#166534">🟢 Veg</span>
