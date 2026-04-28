@@ -27,7 +27,7 @@ try {
                                      AND o.status = 'active'
                                      AND CURRENT_DATE BETWEEN o.start_date AND o.end_date
                    WHERE d.user_id = ? AND d.is_deleted = 0 AND c.is_deleted = 0
-                   ORDER BY c.name, d.name";
+                   ORDER BY d.display_order ASC, d.name ASC";
     
     $stmt_d = $conn->prepare($sql_dishes);
     $stmt_d->bind_param('i', $user_id);

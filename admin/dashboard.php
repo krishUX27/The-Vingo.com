@@ -20,7 +20,8 @@ $cols_to_add = [
     'currency'            => "VARCHAR(10) DEFAULT 'INR' AFTER description",
     'offer_id'            => "INT DEFAULT NULL AFTER currency",
     'is_deleted'          => "TINYINT(1) DEFAULT 0 AFTER offer_id",
-    'deleted_at'          => "DATETIME NULL AFTER is_deleted"
+    'deleted_at'          => "DATETIME NULL AFTER is_deleted",
+    'display_order'       => "INT DEFAULT 0 AFTER deleted_at"
 ];
 // Ensure categories table is updated
 $check_cat = $conn->query("SHOW COLUMNS FROM categories LIKE 'user_id'");
@@ -237,7 +238,7 @@ $sql  = "SELECT d.*, c.name AS cat_name, o.title AS offer_title, o.discount_perc
          JOIN categories c ON c.id = d.category_id
          LEFT JOIN offers o ON o.id = d.offer_id AND o.offer_type = 'seasonal' AND o.is_deleted = 0
          WHERE d.user_id = ? AND d.is_deleted = 0 " . ($where ? "AND " . str_replace('WHERE','',$where) : "") . "
-         ORDER BY d.created_at DESC";
+         ORDER BY d.display_order ASC, d.created_at DESC";
 $stmt = $conn->prepare($sql);
 
 // Add the user_id to the params array
@@ -327,7 +328,12 @@ if (!$offer_res) {
 
     <!-- Dish Table -->
     <div class="card">
-      <div class="card-title">🍴 All Dishes</div>
+      <div class="card-title" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px">
+        <span>🍴 All Dishes</span>
+        <span id="reorder-hint" style="font-size:0.78rem; font-weight:500; color:#6366f1; background:#eef2ff; padding:5px 12px; border-radius:20px; display:flex; align-items:center; gap:6px">
+          <span style="font-size:1rem">⠿</span> Drag rows to reorder the live menu
+        </span>
+      </div>
 
       <!-- Filter bar -->
       <form method="GET" action="">
@@ -407,6 +413,7 @@ if (!$offer_res) {
         <table>
           <thead>
             <tr>
+              <th style="width:36px" title="Drag to reorder">⠿</th>
               <th><input type="checkbox" id="select-all"></th>
               <th>#</th>
               <th>Image</th>
@@ -419,14 +426,15 @@ if (!$offer_res) {
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="dishes-tbody">
             <?php
               $new_id = $_GET['new_id'] ?? 0;
             ?>
             <?php foreach ($dishes as $i => $d): ?>
-            <tr class="<?= ($d['id'] == $new_id) ? 'row-highlight' : '' ?>">
+            <tr class="dish-row-sortable <?= ($d['id'] == $new_id) ? 'row-highlight' : '' ?>" data-id="<?= $d['id'] ?>">
+              <td class="drag-handle" title="Drag to reorder" style="cursor:grab; text-align:center; color:#aaa; font-size:1.2rem; user-select:none">⠿</td>
               <td><input type="checkbox" name="dish_ids[]" value="<?= $d['id'] ?>" class="dish-checkbox"></td>
-              <td><?= $i + 1 ?></td>
+              <td class="row-num"><?= $i + 1 ?></td>
               <td>
                 <?php if ($d['image'] && file_exists(__DIR__ . '/../uploads/' . $d['image'])): ?>
                   <img class="dish-img" src="../uploads/<?= htmlspecialchars($d['image']) ?>" alt="">
@@ -672,6 +680,144 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initial refresh and periodic update (every 30 seconds)
   refreshQRAnalytics();
   setInterval(refreshQRAnalytics, 30000);
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     Drag-and-Drop Reordering (Admin Only — SortableJS)
+═════════════════════════════════════════════════════════════════════════════ -->
+<style>
+  /* Drag handle cursor */
+  .drag-handle { cursor: grab !important; }
+  .drag-handle:active { cursor: grabbing !important; }
+
+  /* Ghost row while dragging */
+  .sortable-ghost {
+    opacity: 0.4;
+    background: #eef2ff !important;
+  }
+
+  /* Chosen (picked-up) row */
+  .sortable-chosen {
+    background: #f5f3ff !important;
+    box-shadow: 0 8px 24px rgba(99,102,241,0.18);
+    transform: scale(1.01);
+    transition: transform 0.15s ease;
+  }
+
+  /* Drag row animation */
+  .dish-row-sortable { transition: background 0.2s; }
+
+  /* Save order toast */
+  #order-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    min-width: 240px;
+    padding: 14px 20px;
+    border-radius: 14px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: inherit;
+    z-index: 9999;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateY(80px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease;
+  }
+  #order-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #order-toast.toast-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  #order-toast.toast-error   { background: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; }
+  #order-toast.toast-saving  { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; }
+</style>
+
+<!-- Toast element -->
+<div id="order-toast" role="status" aria-live="polite"></div>
+
+<!-- SortableJS CDN (lightweight, no framework needed) -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ── Toast Helper ────────────────────────────────────────────────────── */
+  const toast = document.getElementById('order-toast');
+  let _toastTimer;
+
+  function showOrderToast(msg, type /* 'success' | 'error' | 'saving' */, duration = 3000) {
+    if (!toast) return;
+    clearTimeout(_toastTimer);
+    const icons = { success: '✅', error: '❌', saving: '⏳' };
+    toast.innerHTML = `<span style="font-size:1.1rem">${icons[type] || ''}</span> ${msg}`;
+    toast.className = `show toast-${type}`;
+    if (duration > 0) {
+      _toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+    }
+  }
+
+  /* ── Re-number visible row indices after sort ──────────────────────── */
+  function renumberRows() {
+    document.querySelectorAll('#dishes-tbody tr.dish-row-sortable').forEach((tr, i) => {
+      const numCell = tr.querySelector('.row-num');
+      if (numCell) numCell.textContent = i + 1;
+    });
+  }
+
+  /* ── Save order via AJAX ─────────────────────────────────────────────── */
+  async function saveOrder(orderedIds) {
+    showOrderToast('Saving new order…', 'saving', 0);
+    try {
+      const res = await fetch('../api/update_order.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order: orderedIds })
+      });
+      const json = await res.json();
+      if (json.success) {
+        showOrderToast('Menu order saved! Live menu updated.', 'success');
+      } else {
+        showOrderToast('Save failed: ' + (json.error || 'Unknown error'), 'error');
+        console.error('[Reorder]', json);
+      }
+    } catch (err) {
+      showOrderToast('Network error. Please try again.', 'error');
+      console.error('[Reorder] Fetch error:', err);
+    }
+  }
+
+  /* ── Initialise SortableJS ───────────────────────────────────────────── */
+  const tbody = document.getElementById('dishes-tbody');
+  if (tbody) {
+    Sortable.create(tbody, {
+      handle: '.drag-handle',        // Only draggable via the handle icon
+      animation: 180,               // Smooth swap animation (ms)
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+      ghostClass: 'sortable-ghost', // Ghost placeholder class
+      chosenClass: 'sortable-chosen', // Class on picked-up element
+      dragClass: 'sortable-drag',
+      forceFallback: false,
+      onEnd: function(evt) {
+        renumberRows();
+
+        // Collect the new ordered list of dish IDs
+        const orderedIds = Array.from(
+          tbody.querySelectorAll('tr.dish-row-sortable[data-id]')
+        ).map(tr => parseInt(tr.getAttribute('data-id'), 10));
+
+        saveOrder(orderedIds);
+      }
+    });
+  }
+
+})();
 </script>
 </body>
 </html>

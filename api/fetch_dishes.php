@@ -30,7 +30,7 @@ $sql = "SELECT d.id,
         LEFT JOIN offers o ON o.id = d.offer_id AND o.offer_type = 'seasonal' AND o.status = 'active' AND CURRENT_DATE BETWEEN o.start_date AND o.end_date
         WHERE  d.user_id = ? AND d.is_deleted = 0
 " . (isset($_GET['veg_type']) && in_array($_GET['veg_type'], ['veg','non_veg']) ? " AND d.veg_type = '" . $conn->real_escape_string($_GET['veg_type']) . "'" : "") . "
-        ORDER  BY c.name, d.name";
+        ORDER  BY d.display_order ASC, d.name ASC";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param('i', $user_id);
