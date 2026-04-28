@@ -1,12 +1,17 @@
 <?php
 // admin/partials/topbar_user.php
 $sess_user = $_SESSION['admin_username'] ?? $_SESSION['super_username'] ?? 'User';
+$sess_id   = $_SESSION['admin_id'] ?? $_SESSION['super_id'] ?? 0;
 $avatar_char = strtoupper(substr($sess_user, 0, 1));
 
 // Fetch real details from DB for the current user
-$user_info = $conn->query("SELECT email, role FROM users WHERE username = '$sess_user' LIMIT 1")->fetch_assoc();
+$stmt = $conn->prepare("SELECT email, role FROM users WHERE id = ? LIMIT 1");
+$stmt->bind_param('i', $sess_id);
+$stmt->execute();
+$user_info = $stmt->get_result()->fetch_assoc();
+
 $user_email = $user_info['email'] ?? 'N/A';
-$user_role  = ($user_info['role'] === 'superadmin') ? 'Super Admin' : 'Admin';
+$user_role  = (($user_info['role'] ?? '') === 'superadmin') ? 'Super Admin' : 'Admin';
 ?>
 <div class="user-profile" id="userProfile">
   <div class="user-avatar">

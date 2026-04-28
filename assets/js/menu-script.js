@@ -39,8 +39,8 @@ function initCategoryModal() {
   if (!btn || !modal) return;   // not on a page with the modal
 
   /* open / close helpers */
-  const open  = () => { input.value = ''; clearMsg(); modal.classList.add('open'); overlay.classList.add('open'); setTimeout(() => input.focus(), 100); };
-  const close = () => { modal.classList.remove('open'); overlay.classList.remove('open'); };
+  const open  = () => { input.value = ''; clearMsg(); modal.classList.add('open'); overlay.classList.add('open'); document.body.classList.add('modal-open'); setTimeout(() => input.focus(), 100); };
+  const close = () => { modal.classList.remove('open'); overlay.classList.remove('open'); document.body.classList.remove('modal-open'); };
 
   btn.addEventListener('click', open);
   closeBtn  ?.addEventListener('click', close);

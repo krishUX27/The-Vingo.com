@@ -71,22 +71,23 @@ $cur = 'index.php';
     /* Yellow accents for icons */
     .icon-yellow { background: #fffbeb; color: var(--super-accent); }
 
-    /* Modal Overlay */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 2000; }
-    .modal-overlay.open { display: block; animation: fadeIn 0.3s; }
+    /* Responsive Adjustments */
+    @media (max-width: 1024px) {
+      .super-main-grid { grid-template-columns: 1fr !important; }
+      .overview-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    }
     
-    /* Modal Content */
-    .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(450px, 95vw); background: #fff; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); z-index: 2100; overflow: hidden; }
-    .modal.open { display: block; animation: modalIn 0.3s ease-out; }
+    @media (max-width: 768px) {
+      .content { padding: 20px; }
+      .topbar { padding: 0 20px; }
+      .stat-card-master { padding: 16px; gap: 12px; }
+      .m-stat-val { font-size: 1.5rem; }
+      h1 { font-size: 1.4rem; }
+      .topbar-right .hide-mobile { display: none; }
+    }
     
-    .modal-header { padding: 20px 24px; background: #f8fafc; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
-    .modal-header h3 { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0; }
-    .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--text-light); cursor: pointer; line-height: 1; transition: 0.2s; }
-    .modal-close:hover { color: var(--super-accent); transform: rotate(90deg); }
-
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes modalIn { from { opacity: 0; transform: translate(-50%, -60%); } to { opacity: 1; transform: translate(-50%, -50%); } }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
   </style>
 </head>
 <body>
@@ -100,7 +101,7 @@ $cur = 'index.php';
       <h1>🛡️ Platform Overview</h1>
     </div>
     <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
-      <div style="background:#f0fdf4; color:#16a34a; padding:6px 16px; border-radius:30px; font-size:0.75rem; font-weight:700; display:flex; align-items:center; gap:6px">
+      <div style="background:#f0fdf4; color:#16a34a; padding:6px 16px; border-radius:30px; font-size:0.75rem; font-weight:700; display:flex; align-items:center; gap:6px" class="hide-mobile">
         <span style="width:8px; height:8px; background:#16a34a; border-radius:50%"></span> System Stable
       </div>
       <?php include __DIR__ . '/../admin/partials/topbar_user.php'; ?>
@@ -141,7 +142,7 @@ $cur = 'index.php';
       </div>
     </div>
 
-    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:30px; align-items:start">
+    <div class="super-main-grid" style="display:grid; grid-template-columns: 2fr 1fr; gap:30px; align-items:start">; align-items:start">
       
       <div class="card">
         <div class="card-title">📡 Global Operations Update</div>
@@ -230,7 +231,7 @@ $cur = 'index.php';
     
     accessModal.classList.add('open');
     accessOverlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
     hotelSearch.value = '';
     filterHotels('');
     setTimeout(() => hotelSearch.focus(), 100);
@@ -239,7 +240,7 @@ $cur = 'index.php';
   function hideAccessModal() {
     accessModal.classList.remove('open');
     accessOverlay.classList.remove('open');
-    document.body.style.overflow = 'auto';
+    document.body.classList.remove('modal-open');
   }
 
   function filterHotels(q) {

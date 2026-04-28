@@ -138,6 +138,9 @@ if (isset($_SESSION['admin_logged_in'])) {
           <span id="togglePassword"
             style="position:absolute; right:15px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.1rem; opacity:0.9; transition:0.2s">👁️</span>
         </div>
+        <div style="text-align:right; margin-top:8px">
+          <a href="forgot-password.php" style="font-size:0.75rem; color:var(--text-light); font-weight:600; text-decoration:none">Forgot Password?</a>
+        </div>
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:16px">
         🚀 Sign In

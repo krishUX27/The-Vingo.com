@@ -328,6 +328,7 @@ function openOfferModal(type) {
     
     document.getElementById('offerModal').classList.add('open');
     document.getElementById('modalOverlay').classList.add('open');
+    document.body.classList.add('modal-open');
 }
 
 function editOffer(o, dishes) {
@@ -357,11 +358,13 @@ function editOffer(o, dishes) {
 
     document.getElementById('offerModal').classList.add('open');
     document.getElementById('modalOverlay').classList.add('open');
+    document.body.classList.add('modal-open');
 }
 
 function closeModal() {
     document.getElementById('offerModal').classList.remove('open');
     document.getElementById('modalOverlay').classList.remove('open');
+    document.body.classList.remove('modal-open');
 }
 
 /* ── Combo Selector Logic ── */

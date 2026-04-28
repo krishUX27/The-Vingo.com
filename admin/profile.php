@@ -7,22 +7,33 @@ $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 $admin_sess_id = $_SESSION['admin_id'] ?? 0;
 $sess_username = $_SESSION['admin_username'] ?? 'admin';
-$admin_email    = menu_get_setting('admin_email', 'admin@vingo.com', $admin_sess_id);
+
+// Fetch current user details from DB
+$u_stmt = $conn->prepare("SELECT email FROM users WHERE id = ?");
+$u_stmt->bind_param('i', $admin_sess_id);
+$u_stmt->execute();
+$u_res = $u_stmt->get_result();
+$user_data = $u_res->fetch_assoc();
+$admin_email = $user_data['email'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Update the database-backed user system.
+    $email = trim($_POST['email'] ?? '');
     
-    // We will update the admin_email in settings.
-    $email = $_POST['email'] ?? '';
-    
-    $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value, user_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
-    $key = 'admin_email';
-    $stmt->bind_param('ssi', $key, $email, $admin_sess_id);
-    $stmt->execute();
-    
-    $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Profile updated successfully!'];
-    header('Location: profile.php');
-    exit;
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Please enter a valid email address.'];
+    } else {
+        // Update the users table directly
+        $stmt = $conn->prepare("UPDATE users SET email = ? WHERE id = ?");
+        $stmt->bind_param('si', $email, $admin_sess_id);
+        
+        if ($stmt->execute()) {
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Profile updated successfully!'];
+            header('Location: profile.php');
+            exit;
+        } else {
+            $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Failed to update email.'];
+        }
+    }
 }
 
 $cur = 'profile.php';

@@ -148,3 +148,66 @@ function sendHoldEmail($to_email, $username) {
     return mail($to_email, $subject, $message, $headers);
 }
 
+/**
+ * Sends a 6-digit OTP for password reset.
+ */
+function sendOTPEmail($to_email, $username, $otp) {
+    $from = "sales@thevingo.com";
+    $subject = "🔑 Your Password Reset OTP: $otp";
+    
+    $headers = "MIME-Version: 1.0" . "\r\n";
+    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+    $headers .= "From: Vingo Security <$from>" . "\r\n";
+    $headers .= "Reply-To: $from" . "\r\n";
+    $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+
+    $message = "
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset='UTF-8'>
+        <title>Password Reset OTP</title>
+    </head>
+    <body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;'>
+        <table border='0' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f8fafc; padding: 40px 0;'>
+            <tr>
+                <td align='center'>
+                    <div style='max-width: 500px; background-color: #ffffff; border-radius: 16px; padding: 40px; border: 1px solid #edf2f7; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);'>
+                        <div style='text-align: center; margin-bottom: 30px;'>
+                           <h2 style='color: #4f46e5; margin: 0;'>Vingo Menu</h2>
+                           <p style='color: #718096; font-size: 14px; margin-top: 5px;'>Security Verification</p>
+                        </div>
+                        
+                        <p style='color: #2d3748; font-size: 16px; line-height: 24px;'>Hello <strong>$username</strong>,</p>
+                        <p style='color: #4a5568; font-size: 16px; line-height: 24px; margin-bottom: 25px;'>
+                            You requested a password reset. Use the verification code below to proceed:
+                        </p>
+                        
+                        <div style='background-color: #f1f5f9; border-radius: 12px; padding: 25px; text-align: center; margin-bottom: 25px;'>
+                            <span style='font-size: 32px; font-weight: 800; letter-spacing: 10px; color: #1e293b;'>$otp</span>
+                        </div>
+                        
+                        <p style='color: #ef4444; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 30px;'>
+                            ⚠️ This code is valid for 5 minutes only.
+                        </p>
+                        
+                        <p style='color: #718096; font-size: 13px; line-height: 20px; text-align: center;'>
+                            If you didn't request this, you can safely ignore this email. Your password will remain unchanged.
+                        </p>
+                        
+                        <hr style='border: 0; border-top: 1px solid #edf2f7; margin: 30px 0;'>
+                        
+                        <p style='font-size: 11px; color: #a0aec0; text-align: center; margin: 0;'>
+                            &copy; " . date('Y') . " Vingo.com | Security Team
+                        </p>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    ";
+
+    return mail($to_email, $subject, $message, $headers);
+}
+

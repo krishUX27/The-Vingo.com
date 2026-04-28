@@ -78,6 +78,13 @@ unset($_SESSION['flash']);
     .btn-primary:hover { background: #fbbf24; transform: translateY(-2px); }
     .status-badge { padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
     .user-avatar { background: var(--super-accent) !important; color: #0f172a !important; box-shadow: 0 4px 12px var(--super-accent-glow) !important; }
+    
+    @media (max-width: 768px) {
+      .content { padding: 20px; }
+      .topbar { padding: 0 20px; }
+      .table-wrap { overflow-x: auto; margin: 0 -15px; padding: 0 15px; }
+      h1 { font-size: 1.3rem; }
+    }
   </style>
 </head>
 <body>

@@ -40,6 +40,16 @@ if ($check_u_status && $check_u_status->num_rows === 0) {
     $conn->query("ALTER TABLE users ADD COLUMN status VARCHAR(20) DEFAULT 'active'");
 }
 
+// Password Resets Table (Auto-Migration)
+$conn->query("CREATE TABLE IF NOT EXISTS password_resets (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  otp VARCHAR(6) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  is_used TINYINT(1) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
 foreach($cols_to_add as $col => $def) {
     $check = $conn->query("SHOW COLUMNS FROM dishes LIKE '$col'");
     if($check && $check->num_rows === 0) {
@@ -614,11 +624,13 @@ document.addEventListener('DOMContentLoaded', function() {
   function showModal() {
     modal.classList.add('open');
     overlay.classList.add('open');
+    document.body.classList.add('modal-open');
   }
 
   function hideModal() {
     modal.classList.remove('open');
     overlay.classList.remove('open');
+    document.body.classList.remove('modal-open');
     // Clear preview on close
     imageInput.value = '';
     previewImg.src = '';

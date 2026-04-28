@@ -170,6 +170,12 @@ $cur = 'manage-admins.php';
     @media (max-width: 1024px) {
       .super-grid { grid-template-columns: 1fr; }
     }
+    @media (max-width: 768px) {
+      .content { padding: 20px; }
+      .topbar { padding: 0 20px; }
+      .table-wrap { overflow-x: auto; margin: 0 -15px; padding: 0 15px; }
+      h1 { font-size: 1.3rem; }
+    }
   </style>
 </head>
 <body>

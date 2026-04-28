@@ -91,6 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .btn-primary:hover { background: #fbbf24; transform: translateY(-2px); box-shadow: 0 8px 20px var(--super-accent-glow); }
     
     input:focus { border-color: var(--super-accent) !important; box-shadow: 0 0 0 4px var(--super-accent-glow) !important; }
+
+    @media (max-width: 768px) {
+      .content { padding: 20px; }
+      .topbar { padding: 0 20px; }
+      h1 { font-size: 1.3rem; }
+    }
   </style>
 </head>
 <body>

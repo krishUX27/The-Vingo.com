@@ -45,6 +45,9 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
+body.modal-open {
+  overflow: hidden;
+}
 a { text-decoration: none; }
 
 
@@ -302,10 +305,12 @@ tbody tr:hover { background: #fdfdfd; }
 .modal-overlay.open { display: block; animation: fadeIn 0.3s; }
 .modal {
   display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-  width: min(500px, 95vw); background: #fff; border-radius: var(--radius-lg); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); z-index: 2100;
+  width: min(500px, 95vw); max-height: 90vh; background: #fff; border-radius: var(--radius-lg); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); z-index: 2100;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
-.modal.open { display: block; animation: modalIn 0.3s ease-out; }
+.modal.open { display: flex; animation: modalIn 0.3s ease-out; }
 
 .modal-header {
   padding: 24px 30px;
@@ -320,7 +325,7 @@ tbody tr:hover { background: #fdfdfd; }
 }
 .modal-close:hover { color: var(--danger); transform: rotate(90deg); }
 
-.modal-body { padding: 30px; }
+.modal-body { padding: 30px; overflow-y: auto; flex: 1; }
 .modal-footer {
   padding: 20px 30px;
   background: #f8fafc;
@@ -483,7 +488,7 @@ tbody tr:hover { background: #fdfdfd; }
   .user-name, .user-role { display: none; }
   .user-profile { padding: 6px; }
 
-  .modal { width: 95% !important; max-height: 90vh !important; top: 5% !important; transform: translateX(-50%) !important; overflow-y: auto; }
+  .modal { width: 95% !important; max-height: 90vh !important; }
 
   /* Horizontal Scroll for Stats on Mobile */
   .stats-grid {
