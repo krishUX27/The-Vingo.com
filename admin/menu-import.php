@@ -148,15 +148,25 @@ function process_csv_import($file_path, $admin_id, $conn) {
             $avail_d = (strtolower(trim($data[$col_map['d']] ?? '')) === 'no') ? 0 : 1;
             $currency = 'INR';
 
-            // Category handling
+            // Category handling (Smarter & Ignore Duplicates)
             $cat_key = strtolower($cat_name);
             if (!isset($cat_map[$cat_key])) {
-                $stmt = $conn->prepare("INSERT INTO categories (name, user_id) VALUES (?, ?)");
-                $stmt->bind_param("si", $cat_name, $admin_id);
-                $stmt->execute();
-                $cat_id = $conn->insert_id;
+                $stmt_c = $conn->prepare("INSERT IGNORE INTO categories (name, user_id) VALUES (?, ?)");
+                $stmt_c->bind_param("si", $cat_name, $admin_id);
+                $stmt_c->execute();
+                
+                if ($stmt_c->affected_rows > 0) {
+                    $cat_id = $conn->insert_id;
+                } else {
+                    // Fallback: If IGNORE skipped it, fetch the existing ID
+                    $stmt_f = $conn->prepare("SELECT id FROM categories WHERE user_id = ? AND name = ?");
+                    $stmt_f->bind_param("is", $admin_id, $cat_name);
+                    $stmt_f->execute();
+                    $cat_id = $stmt_f->get_result()->fetch_assoc()['id'] ?? 0;
+                    $stmt_f->close();
+                }
                 $cat_map[$cat_key] = $cat_id;
-                $stmt->close();
+                $stmt_c->close();
             } else {
                 $cat_id = $cat_map[$cat_key];
             }
