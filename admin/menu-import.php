@@ -196,19 +196,22 @@ function process_csv_import($file_path, $admin_id, $conn) {
 }
 
 // ── Handle Upload Post ─────────────────────────────────────────
-file_put_contents(__DIR__ . '/import_debug.log', "[" . date('Y-m-d H:i:s') . "] POST Request Received. Files: " . json_encode($_FILES) . "\n", FILE_APPEND);
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['menu_file'])) {
     $file = $_FILES['menu_file'];
+    platform_log("Import Attempt: " . $file['name'], "MenuImport");
+    
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
     if ($ext !== 'csv') {
         $error = "Please use a CSV file.";
     } elseif ($file['error'] !== UPLOAD_ERR_OK) {
-        $error = "Upload failed.";
+        $error = "Upload failed. Error Code: " . $file['error'];
     } else {
         $file_path = $upload_dir . uniqid('import_') . '.csv';
         if (move_uploaded_file($file['tmp_name'], $file_path)) {
+            // Ensure table exists one more time just in case
+            $conn->query("CREATE TABLE IF NOT EXISTS menu_imports (id INT AUTO_INCREMENT PRIMARY KEY, admin_id INT, file_name VARCHAR(255), file_type VARCHAR(50), file_path VARCHAR(255), status VARCHAR(20), uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+
             $stmt = $conn->prepare("INSERT INTO menu_imports (admin_id, file_name, file_type, file_path, status) VALUES (?, ?, 'csv', ?, 'processing')");
             $stmt->bind_param("iss", $admin_id, $file['name'], $file_path);
             $stmt->execute();
@@ -220,11 +223,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['menu_file'])) {
                 if ($res) {
                     $conn->query("UPDATE menu_imports SET status = 'completed' WHERE id = $import_id");
                     $success = "{$res['success']} dishes imported successfully!";
+                    platform_log("Import Success: {$res['success']} dishes", "MenuImport");
                 }
             } catch (Exception $e) {
                 $conn->query("UPDATE menu_imports SET status = 'failed' WHERE id = $import_id");
                 $error = $e->getMessage();
+                platform_log("Import Exception: " . $e->getMessage(), "MenuImport", "Error");
             }
+        } else {
+            $error = "Could not save uploaded file.";
+            platform_log("File Move Failed", "MenuImport", "Error");
         }
     }
 }
