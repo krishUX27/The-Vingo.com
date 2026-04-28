@@ -355,14 +355,20 @@ if (!$offer_res) {
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
+    /* Version 5.2 Responsive Patch */
     @media (max-width: 768px) {
-      .topbar { padding: 0 15px; height: 70px; }
-      .topbar h1 { font-size: 1rem; }
-      .content { padding: 15px; }
-      .stats-grid { gap: 12px; }
-      .col-name { min-width: 150px; }
-      .col-desc { font-size: 0.75rem; max-width: 180px; }
-      .btn-sm { padding: 6px 10px; font-size: 0.7rem; }
+      .topbar { padding: 0 10px !important; height: 65px !important; gap: 5px !important; }
+      .topbar-left { gap: 10px !important; }
+      .topbar h1 { font-size: 0.9rem !important; }
+      .topbar-right { gap: 5px !important; }
+      .user-avatar { width: 34px !important; height: 34px !important; font-size: 0.9rem !important; }
+      .content { padding: 12px !important; }
+      .stats-grid { gap: 10px !important; }
+      .stat-box { padding: 14px !important; }
+      .stat-val { font-size: 1.4rem !important; }
+      .table-wrap table { font-size: 0.85rem !important; }
+      .btn-grp { flex-direction: column !important; width: 100%; }
+      .btn-grp .btn { width: 100% !important; margin-bottom: 4px; }
     }
   </style>
 </head>
