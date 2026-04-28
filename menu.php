@@ -2,7 +2,7 @@
 require_once __DIR__ . '/includes/db.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-$user_id = intval($_GET['id'] ?? 0);
+$user_id = intval($_GET['user_id'] ?? $_GET['id'] ?? 0);
 
 // 1. Initial Identity Check
 $is_owner = (isset($_SESSION['admin_id']) && (int)$_SESSION['admin_id'] === $user_id);
@@ -751,7 +751,7 @@ function syncSearch(val) {
 
 <script>
 const URL_PARAMS      = new URLSearchParams(window.location.search);
-const MENU_ID         = URL_PARAMS.get('id') || 0;
+const MENU_ID         = URL_PARAMS.get('user_id') || URL_PARAMS.get('id') || 0;
 const POLL_MS         = 6000;
 
 // Language persistence
