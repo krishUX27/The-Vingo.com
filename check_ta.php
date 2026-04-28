@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/includes/db.php';
 
 $res = $conn->query("SELECT * FROM dish_translations WHERE language_code = 'ta' LIMIT 5");
 if ($res && $res->num_rows > 0) {

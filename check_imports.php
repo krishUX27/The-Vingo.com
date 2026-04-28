@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/includes/db.php';
 
 $res = $conn->query("SELECT * FROM menu_imports ORDER BY uploaded_at DESC LIMIT 5");
 if ($res && $res->num_rows > 0) {

@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/includes/db.php';
 
 $res = $conn->query("SELECT * FROM system_logs WHERE source = 'MenuImport' ORDER BY id DESC LIMIT 10");
 if ($res && $res->num_rows > 0) {

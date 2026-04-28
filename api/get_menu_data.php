@@ -61,6 +61,7 @@ try {
             'available_breakfast' => (int)$row['available_breakfast'],
             'available_lunch'     => (int)$row['available_lunch'],
             'available_dinner'    => (int)$row['available_dinner'],
+            'description'         => $row['description'],
             'category'       => $cat
         ];
     }
