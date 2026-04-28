@@ -167,7 +167,7 @@ $cur = 'manage-admins.php';
     .user-avatar { background: var(--super-accent) !important; color: #0f172a !important; box-shadow: 0 4px 12px var(--super-accent-glow) !important; }
     
     .super-grid { display: grid; grid-template-columns: 1fr 340px; gap: 30px; align-items: start; }
-    @media (max-width: 1024px) {
+    @media (max-width: 1200px) {
       .super-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
@@ -222,6 +222,7 @@ $cur = 'manage-admins.php';
             <tbody>
               <?php foreach ($admins as $a): ?>
               <tr>
+                <td><input type="checkbox" name="admin_ids[]" value="<?= $a['id'] ?>"></td>
                 <td><strong><?= htmlspecialchars($a['username']) ?></strong></td>
                 <td style="font-size:0.85rem; color:#64748b"><?= htmlspecialchars($a['email'] ?? 'N/A') ?></td>
                 <td>
@@ -233,15 +234,15 @@ $cur = 'manage-admins.php';
                 </td>
                 <td style="font-size:0.85rem; color:var(--text-light)"><?= date('M d, Y', strtotime($a['created_at'])) ?></td>
                 <td style="text-align:right">
-                  <a href="edit-admin.php?id=<?= $a['id'] ?>" class="btn btn-outline btn-sm" style="margin-right:5px">✏️ Edit</a>
+                  <a href="edit-admin.php?id=<?= $a['id'] ?>" class="btn btn-outline btn-sm" style="margin-right:5px">✏️</a>
                   
                   <?php if (($a['status'] ?? 'active') === 'active'): ?>
-                    <a href="?status_toggle=<?= $a['id'] ?>&status=hold" class="btn btn-warning btn-sm" style="margin-right:5px; background:#fef3c7; color:#92400e; border:1px solid #fde68a" onclick="return confirm('Place this account on hold?')">⏸️ Hold</a>
+                    <a href="?status_toggle=<?= $a['id'] ?>&status=hold" class="btn btn-warning btn-sm" style="margin-right:5px; background:#fef3c7; color:#92400e; border:1px solid #fde68a" onclick="return confirm('Place this account on hold?')">⏸️</a>
                   <?php else: ?>
-                    <a href="?status_toggle=<?= $a['id'] ?>&status=active" class="btn btn-success btn-sm" style="margin-right:5px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0" onclick="return confirm('Re-activate this account?')">▶️ Activate</a>
+                    <a href="?status_toggle=<?= $a['id'] ?>&status=active" class="btn btn-success btn-sm" style="margin-right:5px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0" onclick="return confirm('Re-activate this account?')">▶️</a>
                   <?php endif; ?>
 
-                  <a href="?delete=<?= $a['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete this admin account?')">🗑️ Delete</a>
+                  <a href="?delete=<?= $a['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete this admin account?')">🗑️</a>
                 </td>
               </tr>
               <?php endforeach; ?>

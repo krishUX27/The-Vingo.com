@@ -649,6 +649,10 @@ $can_reorder   = ($is_admin_view && ($is_owner || $is_super));
       <input type="text" id="refSearch" placeholder="Search for dishes..." onkeyup="syncSearch(this.value)">
       <button class="search-inner-btn" onclick="applyAdvancedFilters()" type="button">🔍</button>
     </div>
+    <select id="langSwitch" style="background:#334155; color:#fff; border:none; padding:12px 10px; border-radius:50px; font-weight:600; font-size:0.85rem; cursor:pointer; outline:none; box-shadow:0 4px 10px rgba(0,0,0,0.1)">
+      <option value="en">🇬🇧 EN</option>
+      <option value="ta">🇮🇳 TA</option>
+    </select>
     <button class="ref-filter-btn" id="openFilter">
       Filter <span style="font-size: 0.7rem">▼</span>
     </button>
@@ -748,8 +752,20 @@ function syncSearch(val) {
 <script>
 const URL_PARAMS      = new URLSearchParams(window.location.search);
 const MENU_ID         = URL_PARAMS.get('id') || 0;
-const MENU_DATA_URL   = 'api/get_menu_data.php?user_id=' + MENU_ID;
 const POLL_MS         = 6000;
+
+// Language persistence
+let currentLang = localStorage.getItem('vingo_lang') || 'en';
+const langSwitch = document.getElementById('langSwitch');
+if(langSwitch) {
+    langSwitch.value = currentLang;
+    langSwitch.addEventListener('change', (e) => {
+        currentLang = e.target.value;
+        localStorage.setItem('vingo_lang', currentLang);
+        syncVingoMenu(true); // Force update
+    });
+}
+
 /* Dot color pool */
 const DOT_COLORS = ['dc-0','dc-1','dc-2','dc-3','dc-4','dc-5','dc-6','dc-7'];
 const catColorMap = {};
@@ -766,14 +782,14 @@ let fullData     = null; // Unified menu data
 let activeMeal   = 'all';
 const CAN_REORDER = <?php echo $can_reorder ? 'true' : 'false'; ?>;
 
-async function syncVingoMenu() {
+async function syncVingoMenu(force = false) {
   try {
-    const r = await fetch(MENU_DATA_URL + (MENU_DATA_URL.includes('?') ? '&' : '?') + '_=' + Date.now());
+    const r = await fetch(`api/get_menu_data.php?user_id=${MENU_ID}&lang=${currentLang}&_=${Date.now()}`);
     const json = await r.json();
     if (!json.success) return;
 
     const hash = JSON.stringify(json.data);
-    if (hash === lastHash) return;
+    if (!force && hash === lastHash) return;
     lastHash = hash;
 
     const first = fullData === null;

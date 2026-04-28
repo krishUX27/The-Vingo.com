@@ -57,6 +57,35 @@ foreach($cols_to_add as $col => $def) {
     }
 }
 
+// Multi-Language Support: Translation Table
+$conn->query("CREATE TABLE IF NOT EXISTS dish_translations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  dish_id INT NOT NULL,
+  language_code VARCHAR(10) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  UNIQUE KEY unique_translation (dish_id, language_code),
+  INDEX idx_dish_lang (dish_id, language_code)
+)");
+
+// Data Migration: Move existing names/descriptions to 'en' translation if not already moved
+$check_migrated = $conn->query("SELECT COUNT(*) FROM dish_translations");
+$migrated_count = ($check_migrated) ? (int)$check_migrated->fetch_row()[0] : 0;
+if ($migrated_count === 0) {
+    // Check if dishes table still has data to migrate
+    $res = $conn->query("SELECT id, name, description FROM dishes");
+    if ($res && $res->num_rows > 0) {
+        while ($row = $res->fetch_assoc()) {
+            $dish_id = $row['id'];
+            $name = $conn->real_escape_string($row['name']);
+            $desc = $conn->real_escape_string($row['description']);
+            if (!empty($name)) {
+                $conn->query("INSERT IGNORE INTO dish_translations (dish_id, language_code, name, description) VALUES ($dish_id, 'en', '$name', '$desc')");
+            }
+        }
+    }
+}
+
 // Production Error Handling
 ini_set('display_errors', 0);
 error_reporting(E_ALL & ~E_NOTICE);
@@ -168,9 +197,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $cat_check->close();
     }
 
-    // Check for duplicate dish name for this user (Case-Insensitive)
+    // Check for duplicate dish name for this user (Case-Insensitive) via translations
     if (empty($errors)) {
-        $check_stmt = $conn->prepare("SELECT id FROM dishes WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND user_id = ? AND is_deleted = 0");
+        $check_stmt = $conn->prepare("SELECT d.id FROM dishes d JOIN dish_translations t ON t.dish_id = d.id WHERE LOWER(TRIM(t.name)) = LOWER(TRIM(?)) AND d.user_id = ? AND d.is_deleted = 0");
         $check_stmt->bind_param('si', $name, $admin_sess_id);
         $check_stmt->execute();
         if ($check_stmt->get_result()->num_rows > 0) {
@@ -199,15 +228,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     if (empty($errors)) {
         dashboard_log("Attempting to insert dish: $name, $price, $cat_id, $veg_type_val for User $admin_sess_id");
-        $s = $conn->prepare("INSERT INTO dishes (name,price,category_id,veg_type,available_breakfast,available_lunch,available_dinner,image,currency,offer_id,user_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+        $s = $conn->prepare("INSERT INTO dishes (price,category_id,veg_type,available_breakfast,available_lunch,available_dinner,image,currency,offer_id,user_id) VALUES (?,?,?,?,?,?,?,?,?,?)");
         if (!$s) {
             $err_msg = 'Prepare failed: ' . $conn->error;
             dashboard_log($err_msg);
             $errors[] = $err_msg;
         } else {
-            $s->bind_param('sdisiiissii', $name, $price, $cat_id, $veg_type_val, $break, $lunch, $dinner, $image_name, $currency, $offer_id, $admin_sess_id);
+            $s->bind_param('disiiissii', $price, $cat_id, $veg_type_val, $break, $lunch, $dinner, $image_name, $currency, $offer_id, $admin_sess_id);
             if ($s->execute()) {
                 $new_id = $conn->insert_id;
+                
+                // Insert Translation (Default EN)
+                $t_s = $conn->prepare("INSERT INTO dish_translations (dish_id, language_code, name) VALUES (?, 'en', ?)");
+                $t_s->bind_param('is', $new_id, $name);
+                $t_s->execute();
+                $t_s->close();
+
                 dashboard_log("Dish '{$name}' added successfully. ID: {$new_id}");
                 $_SESSION['flash'] = ['type' => 'success', 'msg' => "Dish added successfully!"];
                 header("Location: dashboard.php?new_id={$new_id}");
@@ -243,9 +279,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 /* ── Dish list (Owner filtered) ── */
-$sql  = "SELECT d.*, c.name AS cat_name, o.title AS offer_title, o.discount_percentage AS offer_discount
+$preview_lang = $conn->real_escape_string($_GET['lang'] ?? 'en');
+$sql  = "SELECT d.id, d.price, d.image, d.veg_type, d.currency, d.available_breakfast, d.available_lunch, d.available_dinner, d.is_deleted, d.display_order, d.created_at,
+                COALESCE(t.name, t_en.name) AS name,
+                COALESCE(t.description, t_en.description) AS description,
+                c.name AS cat_name, o.title AS offer_title, o.discount_percentage AS offer_discount
          FROM dishes d
          JOIN categories c ON c.id = d.category_id
+         LEFT JOIN dish_translations t ON t.dish_id = d.id AND t.language_code = '$preview_lang'
+         LEFT JOIN dish_translations t_en ON t_en.dish_id = d.id AND t_en.language_code = 'en'
          LEFT JOIN offers o ON o.id = d.offer_id AND o.offer_type = 'seasonal' AND o.is_deleted = 0
          WHERE d.user_id = ? AND d.is_deleted = 0 " . ($where ? "AND " . str_replace('WHERE','',$where) : "") . "
          ORDER BY d.display_order ASC, d.created_at DESC";
@@ -303,6 +345,10 @@ if (!$offer_res) {
       </div>
     </div>
     <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
+      <select onchange="location.href='?lang='+this.value" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:6px 12px; border-radius:30px; font-size:0.75rem; font-weight:700; cursor:pointer; outline:none;">
+        <option value="en" <?= $preview_lang === 'en' ? 'selected' : '' ?>>🇬🇧 English</option>
+        <option value="ta" <?= $preview_lang === 'ta' ? 'selected' : '' ?>>🇮🇳 Tamil</option>
+      </select>
       <a href="../menu.php?id=<?= $admin_sess_id ?>" target="_blank" class="btn btn-outline btn-sm">
         <span class="live-dot"></span> Live Menu View
       </a>

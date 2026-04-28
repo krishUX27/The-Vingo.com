@@ -5,32 +5,42 @@ header('Cache-Control: no-cache');
 require_once __DIR__ . '/../includes/db.php';
 
 $user_id = intval($_GET['user_id'] ?? 0);
+$lang    = $conn->real_escape_string($_GET['lang'] ?? 'en');
+
 if (!$user_id) {
     echo json_encode(['success' => false, 'message' => 'User ID required']);
     exit;
 }
 
 try {
-    // 1. Fetch Dishes Grouped by Category with Seasonal and Combo info
-    $sql_dishes = "SELECT d.*, c.name AS category_name, o.title AS offer_title, 
+    // 1. Fetch Dishes Grouped by Category with Seasonal and Combo info + Translations
+    $sql_dishes = "SELECT d.id, d.price, d.image, d.veg_type, d.currency, d.available_breakfast, d.available_lunch, d.available_dinner,
+                          COALESCE(t.name, t_en.name) AS name,
+                          COALESCE(t.description, t_en.description) AS description,
+                          c.name AS category_name, o.title AS offer_title, 
                           CONCAT(o.discount_percentage, '%') AS offer_discount,
-                          (SELECT GROUP_CONCAT(o2.title SEPARATOR ', ') 
+                          (SELECT GROUP_CONCAT(COALESCE(t2.name, t2_en.name) SEPARATOR ', ') 
                            FROM offer_combo_dishes ocd 
+                           JOIN dishes d2 ON d2.id = ocd.dish_id 
+                           LEFT JOIN dish_translations t2 ON t2.dish_id = d2.id AND t2.language_code = ?
+                           LEFT JOIN dish_translations t2_en ON t2_en.dish_id = d2.id AND t2_en.language_code = 'en'
                            JOIN offers o2 ON o2.id = ocd.offer_id 
                            WHERE ocd.dish_id = d.id AND o2.offer_type = 'combo' 
                            AND o2.status = 'active' AND o2.is_deleted = 0
                            AND CURRENT_DATE BETWEEN o2.start_date AND o2.end_date) AS combo_names
                    FROM dishes d
                    JOIN categories c ON c.id = d.category_id
+                   LEFT JOIN dish_translations t ON t.dish_id = d.id AND t.language_code = ?
+                   LEFT JOIN dish_translations t_en ON t_en.dish_id = d.id AND t_en.language_code = 'en'
                    LEFT JOIN offers o ON o.id = d.offer_id 
                                      AND o.offer_type = 'seasonal' 
                                      AND o.status = 'active'
                                      AND CURRENT_DATE BETWEEN o.start_date AND o.end_date
                    WHERE d.user_id = ? AND d.is_deleted = 0 AND c.is_deleted = 0
-                   ORDER BY d.display_order ASC, d.name ASC";
+                   ORDER BY d.display_order ASC, COALESCE(t.name, t_en.name) ASC";
     
     $stmt_d = $conn->prepare($sql_dishes);
-    $stmt_d->bind_param('i', $user_id);
+    $stmt_d->bind_param('ssi', $lang, $lang, $user_id);
     $stmt_d->execute();
     $res_d = $stmt_d->get_result();
     
@@ -72,8 +82,11 @@ try {
     while ($o = $res_o->fetch_assoc()) {
         if ($o['offer_type'] === 'combo') {
             $oid = $o['id'];
-            $items_res = $conn->query("SELECT d.name FROM offer_combo_dishes ocd 
+            $items_res = $conn->query("SELECT COALESCE(t.name, t_en.name) as name 
+                                       FROM offer_combo_dishes ocd 
                                        JOIN dishes d ON d.id = ocd.dish_id 
+                                       LEFT JOIN dish_translations t ON t.dish_id = d.id AND t.language_code = '$lang'
+                                       LEFT JOIN dish_translations t_en ON t_en.dish_id = d.id AND t_en.language_code = 'en'
                                        WHERE ocd.offer_id = $oid AND d.is_deleted = 0");
             $items = [];
             while($ir = $items_res->fetch_assoc()) $items[] = $ir['name'];

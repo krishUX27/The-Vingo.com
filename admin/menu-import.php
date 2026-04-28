@@ -43,75 +43,79 @@ $conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS available_dinner TINYI
 
 
 
-// ── CSV Processing Logic (Strict Mode Robust) ─────────────────
+// ── CSV Processing Logic (Dynamic Multi-Language Mode) ─────────
 function process_csv_import($file_path, $admin_id, $conn) {
     ini_set('auto_detect_line_endings', true);
     
     $handle = fopen($file_path, "r");
     if (!$handle) return false;
 
-    // Detect delimiter more robustly by counting occurrences
+    // 1. Detect delimiter and parse header
     $first_line = fgets($handle);
-    $c_comma = substr_count($first_line, ',');
-    $c_semi  = substr_count($first_line, ';');
-    $delimiter = ($c_semi > $c_comma) ? ';' : ',';
+    $delimiter = (substr_count($first_line, ';') > substr_count($first_line, ',')) ? ';' : ',';
     rewind($handle);
+    
+    $header = fgetcsv($handle, 0, $delimiter);
+    if (!$header) { fclose($handle); return false; }
 
-    $stats = ['total' => 0, 'success' => 0, 'skipped' => 0];
-    $row_count = 0;
-
-    // Cache ONLY active categories for this admin
-    $cat_map = [];
-    $res = $conn->query("SELECT id, name FROM categories WHERE user_id = $admin_id AND is_deleted = 0");
-    if ($res) {
-        while($row = $res->fetch_assoc()) { 
-            $cat_map[strtolower(trim($row['name']))] = $row['id']; 
+    // 2. Identify dynamic column mapping
+    $col_map = [];
+    $langs = [];
+    foreach($header as $idx => $col) {
+        $col = strtolower(trim($col));
+        if ($col === 'category') $col_map['cat'] = $idx;
+        elseif ($col === 'price')    $col_map['price'] = $idx;
+        elseif ($col === 'veg_type' || $col === 'veg') $col_map['veg'] = $idx;
+        elseif ($col === 'breakfast' || $col === 'b')  $col_map['b'] = $idx;
+        elseif ($col === 'lunch' || $col === 'l')      $col_map['l'] = $idx;
+        elseif ($col === 'dinner' || $col === 'd')     $col_map['d'] = $idx;
+        elseif ($col === 'image' || $col === 'img')    $col_map['img'] = $idx;
+        elseif (preg_match('/^name_(.+)$/', $col, $m)) {
+            $lang_code = $m[1];
+            $langs[$lang_code]['name'] = $idx;
+        }
+        elseif (preg_match('/^description_(.+)$/', $col, $m)) {
+            $lang_code = $m[1];
+            $langs[$lang_code]['desc'] = $idx;
         }
     }
 
-    // Use 0 for unlimited line length in fgetcsv
-    while (($data = fgetcsv($handle, 0, $delimiter)) !== FALSE) {
-        $row_count++;
-        if ($row_count === 1) continue; // Skip Header
-        
-        // Handle BOM or weird encoding on first column
-        if ($row_count === 2 && !empty($data[0])) {
-            $data[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $data[0]); 
-        }
+    $stats = ['total' => 0, 'success' => 0, 'skipped' => 0];
+    
+    // 3. Cache categories
+    $cat_map = [];
+    $res = $conn->query("SELECT id, name FROM categories WHERE user_id = $admin_id AND is_deleted = 0");
+    if ($res) { while($row = $res->fetch_assoc()) { $cat_map[strtolower(trim($row['name']))] = $row['id']; } }
 
+    // 4. Process Rows
+    while (($data = fgetcsv($handle, 0, $delimiter)) !== FALSE) {
         $stats['total']++;
         
-        $cat_name  = trim($data[0] ?? '');
-        $dish_name = trim($data[1] ?? '');
-        $price_raw = trim($data[2] ?? '0');
-        
-        // Robust Price cleaning
-        $price = (float)str_replace(',', '', preg_replace('/[^0-9.,]/', '', $price_raw));
-        $desc  = trim($data[3] ?? '');
-        
-        // Fuzzy Veg Type detection
-        $veg_raw  = strtolower(trim($data[4] ?? 'veg'));
-        $veg_type = (strpos($veg_raw, 'non') !== false) ? 'non_veg' : 'veg';
-        
-        // Flexible binary detection (1, yes, y, true, available)
-        $is_true = function($v) {
-            $v = strtolower(trim($v));
-            return in_array($v, ['1', 'y', 'yes', 'true', 'available', 'v']);
-        };
+        $cat_name    = isset($col_map['cat']) ? trim($data[$col_map['cat']] ?? '') : '';
+        $price_raw   = isset($col_map['price']) ? trim($data[$col_map['price']] ?? '0') : '0';
+        $veg_raw     = isset($col_map['veg']) ? strtolower(trim($data[$col_map['veg']] ?? 'veg')) : 'veg';
+        $avail_b_raw = isset($col_map['b']) ? strtolower(trim($data[$col_map['b']] ?? 'no')) : 'no';
+        $avail_l_raw = isset($col_map['l']) ? strtolower(trim($data[$col_map['l']] ?? 'no')) : 'no';
+        $avail_d_raw = isset($col_map['d']) ? strtolower(trim($data[$col_map['d']] ?? 'no')) : 'no';
+        $image       = isset($col_map['img']) ? trim($data[$col_map['img']] ?? '') : '';
 
-        $avail_b   = $is_true($data[5] ?? '0') ? 1 : 0;
-        $avail_l   = $is_true($data[6] ?? '0') ? 1 : 0;
-        $avail_d   = $is_true($data[7] ?? '0') ? 1 : 0;
-
-        if (empty($dish_name)) {
+        // Validation: name_en is mandatory as per rules
+        $name_en_idx = $langs['en']['name'] ?? -1;
+        if ($name_en_idx === -1 || empty(trim($data[$name_en_idx] ?? ''))) {
             $stats['skipped']++;
             continue;
         }
 
+        $price    = (float)str_replace(',', '', preg_replace('/[^0-9.,]/', '', $price_raw));
+        $veg_type = (strpos($veg_raw, 'non') !== false) ? 'non_veg' : 'veg';
+        
+        $is_yes = function($v) { return in_array(strtolower(trim($v)), ['1', 'y', 'yes', 'true', 'available']); };
+        $avail_b = $is_yes($avail_b_raw) ? 1 : 0;
+        $avail_l = $is_yes($avail_l_raw) ? 1 : 0;
+        $avail_d = $is_yes($avail_d_raw) ? 1 : 0;
+
         try {
-            $stmt = null;
             $cat_id = 0;
-            // 1. Ensure Category (Admin Isolated & Active)
             if (!empty($cat_name)) {
                 $cat_key = strtolower($cat_name);
                 if (!isset($cat_map[$cat_key])) {
@@ -121,42 +125,38 @@ function process_csv_import($file_path, $admin_id, $conn) {
                     $cat_id = $conn->insert_id;
                     $cat_map[$cat_key] = $cat_id;
                     $stmt->close();
-                    $stmt = null;
-                } else {
-                    $cat_id = $cat_map[$cat_key];
-                }
-            } else {
-                if (!empty($cat_map)) {
-                  $cat_id = reset($cat_map);
-                } else {
-                  // Fallback category if none exist
-                  $conn->query("INSERT INTO categories (name, user_id) VALUES ('General', $admin_id)");
-                  $cat_id = $conn->insert_id;
-                  $cat_map['general'] = $cat_id;
-                }
+                } else { $cat_id = $cat_map[$cat_key]; }
             }
 
-            // 2. Dynamic Currency from Admin Settings
+            // Insert Base Dish
             $currency = menu_get_setting('currency', 'INR', $admin_id);
-
-            // 3. Insert Dish (Strict Admin Isolation)
-            $sql = "INSERT INTO dishes (user_id, category_id, name, price, description, veg_type, available_breakfast, available_lunch, available_dinner, currency) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("iisdssiiis", $admin_id, $cat_id, $dish_name, $price, $desc, $veg_type, $avail_b, $avail_l, $avail_d, $currency);
+            $stmt = $conn->prepare("INSERT INTO dishes (user_id, category_id, price, veg_type, available_breakfast, available_lunch, available_dinner, image, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("iisdiiiss", $admin_id, $cat_id, $price, $veg_type, $avail_b, $avail_l, $avail_d, $image, $currency);
             
             if ($stmt->execute()) {
+                $dish_id = $conn->insert_id;
+                
+                // Insert Translations Dynamically
+                $t_stmt = $conn->prepare("INSERT INTO dish_translations (dish_id, language_code, name, description) VALUES (?, ?, ?, ?)");
+                foreach($langs as $lang_code => $indices) {
+                    $name_val = trim($data[$indices['name']] ?? '');
+                    if ($name_val === '' && $lang_code !== 'en') continue; // Skip optional empty translations
+                    
+                    $desc_idx = $indices['desc'] ?? -1;
+                    $desc_val = ($desc_idx !== -1) ? trim($data[$desc_idx] ?? '') : '';
+                    
+                    $t_stmt->bind_param("isss", $dish_id, $lang_code, $name_val, $desc_val);
+                    $t_stmt->execute();
+                }
+                $t_stmt->close();
                 $stats['success']++;
             } else {
                 $stats['skipped']++;
-                $stats['last_err'] = $stmt->error;
             }
             $stmt->close();
-            $stmt = null;
         } catch (Exception $e) {
             $stats['skipped']++;
             $stats['last_err'] = $e->getMessage();
-            if ($stmt) $stmt->close();
         }
     }
     fclose($handle);
@@ -167,23 +167,16 @@ function process_csv_import($file_path, $admin_id, $conn) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['menu_file'])) {
     $file = $_FILES['menu_file'];
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    $allowed = ['csv'];
 
-    if (!in_array($ext, $allowed)) {
-        $error = "File type not supported. Please use a CSV file.";
+    if ($ext !== 'csv') {
+        $error = "Please use a CSV file.";
     } elseif ($file['error'] !== UPLOAD_ERR_OK) {
-        $error = "Upload failed with error code: " . $file['error'];
-    } elseif ($file['size'] > 10 * 1024 * 1024) {
-        $error = "File too large. Max 10MB.";
+        $error = "Upload failed.";
     } else {
-        $new_name = uniqid('import_') . '.' . $ext;
-        $file_path = $upload_dir . $new_name;
-
+        $file_path = $upload_dir . uniqid('import_') . '.csv';
         if (move_uploaded_file($file['tmp_name'], $file_path)) {
-            // Log to database
-            $file_type = 'csv';
-            $stmt = $conn->prepare("INSERT INTO menu_imports (admin_id, file_name, file_type, file_path, status) VALUES (?, ?, ?, ?, 'processing')");
-            $stmt->bind_param("isss", $admin_id, $file['name'], $file_type, $file_path);
+            $stmt = $conn->prepare("INSERT INTO menu_imports (admin_id, file_name, file_type, file_path, status) VALUES (?, ?, 'csv', ?, 'processing')");
+            $stmt->bind_param("iss", $admin_id, $file['name'], $file_path);
             $stmt->execute();
             $import_id = $conn->insert_id;
             $stmt->close();
@@ -192,19 +185,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['menu_file'])) {
                 $res = process_csv_import($file_path, $admin_id, $conn);
                 if ($res) {
                     $conn->query("UPDATE menu_imports SET status = 'completed' WHERE id = $import_id");
-                    $success = "{$res['total']} rows detected. {$res['success']} dishes imported successfully. <a href='dashboard.php' class='btn btn-sm btn-primary' style='margin-left:auto; font-size:0.7rem; padding: 6px 12px; color:white;'>View Dishes</a>";
-                    if ($res['skipped'] > 0 && !empty($res['last_err'])) {
-                        $success .= " <br><small>Note: {$res['skipped']} rows skipped. Last error: {$res['last_err']}</small>";
-                    }
-                } else {
-                    throw new Exception("Unable to parse CSV file.");
+                    $success = "{$res['success']} dishes imported successfully!";
                 }
             } catch (Exception $e) {
                 $conn->query("UPDATE menu_imports SET status = 'failed' WHERE id = $import_id");
-                $error = "Processing Error: " . $e->getMessage();
+                $error = $e->getMessage();
             }
-        } else {
-            $error = "Failed to save file on Hostinger server. Check folder permissions.";
         }
     }
 }
@@ -360,28 +346,25 @@ $history = $conn->query("SELECT * FROM menu_imports WHERE admin_id = $admin_id O
             <div class="scroll-mobile">
               <table style="width: 100%; border: none">
                 <thead>
+            <div class="scroll-mobile">
+              <table style="width: 100%; border: none">
+                <thead>
                   <tr style="background: #f8fafc">
-                    <th>Col A</th><th>Col B</th><th>Col C</th><th>Col D</th>
-                    <th>Col E</th><th>Col F</th><th>Col G</th><th>Col H</th>
+                    <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>...</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr style="background:#f1f5f9; font-weight:700">
-                    <td>Category</td><td>Dish Name</td><td>Price</td><td>Description</td>
-                    <td>Veg Type</td><td>Breakfast</td><td>Lunch</td><td>Dinner</td>
+                    <td>Category</td><td>Price</td><td>Veg</td><td>B</td><td>L</td><td>D</td><td>Img</td><td>name_en</td><td>desc_en</td><td>name_XX</td>
                   </tr>
                   <tr>
-                    <td>Burgers</td><td>Classic Veggie</td><td>299</td><td>Double patty...</td>
-                    <td>veg</td><td>No</td><td>Yes</td><td>Yes</td>
+                    <td>Burgers</td><td>299</td><td>veg</td><td>No</td><td>Yes</td><td>Yes</td><td>b.jpg</td><td>Veg Burger</td><td>...</td><td>Other Lang</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <p class="file-hint" style="margin-top:10px">
-              💡 <strong>Columns:</strong> A: Category, B: Name, C: Price, D: Desc, E: Veg Type, F: B, G: L, H: D
-            </p>
-            <p class="file-hint" style="margin-top:5px">
-              ⚠️ <strong>Tip:</strong> Ensure your CSV follows this order exactly. Skip headers if necessary.
+              💡 <strong>Requirement:</strong> name_en is mandatory. You can add unlimited languages by adding columns like <strong>name_ta, description_ta, name_hi, etc.</strong>
             </p>
           </div>
         </div>

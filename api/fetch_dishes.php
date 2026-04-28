@@ -6,6 +6,8 @@ header('Cache-Control: no-cache');
 require_once __DIR__ . '/../includes/db.php';
 
 $user_id = intval($_GET['user_id'] ?? 0);
+$lang    = $conn->real_escape_string($_GET['lang'] ?? 'en');
+
 if (!$user_id) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Menu ID is required.']);
@@ -13,7 +15,8 @@ if (!$user_id) {
 }
 
 $sql = "SELECT d.id,
-               d.name        AS dish_name,
+               COALESCE(t.name, t_en.name) AS dish_name,
+               COALESCE(t.description, t_en.description) AS dish_description,
                d.price,
                d.image,
                d.veg_type,
@@ -27,13 +30,15 @@ $sql = "SELECT d.id,
                d.available_dinner
         FROM   dishes     d
         JOIN   categories c ON c.id = d.category_id
+        LEFT JOIN dish_translations t ON t.dish_id = d.id AND t.language_code = ?
+        LEFT JOIN dish_translations t_en ON t_en.dish_id = d.id AND t_en.language_code = 'en'
         LEFT JOIN offers o ON o.id = d.offer_id AND o.offer_type = 'seasonal' AND o.status = 'active' AND CURRENT_DATE BETWEEN o.start_date AND o.end_date
         WHERE  d.user_id = ? AND d.is_deleted = 0
 " . (isset($_GET['veg_type']) && in_array($_GET['veg_type'], ['veg','non_veg']) ? " AND d.veg_type = '" . $conn->real_escape_string($_GET['veg_type']) . "'" : "") . "
-        ORDER  BY d.display_order ASC, d.name ASC";
+        ORDER  BY d.display_order ASC, COALESCE(t.name, t_en.name) ASC";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param('i', $user_id);
+$stmt->bind_param('si', $lang, $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -54,6 +59,7 @@ while ($row = $result->fetch_assoc()) {
     $grouped[$cat][] = [
         'id'             => (int) $row['id'],
         'name'           => $row['dish_name'],
+        'description'    => $row['dish_description'],
         'price'          => (float) $row['price'],
         'currency'       => $row['currency'],
         'image'          => $row['image'],
