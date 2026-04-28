@@ -881,11 +881,9 @@ function esc(s) {
 /* ── Build dish row ── */
 function dishRow(d, dotClass) {
   const symbol = d.currency === 'USD' ? '$' : '₹';
-  const imgUrl = d.image ? `uploads/${d.image}` : '';
+  const imgUrl = d.image ? `uploads/${d.image}` : 'assets/images/dish-placeholder.png';
   
-  const imgHtml = imgUrl 
-    ? `<img src="${esc(imgUrl)}" alt="${esc(d.name)}">`
-    : `<span class="dish-picon">🍽️</span>`;
+  const imgHtml = `<img src="${esc(imgUrl)}" alt="${esc(d.name)}" onerror="this.src='assets/images/dish-placeholder.png'; this.onerror=null;">`;
 
   let priceHtml = `<span class="dish-price" style="flex-shrink:0">${symbol}${parseFloat(d.price).toFixed(2)}</span>`;
   

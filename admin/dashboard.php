@@ -499,7 +499,7 @@ if (!$offer_res) {
                 <?php if ($d['image'] && file_exists(__DIR__ . '/../uploads/' . $d['image'])): ?>
                   <img class="dish-img" src="../uploads/<?= htmlspecialchars($d['image']) ?>" alt="">
                 <?php else: ?>
-                  <div class="dish-placeholder">🍽️</div>
+                  <img class="dish-img" src="../assets/images/dish-placeholder.png" alt="No image">
                 <?php endif; ?>
               </td>
               <td><strong><?= htmlspecialchars($d['name']) ?></strong></td>

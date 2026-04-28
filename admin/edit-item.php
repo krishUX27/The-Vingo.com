@@ -7,7 +7,11 @@ if (!$id) { header('Location: dashboard.php'); exit; }
 
 $admin_sess_id = $_SESSION['admin_id'] ?? 0;
 
-$s = $conn->prepare("SELECT * FROM dishes WHERE id = ? AND user_id = ?");
+$s = $conn->prepare("SELECT d.*, COALESCE(t.name, t_en.name) AS name, COALESCE(t.description, t_en.description) AS description 
+                    FROM dishes d 
+                    LEFT JOIN dish_translations t ON t.dish_id = d.id AND t.language_code = 'en'
+                    LEFT JOIN dish_translations t_en ON t_en.dish_id = d.id AND t_en.language_code = 'en'
+                    WHERE d.id = ? AND d.user_id = ?");
 $s->bind_param('ii', $id, $admin_sess_id);
 $s->execute();
 $dish = $s->get_result()->fetch_assoc();
@@ -87,9 +91,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $upd = $conn->prepare("UPDATE dishes SET name=?, price=?, category_id=?, veg_type=?, available_breakfast=?, available_lunch=?, available_dinner=?, image=?, currency=?, offer_id=? WHERE id=? AND user_id=?");
-        $upd->bind_param('sdisiiissiii', $name, $price, $cat_id, $veg_type, $break, $lunch, $dinner, $image_name, $currency, $offer_id, $id, $admin_sess_id);
+        $upd = $conn->prepare("UPDATE dishes SET price=?, category_id=?, veg_type=?, available_breakfast=?, available_lunch=?, available_dinner=?, image=?, currency=?, offer_id=? WHERE id=? AND user_id=?");
+        $upd->bind_param('disiiissiii', $price, $cat_id, $veg_type, $break, $lunch, $dinner, $image_name, $currency, $offer_id, $id, $admin_sess_id);
         if ($upd->execute()) {
+            // Update translation (EN)
+            $t_upd = $conn->prepare("INSERT INTO dish_translations (dish_id, language_code, name) VALUES (?, 'en', ?) ON DUPLICATE KEY UPDATE name = ?");
+            $t_upd->bind_param('iss', $id, $name, $name);
+            $t_upd->execute();
+            $t_upd->close();
+
             if ($delete_old_image && $dish['image'] && file_exists(__DIR__ . '/../uploads/' . $dish['image'])) {
                 unlink(__DIR__ . '/../uploads/' . $dish['image']);
             }
