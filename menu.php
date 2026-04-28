@@ -44,6 +44,10 @@ if ($user_id) {
     $off_res = $conn->query("SELECT * FROM offers WHERE user_id = $user_id AND status = 'active' AND '$today' BETWEEN start_date AND end_date AND is_deleted = 0 ORDER BY created_at DESC");
     if ($off_res) $offers = $off_res->fetch_all(MYSQLI_ASSOC);
 }
+
+// ── Admin Drag & Drop Check ──────────────────────────────────────────────────
+$is_admin_view = (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true);
+$can_reorder   = ($is_admin_view && ($is_owner || $is_super));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -577,7 +581,48 @@ if ($user_id) {
       color: var(--header-bg) !important;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
+
+    /* ── Admin Drag Handle ── */
+    <?php if ($can_reorder): ?>
+    .drag-handle {
+      cursor: grab;
+      padding: 0 8px;
+      color: #ccc;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      user-select: none;
+      transition: color 0.2s;
+    }
+    .drag-handle:hover { color: #6366f1; }
+    .drag-handle:active { cursor: grabbing; }
+    .sortable-ghost { opacity: 0.3; background: #eef2ff !important; border: 1px dashed #6366f1 !important; }
+    .sortable-chosen { box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .dish-row.dragging { background: #f8fafc; }
+    
+    #admin-reorder-msg {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(99, 102, 241, 0.95);
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      z-index: 9999;
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      backdrop-filter: blur(5px);
+    }
+    <?php endif; ?>
   </style>
+  <?php if ($can_reorder): ?>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <?php endif; ?>
 </head>
 <body>
 
@@ -693,6 +738,13 @@ function syncSearch(val) {
 
 <div id="toast">⚡ Menu updated</div>
 
+<?php if ($can_reorder): ?>
+<div id="admin-reorder-msg">
+  <span style="font-size:1.2rem">⠿</span> 
+  Admin: Drag dishes to reorder the live menu
+</div>
+<?php endif; ?>
+
 <script>
 const URL_PARAMS      = new URLSearchParams(window.location.search);
 const MENU_ID         = URL_PARAMS.get('id') || 0;
@@ -712,6 +764,7 @@ function catDot(name) {
 let lastHash     = '';
 let fullData     = null; // Unified menu data
 let activeMeal   = 'all';
+const CAN_REORDER = <?php echo $can_reorder ? 'true' : 'false'; ?>;
 
 async function syncVingoMenu() {
   try {
@@ -843,7 +896,8 @@ function dishRow(d, dotClass) {
   }
 
   return `
-    <div class="dish-row">
+    <div class="dish-row" ${CAN_REORDER ? `data-id="${d.id}"` : ''}>
+      ${CAN_REORDER ? '<div class="drag-handle" title="Drag to reorder">⠿</div>' : ''}
       <div class="dish-img-wrap">
         ${imgHtml}
       </div>
@@ -942,6 +996,60 @@ function renderMenu(grouped, isFirstLoad = true) {
         <div class="dish-list">${rows}</div>
       </div>`;
   }).join('');
+
+  if (CAN_REORDER) {
+    initDragAndDrop();
+  }
+}
+
+/* ── Admin Drag & Drop Initialization ── */
+function initDragAndDrop() {
+  if (typeof Sortable === 'undefined') return;
+  
+  const lists = document.querySelectorAll('.dish-list');
+  lists.forEach(el => {
+    Sortable.create(el, {
+      handle: '.drag-handle',
+      animation: 200,
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      onEnd: function() {
+        const orderedIds = [];
+        // Since dishes might be across different category containers, 
+        // we collect them globally from the whole body to maintain the absolute sequence.
+        document.querySelectorAll('.dish-row[data-id]').forEach(row => {
+          orderedIds.push(parseInt(row.getAttribute('data-id')));
+        });
+        saveNewOrder(orderedIds);
+      }
+    });
+  });
+}
+
+async function saveNewOrder(order) {
+  const toast = document.getElementById('toast');
+  toast.innerText = '⏳ Saving order...';
+  toast.classList.add('show');
+  
+  try {
+    const res = await fetch('api/update_order.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order })
+    });
+    const json = await res.json();
+    if (json.success) {
+      toast.innerText = '✅ Order updated';
+      // We don't want the poll to overwrite the UI immediately if the user is still dragging,
+      // but syncVingoMenu will eventually update it.
+    } else {
+      toast.innerText = '❌ Failed to save';
+    }
+  } catch (e) {
+    toast.innerText = '❌ Network error';
+  }
+  
+  setTimeout(() => toast.classList.remove('show'), 2000);
 }
 
 /* ── Toast ── */
