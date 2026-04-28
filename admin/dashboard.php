@@ -80,8 +80,14 @@ $conn->query("CREATE TABLE IF NOT EXISTS password_resets (
 )");
 
 // Ensure 'name' and 'description' columns exist in 'dishes' as fallback
-$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS name VARCHAR(255) AFTER category_id");
-$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS description TEXT AFTER name");
+$check_name = $conn->query("SHOW COLUMNS FROM dishes LIKE 'name'");
+if ($check_name && $check_name->num_rows === 0) {
+    $conn->query("ALTER TABLE dishes ADD COLUMN name VARCHAR(255) AFTER category_id");
+}
+$check_desc = $conn->query("SHOW COLUMNS FROM dishes LIKE 'description'");
+if ($check_desc && $check_desc->num_rows === 0) {
+    $conn->query("ALTER TABLE dishes ADD COLUMN description TEXT AFTER name");
+}
 
 // Sync English translations back to base table for compatibility
 $conn->query("UPDATE dishes d JOIN dish_translations t ON t.dish_id = d.id AND t.language_code = 'en' SET d.name = t.name, d.description = t.description WHERE d.name IS NULL OR d.name = ''");

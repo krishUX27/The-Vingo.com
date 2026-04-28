@@ -35,18 +35,24 @@ $conn->query("ALTER TABLE categories DROP INDEX IF EXISTS uq_cat_name");
 // New Fix: Ensure category uniqueness per user (Multi-Tenant Index)
 $conn->query("ALTER TABLE categories ADD UNIQUE INDEX IF NOT EXISTS u_cat_user (user_id, name)");
 
-$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS is_deleted TINYINT(1) DEFAULT 0 AFTER currency");
-$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS deleted_at DATETIME NULL AFTER is_deleted");
-$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS available_breakfast TINYINT(1) DEFAULT 1 AFTER veg_type");
-$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS available_lunch TINYINT(1) DEFAULT 1 AFTER available_breakfast");
-$conn->query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS available_dinner TINYINT(1) DEFAULT 1 AFTER available_lunch");
-
-
+ensure_dish_col($conn, 'is_deleted', 'TINYINT(1) DEFAULT 0', 'currency');
+ensure_dish_col($conn, 'deleted_at', 'DATETIME NULL', 'is_deleted');
+// Compatible Migration Helper
+function ensure_dish_col($conn, $col, $def, $after) {
+    $check = $conn->query("SHOW COLUMNS FROM dishes LIKE '$col'");
+    if ($check && $check->num_rows === 0) {
+        $conn->query("ALTER TABLE dishes ADD COLUMN $col $def AFTER $after");
+    }
+}
+ensure_dish_col($conn, 'name', 'VARCHAR(255)', 'category_id');
+ensure_dish_col($conn, 'description', 'TEXT', 'name');
+ensure_dish_col($conn, 'available_breakfast', 'TINYINT(1) DEFAULT 1', 'veg_type');
+ensure_dish_col($conn, 'available_lunch', 'TINYINT(1) DEFAULT 1', 'available_breakfast');
+ensure_dish_col($conn, 'available_dinner', 'TINYINT(1) DEFAULT 1', 'available_lunch');
 
 // ── CSV Processing Logic (Dynamic Multi-Language Mode) ─────────
 function process_csv_import($file_path, $admin_id, $conn) {
     ini_set('auto_detect_line_endings', true);
-    
     $handle = fopen($file_path, "r");
     if (!$handle) return false;
 
@@ -153,11 +159,14 @@ function process_csv_import($file_path, $admin_id, $conn) {
                 $stats['success']++;
             } else {
                 $stats['skipped']++;
+                file_put_contents(__DIR__ . '/import_errors.log', "[" . date('Y-m-d H:i:s') . "] Insert Failed: " . $conn->error . "\n", FILE_APPEND);
             }
             $stmt->close();
         } catch (Exception $e) {
             $stats['skipped']++;
             $stats['last_err'] = $e->getMessage();
+            file_put_contents(__DIR__ . '/import_errors.log', "[" . date('Y-m-d H:i:s') . "] Exception: " . $e->getMessage() . "\n", FILE_APPEND);
+        }
         }
     }
     fclose($handle);
