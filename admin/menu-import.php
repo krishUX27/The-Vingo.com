@@ -58,11 +58,13 @@ function process_csv_import($file_path, $admin_id, $conn) {
 
     // 1. Detect delimiter and parse header
     $first_line = fgets($handle);
+    $first_line = preg_replace('/^\xEF\xBB\xBF/', '', $first_line); // Remove BOM
     $delimiter = (substr_count($first_line, ';') > substr_count($first_line, ',')) ? ';' : ',';
     rewind($handle);
     
     $header = fgetcsv($handle, 0, $delimiter);
     if (!$header) { fclose($handle); return false; }
+    $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', $header[0]); // Double check first col
 
     // 2. Identify dynamic column mapping
     $col_map = [];
@@ -112,6 +114,7 @@ function process_csv_import($file_path, $admin_id, $conn) {
         $name_en_idx = $langs['en']['name'] ?? -1;
         if ($name_en_idx === -1 || empty(trim($data[$name_en_idx] ?? ''))) {
             $stats['skipped']++;
+            file_put_contents(__DIR__ . '/import_debug.log', "[" . date('Y-m-d H:i:s') . "] Skipped Row: Missing name_en (idx: $name_en_idx) | Data: " . json_encode($data) . "\n", FILE_APPEND);
             continue;
         }
 
