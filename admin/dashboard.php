@@ -354,6 +354,17 @@ if (!$offer_res) {
   <title>Dashboard — Menu Manager</title>
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+  <style>
+    @media (max-width: 768px) {
+      .topbar { padding: 0 15px; height: 70px; }
+      .topbar h1 { font-size: 1rem; }
+      .content { padding: 15px; }
+      .stats-grid { gap: 12px; }
+      .col-name { min-width: 150px; }
+      .col-desc { font-size: 0.75rem; max-width: 180px; }
+      .btn-sm { padding: 6px 10px; font-size: 0.7rem; }
+    }
+  </style>
 </head>
 <body>
 
@@ -522,10 +533,10 @@ if (!$offer_res) {
                   <img class="dish-img" src="../assets/images/dish-placeholder.png" alt="No image">
                 <?php endif; ?>
               </td>
-              <td>
-                <strong><?= htmlspecialchars($d['name']) ?></strong>
+              <td class="col-name">
+                <strong style="display:block"><?= htmlspecialchars($d['name']) ?></strong>
                 <?php if (!empty($d['description'])): ?>
-                  <div style="font-size:0.7rem; color:var(--muted); margin-top:2px; max-width:220px; line-height:1.2">
+                  <div class="col-desc">
                     <?= htmlspecialchars($d['description']) ?>
                   </div>
                 <?php endif; ?>

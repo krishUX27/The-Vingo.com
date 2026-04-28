@@ -354,6 +354,17 @@ $can_reorder   = ($is_admin_view && ($is_owner || $is_super));
       font-weight: 700;
       color: var(--text);
       line-height: 1.3;
+      word-break: break-word;
+      white-space: normal;
+    }
+    .dish-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 400;
+      margin-top: 2px;
+      line-height: 1.3;
+      word-break: break-word;
+      white-space: normal;
     }
     .dish-badge {
       display: inline-flex;
@@ -368,12 +379,12 @@ $can_reorder   = ($is_admin_view && ($is_owner || $is_super));
       border-radius: 50%;
       flex-shrink: 0;
     }
-
     .dish-price {
       font-size: 0.95rem;
       font-weight: 800;
       color: var(--text);
       flex-shrink: 0;
+      white-space: nowrap;
     }
 
 
