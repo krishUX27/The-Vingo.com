@@ -17,6 +17,12 @@ $error = null;
 $generated = false;
 $qr_url = $proto . '://' . $host . rtrim(dirname($base), '/\\') . '/menu.php?id=' . $admin_sess_id . '&src=qr';
 
+// Get restaurant name for the footer
+$stmt = $conn->prepare("SELECT site_name FROM settings WHERE id = 1");
+$stmt->execute();
+$settings = $stmt->fetch();
+$restaurant_name = $settings['site_name'] ?? 'THE VINGO';
+
 $force     = isset($_GET['regen']);
 $cachedUrl = file_exists($url_file) ? trim(file_get_contents($url_file)) : '';
 
@@ -83,6 +89,12 @@ if ($force || !file_exists($qr_file) || $cachedUrl !== $qr_url) {
   <title>QR Code — Menu Manager</title>
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+  <!-- html2canvas for capture -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- QR Code Library for high-res generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Premium Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body, html { height: 100vh; margin: 0; padding: 0; }
     .main { min-height: 100vh; display: flex; flex-direction: column; }
@@ -94,6 +106,62 @@ if ($force || !file_exists($qr_file) || $cachedUrl !== $qr_url) {
       .btn-grp { flex-direction: column; width: 100%; }
       .btn-grp .btn { width: 100%; justify-content: center; }
       .qr-center img { width: 100% !important; height: auto !important; max-width: 250px; }
+    }
+
+    /* Hidden Printable Area */
+    #printable-layout-container {
+        position: fixed;
+        left: -9999px;
+        top: 0;
+    }
+
+    #printable-area {
+        background: #ffffff;
+        width: 500px;
+        padding: 80px 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    #printable-area h1 {
+        font-size: 42px;
+        font-weight: 700;
+        line-height: 1.1;
+        margin-bottom: 16px;
+        color: #000;
+        letter-spacing: -1px;
+    }
+
+    #printable-area p {
+        font-size: 20px;
+        color: #6b7280;
+        font-weight: 400;
+        margin-bottom: 60px;
+        max-width: 300px;
+    }
+
+    #printable-area .qr-wrapper {
+        background: #fff;
+        padding: 32px;
+        border: 2.5px solid #000;
+        border-radius: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 60px;
+    }
+
+    #printable-area .brand-footer {
+        margin-top: auto;
+        font-size: 14px;
+        font-weight: 500;
+        color: #000;
+        opacity: 0.8;
+        letter-spacing: 1px;
+        text-transform: uppercase;
     }
   </style>
 </head>
@@ -146,14 +214,31 @@ include __DIR__ . '/partials/sidebar.php';
             </a>
           </div>
 
-          <div class="btn-grp" style="justify-content:center; margin-top:20px; gap:8px; flex-wrap:wrap">
-            <a href="../qr/<?= basename($qr_file) ?>" download="menu_qr.png" class="btn btn-primary btn-md">
-              ⬇️ Download QR
-            </a>
+          <div class="btn-grp" style="justify-content:center; margin-top:20px; gap:10px; flex-wrap:wrap">
+            <button id="download-full" class="btn btn-primary btn-md" style="display:flex; align-items:center; gap:8px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Download Full Layout
+            </button>
+            <button id="download-qr-only" class="btn btn-outline btn-md" style="display:flex; align-items:center; gap:8px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M7 7h3v3H7z"></path><path d="M14 7h3v3h-3z"></path><path d="M7 14h3v3H7z"></path><path d="M14 14h3v3h-3z"></path></svg>
+              Download QR Only
+            </button>
             <a href="<?= htmlspecialchars($qr_url) ?>" target="_blank" class="btn btn-outline btn-md">
               🌐 Open Menu
             </a>
           </div>
+        </div>
+
+        <!-- Hidden elements for capture -->
+        <div id="printable-layout-container">
+            <div id="printable-area">
+                <h1>Scan the QR<br>For Menu</h1>
+                <p>Point your camera to view our menu</p>
+                <div class="qr-wrapper">
+                    <div id="qr-target"></div>
+                </div>
+                <div class="brand-footer"><?= htmlspecialchars($restaurant_name) ?></div>
+            </div>
         </div>
 
       <?php else: ?>
@@ -167,6 +252,75 @@ include __DIR__ . '/partials/sidebar.php';
 
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const qrUrl = "<?= $qr_url ?>";
+    const resName = "<?= addslashes($restaurant_name) ?>";
+    const qrTarget = document.getElementById('qr-target');
+    const printableArea = document.getElementById('printable-area');
+    const qrWrapper = document.querySelector('.qr-wrapper');
+    const downloadFullBtn = document.getElementById('download-full');
+    const downloadQrBtn = document.getElementById('download-qr-only');
+
+    // Generate high-res QR for download
+    new QRCode(qrTarget, {
+        text: qrUrl,
+        width: 256,
+        height: 256,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    // Full Layout Download
+    downloadFullBtn.addEventListener('click', async () => {
+        downloadFullBtn.disabled = true;
+        downloadFullBtn.textContent = 'Generating...';
+        
+        try {
+            await document.fonts.ready;
+            await new Promise(r => setTimeout(r, 300));
+            
+            const canvas = await html2canvas(printableArea, {
+                scale: 4,
+                backgroundColor: '#ffffff',
+                useCORS: true
+            });
+            
+            const link = document.createElement('a');
+            link.download = `Menu_QR_Full_${resName.replace(/\s+/g, '_')}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        } finally {
+            downloadFullBtn.disabled = false;
+            downloadFullBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Download Full Layout`;
+        }
+    });
+
+    // QR Only Download
+    downloadQrBtn.addEventListener('click', async () => {
+        downloadQrBtn.disabled = true;
+        downloadQrBtn.textContent = 'Generating...';
+        
+        try {
+            const canvas = await html2canvas(qrWrapper, {
+                scale: 4,
+                backgroundColor: '#ffffff',
+                useCORS: true
+            });
+            
+            const link = document.createElement('a');
+            link.download = `Menu_QR_Only_${resName.replace(/\s+/g, '_')}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        } finally {
+            downloadQrBtn.disabled = false;
+            downloadQrBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M7 7h3v3H7z"></path><path d="M14 7h3v3h-3z"></path><path d="M7 14h3v3H7z"></path><path d="M14 14h3v3h-3z"></path></svg> Download QR Only`;
+        }
+    });
+});
+</script>
 
 </body>
 </html>
