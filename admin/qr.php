@@ -17,11 +17,8 @@ $error = null;
 $generated = false;
 $qr_url = $proto . '://' . $host . rtrim(dirname($base), '/\\') . '/menu.php?id=' . $admin_sess_id . '&src=qr';
 
-// Get restaurant name for the footer
-$stmt = $conn->prepare("SELECT site_name FROM settings WHERE id = 1");
-$stmt->execute();
-$settings = $stmt->fetch();
-$restaurant_name = $settings['site_name'] ?? 'THE VINGO';
+// Get restaurant name for the footer using the existing helper function
+$restaurant_name = menu_get_setting('restaurant_name', 'THE VINGO', $admin_sess_id);
 
 $force     = isset($_GET['regen']);
 $cachedUrl = file_exists($url_file) ? trim(file_get_contents($url_file)) : '';
