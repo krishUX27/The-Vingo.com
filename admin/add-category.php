@@ -120,15 +120,29 @@ $categories = $conn->query(
     .modal {
       display: none;
       position: fixed;
-      z-index: 2000;
-      left: 0; top: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
+      inset: 0;
+      z-index: 99999;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(10px);
       align-items: center;
       justify-content: center;
       padding: 20px;
+      pointer-events: auto;
     }
     .modal.active { display: flex; }
+    .modal-box {
+      background: #fff;
+      width: 100%;
+      max-width: 440px;
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3);
+      animation: modalShow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes modalShow {
+      from { transform: scale(0.95) translateY(10px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
     .cat-actions { display: flex; gap: 8px; align-items: center; }
     .btn-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 10px; }
   </style>
@@ -224,18 +238,23 @@ $categories = $conn->query(
 
 <!-- Edit Modal -->
 <div id="editModal" class="modal">
-  <div class="card" style="max-width:400px; width:100%; margin:0; border:none; box-shadow: 0 20px 50px rgba(0,0,0,0.2)">
-    <div class="card-title" style="margin-bottom:20px">✏️ Edit Category</div>
+  <div class="modal-box">
+    <div style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+      ✏️ Edit Category
+    </div>
     <form method="POST">
       <input type="hidden" name="action" value="edit">
       <input type="hidden" id="edit_cat_id" name="cat_id">
-      <div class="form-group" style="margin-bottom:20px">
-        <label for="edit_cat_name">Category Name <span class="req">*</span></label>
-        <input type="text" id="edit_cat_name" name="cat_name" required>
+      <div class="form-group" style="margin-bottom:24px">
+        <label for="edit_cat_name" style="display: block; font-size: 0.9rem; font-weight: 600; color: #64748b; margin-bottom: 8px;">
+          Category Name <span class="req">*</span>
+        </label>
+        <input type="text" id="edit_cat_name" name="cat_name" required 
+               style="width:100%; padding:14px; border-radius:12px; border: 2px solid #e2e8f0; font-size: 1rem; outline: none; transition: border-color 0.2s;">
       </div>
       <div style="display:flex; gap:12px">
-        <button type="submit" class="btn btn-primary" style="flex:1">💾 Save Changes</button>
-        <button type="button" class="btn btn-outline" style="flex:1" onclick="closeEditModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" style="flex:1; padding: 14px; border-radius: 14px; font-weight: 600;">💾 Save Changes</button>
+        <button type="button" class="btn btn-outline" style="flex:1; padding: 14px; border-radius: 14px; font-weight: 600;" onclick="closeEditModal()">Cancel</button>
       </div>
     </form>
   </div>
