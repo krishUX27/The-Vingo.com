@@ -50,6 +50,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $chk->close();
         }
     }
+    
+    /* ── Edit ── */
+    if ($action === 'edit') {
+        $eid  = intval($_POST['cat_id'] ?? 0);
+        $name = trim($_POST['cat_name'] ?? '');
+        if ($name === '') {
+            $errors[] = 'Category name is required.';
+        } else {
+            // Check for duplicate for THIS user only (excluding current)
+            $chk = $conn->prepare("SELECT id FROM categories WHERE name = ? AND user_id = ? AND id != ? AND is_deleted = 0");
+            $chk->bind_param('sii', $name, $admin_sess_id, $eid);
+            $chk->execute();
+            if ($chk->get_result()->num_rows > 0) {
+                $errors[] = "'{$name}' already exists in your menu.";
+            } else {
+                $upd = $conn->prepare("UPDATE categories SET name = ? WHERE id = ? AND user_id = ?");
+                $upd->bind_param('sii', $name, $eid, $admin_sess_id);
+                $upd->execute();
+                $upd->close();
+                $_SESSION['flash'] = ['type' => 'success', 'msg' => "Category updated to '{$name}'."];
+                header('Location: add-category.php');
+                exit;
+            }
+            $chk->close();
+        }
+    }
 
     /* ── Delete ── */
     if ($action === 'delete') {
@@ -90,6 +116,22 @@ $categories = $conn->query(
   <title>Categories — Menu Manager</title>
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal.active { display: flex; }
+    .cat-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 10px; }
+  </style>
 </head>
 <body>
 
@@ -157,10 +199,15 @@ $categories = $conn->query(
                 
                 <div class="cat-actions">
                     <span class="badge badge-info"><?= $cnt ?> dishes</span>
+                    <button class="btn btn-primary btn-sm btn-icon" 
+                            onclick="openEditModal(<?= $c['id'] ?>, '<?= addslashes(htmlspecialchars($c['name'])) ?>')"
+                            title="Edit">
+                      ✏️
+                    </button>
                     <a href="delete-category.php?id=<?= $c['id'] ?>" 
-                       class="btn btn-danger btn-sm"
-                       style="padding:6px 12px; border-radius:10px"
-                       onclick="return confirm('Delete \'<?= addslashes(htmlspecialchars($c['name'])) ?>\'?')">
+                       class="btn btn-danger btn-sm btn-icon"
+                       onclick="return confirm('Delete \'<?= addslashes(htmlspecialchars($c['name'])) ?>\'?')"
+                       title="Delete">
                       🗑️
                     </a>
                 </div>
@@ -174,6 +221,42 @@ $categories = $conn->query(
 
   </div>
 </div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+  <div class="card" style="max-width:400px; width:100%; margin:0; border:none; box-shadow: 0 20px 50px rgba(0,0,0,0.2)">
+    <div class="card-title" style="margin-bottom:20px">✏️ Edit Category</div>
+    <form method="POST">
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" id="edit_cat_id" name="cat_id">
+      <div class="form-group" style="margin-bottom:20px">
+        <label for="edit_cat_name">Category Name <span class="req">*</span></label>
+        <input type="text" id="edit_cat_name" name="cat_name" required>
+      </div>
+      <div style="display:flex; gap:12px">
+        <button type="submit" class="btn btn-primary" style="flex:1">💾 Save Changes</button>
+        <button type="button" class="btn btn-outline" style="flex:1" onclick="closeEditModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openEditModal(id, name) {
+    document.getElementById('edit_cat_id').value = id;
+    document.getElementById('edit_cat_name').value = name;
+    document.getElementById('editModal').classList.add('active');
+    document.getElementById('edit_cat_name').focus();
+  }
+  function closeEditModal() {
+    document.getElementById('editModal').classList.remove('active');
+  }
+  // Close on outside click
+  window.onclick = function(event) {
+    const modal = document.getElementById('editModal');
+    if (event.target == modal) closeEditModal();
+  }
+</script>
 
 </body>
 </html>
