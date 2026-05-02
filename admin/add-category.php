@@ -119,17 +119,21 @@ $categories = $conn->query(
   <style>
     .modal {
       display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
-      background: rgba(15, 23, 42, 0.7);
-      backdrop-filter: blur(10px);
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      pointer-events: auto;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      z-index: 999999 !important;
+      background: rgba(15, 23, 42, 0.7) !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 20px !important;
+      margin: 0 !important;
     }
-    .modal.active { display: flex; }
+    .modal.active { display: flex !important; }
     .modal-box {
       background: #fff;
       width: 100%;
@@ -148,6 +152,30 @@ $categories = $conn->query(
   </style>
 </head>
 <body>
+
+<!-- Edit Modal (Placed at top for best z-index/fixed positioning) -->
+<div id="editModal" class="modal">
+  <div class="modal-box">
+    <div style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+      ✏️ Edit Category
+    </div>
+    <form method="POST">
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" id="edit_cat_id" name="cat_id">
+      <div class="form-group" style="margin-bottom:24px">
+        <label for="edit_cat_name" style="display: block; font-size: 0.9rem; font-weight: 600; color: #64748b; margin-bottom: 8px;">
+          Category Name <span class="req">*</span>
+        </label>
+        <input type="text" id="edit_cat_name" name="cat_name" required 
+               style="width:100%; padding:14px; border-radius:12px; border: 2px solid #e2e8f0; font-size: 1rem; outline: none; transition: border-color 0.2s;">
+      </div>
+      <div style="display:flex; gap:12px">
+        <button type="submit" class="btn btn-primary" style="flex:1; padding: 14px; border-radius: 14px; font-weight: 600;">💾 Save Changes</button>
+        <button type="button" class="btn btn-outline" style="flex:1; padding: 14px; border-radius: 14px; font-weight: 600;" onclick="closeEditModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <?php include __DIR__ . '/partials/sidebar.php'; ?>
 
@@ -236,28 +264,6 @@ $categories = $conn->query(
   </div>
 </div>
 
-<!-- Edit Modal -->
-<div id="editModal" class="modal">
-  <div class="modal-box">
-    <div style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
-      ✏️ Edit Category
-    </div>
-    <form method="POST">
-      <input type="hidden" name="action" value="edit">
-      <input type="hidden" id="edit_cat_id" name="cat_id">
-      <div class="form-group" style="margin-bottom:24px">
-        <label for="edit_cat_name" style="display: block; font-size: 0.9rem; font-weight: 600; color: #64748b; margin-bottom: 8px;">
-          Category Name <span class="req">*</span>
-        </label>
-        <input type="text" id="edit_cat_name" name="cat_name" required 
-               style="width:100%; padding:14px; border-radius:12px; border: 2px solid #e2e8f0; font-size: 1rem; outline: none; transition: border-color 0.2s;">
-      </div>
-      <div style="display:flex; gap:12px">
-        <button type="submit" class="btn btn-primary" style="flex:1; padding: 14px; border-radius: 14px; font-weight: 600;">💾 Save Changes</button>
-        <button type="button" class="btn btn-outline" style="flex:1; padding: 14px; border-radius: 14px; font-weight: 600;" onclick="closeEditModal()">Cancel</button>
-      </div>
-    </form>
-  </div>
 </div>
 
 <script>
