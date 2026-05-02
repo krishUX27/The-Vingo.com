@@ -153,12 +153,19 @@ if ($force || !file_exists($qr_file) || $cachedUrl !== $qr_url) {
 
     #printable-area .brand-footer {
         margin-top: auto;
+        font-size: 26px;
+        font-weight: 700;
+        color: #000;
+        letter-spacing: -0.5px;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+
+    #printable-area .powered-by {
         font-size: 14px;
         font-weight: 500;
-        color: #000;
-        opacity: 0.8;
-        letter-spacing: 1px;
-        text-transform: uppercase;
+        color: #6b7280;
+        letter-spacing: 0.5px;
     }
   </style>
 </head>
@@ -235,6 +242,7 @@ include __DIR__ . '/partials/sidebar.php';
                     <div id="qr-target"></div>
                 </div>
                 <div class="brand-footer"><?= htmlspecialchars($restaurant_name) ?></div>
+                <div class="powered-by">Powered by thevingo.com</div>
             </div>
         </div>
 
