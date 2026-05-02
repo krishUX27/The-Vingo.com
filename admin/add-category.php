@@ -117,65 +117,43 @@ $categories = $conn->query(
   <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <style>
-    .modal {
+    .vingo-modal-overlay {
       display: none;
       position: fixed !important;
       top: 0 !important;
       left: 0 !important;
       width: 100% !important;
       height: 100% !important;
-      z-index: 999999 !important;
+      z-index: 1000000 !important;
       background: rgba(15, 23, 42, 0.7) !important;
       backdrop-filter: blur(10px) !important;
       -webkit-backdrop-filter: blur(10px) !important;
-      align-items: center !important;
-      justify-content: center !important;
-      padding: 20px !important;
       margin: 0 !important;
+      padding: 0 !important;
     }
-    .modal.active { display: flex !important; }
-    .modal-box {
-      background: #fff;
-      width: 100%;
-      max-width: 440px;
-      border-radius: 28px;
-      padding: 32px;
-      box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3);
-      animation: modalShow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    .vingo-modal-overlay.active { display: block !important; }
+    .vingo-modal-content {
+      position: absolute !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      background: #fff !important;
+      width: 90% !important;
+      max-width: 440px !important;
+      border-radius: 28px !important;
+      padding: 32px !important;
+      box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3) !important;
+      animation: vingoModalShow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    @keyframes modalShow {
-      from { transform: scale(0.95) translateY(10px); opacity: 0; }
-      to { transform: scale(1) translateY(0); opacity: 1; }
+    @keyframes vingoModalShow {
+      from { transform: translate(-50%, -45%) scale(0.95); opacity: 0; }
+      to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     }
     .cat-actions { display: flex; gap: 8px; align-items: center; }
     .btn-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 10px; }
   </style>
 </head>
 <body>
-
-<!-- Edit Modal (Placed at top for best z-index/fixed positioning) -->
-<div id="editModal" class="modal">
-  <div class="modal-box">
-    <div style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
-      ✏️ Edit Category
-    </div>
-    <form method="POST">
-      <input type="hidden" name="action" value="edit">
-      <input type="hidden" id="edit_cat_id" name="cat_id">
-      <div class="form-group" style="margin-bottom:24px">
-        <label for="edit_cat_name" style="display: block; font-size: 0.9rem; font-weight: 600; color: #64748b; margin-bottom: 8px;">
-          Category Name <span class="req">*</span>
-        </label>
-        <input type="text" id="edit_cat_name" name="cat_name" required 
-               style="width:100%; padding:14px; border-radius:12px; border: 2px solid #e2e8f0; font-size: 1rem; outline: none; transition: border-color 0.2s;">
-      </div>
-      <div style="display:flex; gap:12px">
-        <button type="submit" class="btn btn-primary" style="flex:1; padding: 14px; border-radius: 14px; font-weight: 600;">💾 Save Changes</button>
-        <button type="button" class="btn btn-outline" style="flex:1; padding: 14px; border-radius: 14px; font-weight: 600;" onclick="closeEditModal()">Cancel</button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <?php include __DIR__ . '/partials/sidebar.php'; ?>
 
@@ -266,17 +244,41 @@ $categories = $conn->query(
 
 </div>
 
+<!-- Edit Modal -->
+<div id="editModal" class="vingo-modal-overlay">
+  <div class="vingo-modal-content">
+    <div style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+      ✏️ Edit Category
+    </div>
+    <form method="POST">
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" id="edit_cat_id" name="cat_id">
+      <div class="form-group" style="margin-bottom:24px">
+        <label for="edit_cat_name" style="display: block; font-size: 0.9rem; font-weight: 600; color: #64748b; margin-bottom: 8px;">
+          Category Name <span class="req">*</span>
+        </label>
+        <input type="text" id="edit_cat_name" name="cat_name" required 
+               style="width:100%; padding:14px; border-radius:12px; border: 2px solid #e2e8f0; font-size: 1rem; outline: none; transition: border-color 0.2s;">
+      </div>
+      <div style="display:flex; gap:12px">
+        <button type="submit" class="btn btn-primary" style="flex:1; padding: 14px; border-radius: 14px; font-weight: 600;">💾 Save Changes</button>
+        <button type="button" class="btn btn-outline" style="flex:1; padding: 14px; border-radius: 14px; font-weight: 600;" onclick="closeEditModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
   function openEditModal(id, name) {
+    const modal = document.getElementById('editModal');
     document.getElementById('edit_cat_id').value = id;
     document.getElementById('edit_cat_name').value = name;
-    document.getElementById('editModal').classList.add('active');
+    modal.classList.add('active');
     document.getElementById('edit_cat_name').focus();
   }
   function closeEditModal() {
     document.getElementById('editModal').classList.remove('active');
   }
-  // Close on outside click
   window.onclick = function(event) {
     const modal = document.getElementById('editModal');
     if (event.target == modal) closeEditModal();
