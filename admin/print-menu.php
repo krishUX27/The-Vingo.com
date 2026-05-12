@@ -113,7 +113,7 @@ while ($row = $result->fetch_assoc()) {
     /* Bold orange category heading — Johns Kitchen style */
     .cat-heading {
       font-family: 'Playfair Display', serif;
-      font-size: 1.45rem;
+      font-size: 24px;
       font-weight: 700;
       color: var(--orange);
       margin-bottom: 10px;
@@ -140,8 +140,8 @@ while ($row = $result->fetch_assoc()) {
       border-left: 1px solid var(--border);
     }
 
-    .i-name  { font-size: .9rem; font-weight: 400; flex: 1; }
-    .i-price { font-size: .9rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+    .i-name  { font-size: 15.5px; font-weight: 400; flex: 1; }
+    .i-price { font-size: 15.5px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
 
     /* ── Footer ── */
     .r-footer {
