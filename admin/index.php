@@ -1,6 +1,5 @@
 <?php
 session_start();
-require_once __DIR__ . '/../includes/db.php';
 
 // Enable error reporting
 ini_set('display_errors', 1);
@@ -16,6 +15,31 @@ function login_log($msg) {
         file_put_contents($log_path, "[$time] [LOGIN] $msg\n", FILE_APPEND);
     }
 }
+
+// Global error handlers to catch 500 errors and detailed trace
+set_exception_handler(function($e) {
+    login_log("Uncaught Exception: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . "\nTrace: " . $e->getTraceAsString());
+    http_response_code(500);
+    echo "A system error occurred. Please check the logs.";
+    exit;
+});
+
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    if (error_reporting() & $errno) {
+        login_log("PHP Error [$errno]: $errstr in $errfile on line $errline");
+    }
+    return false; // let the default error handler run
+});
+
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR])) {
+        login_log("Fatal Error [{$error['type']}]: {$error['message']} in {$error['file']} on line {$error['line']}");
+        http_response_code(500);
+    }
+});
+
+require_once __DIR__ . '/../includes/db.php';
 
 $error = '';
 if (isset($_GET['msg'])) {
@@ -46,10 +70,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {
             login_log("Login Query Exception: " . $e->getMessage());
             // Fallback for cases where is_deleted doesn't exist yet
-            $stmt = $conn->prepare("SELECT id, username, password, role, is_active, status FROM users WHERE (username = ? OR email = ?) AND role = 'admin' LIMIT 1");
-            $stmt->bind_param('ss', $u, $u);
-            $stmt->execute();
-            $result = $stmt->get_result();
+            try {
+                $stmt = $conn->prepare("SELECT id, username, password, role, is_active, status FROM users WHERE (username = ? OR email = ?) AND role = 'admin' LIMIT 1");
+                if ($stmt) {
+                    $stmt->bind_param('ss', $u, $u);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                } else {
+                    login_log("Fallback Prepare failed: " . $conn->error);
+                    $error = 'System connectivity error.';
+                }
+            } catch (Exception $e2) {
+                login_log("Fallback Query Exception: " . $e2->getMessage());
+                $error = 'System connectivity error.';
+            }
         }
 
         if (isset($result) && ($row = $result->fetch_assoc())) {
