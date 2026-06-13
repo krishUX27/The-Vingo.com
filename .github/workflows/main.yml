@@ -1,0 +1,106 @@
+##############################################################
+# TheVingo.com — CI/CD Pipeline
+# Deploys to Hostinger VPS via SSH on push to main
+##############################################################
+
+name: 🚀 Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+# Prevent overlapping deployments
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: 🔄 Deploy via SSH
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # ── 1. Checkout Code ──────────────────────────────────
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Setup SSH Agent ────────────────────────────────
+      - name: 🔑 Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: 🔑 Add host to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "✅ SSH configured"
+
+      # ── 3. Deploy Files via Rsync ─────────────────────────
+      - name: 🚀 Deploy files via rsync
+        run: |
+          rsync -rlgoDzvc -i --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.vscode/' \
+            --exclude='vendor/' \
+            --exclude='node_modules/' \
+            --exclude='uploads/' \
+            --exclude='qr/*.png' \
+            --exclude='qr/qr_url.txt' \
+            --exclude='includes/db.php' \
+            --exclude='includes/config.php' \
+            --exclude='.env' \
+            --exclude='*.log' \
+            --exclude='.DS_Store' \
+            --exclude='Thumbs.db' \
+            -e "ssh -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/
+
+      # ── 4. Post-Deploy: Install Dependencies & Permissions ─
+      - name: ⚙️ Run post-deploy commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            echo "═══════════════════════════════════════"
+            echo "  🔧 Post-Deploy Setup"
+            echo "═══════════════════════════════════════"
+
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            # Install Composer dependencies
+            echo "📦 Installing Composer dependencies..."
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+
+            # Set proper file permissions
+            echo "🔐 Setting file permissions..."
+            find . -type f -exec chmod 644 {} \;
+            find . -type d -exec chmod 755 {} \;
+
+            # Ensure uploads directory is writable
+            chmod -R 775 uploads/ 2>/dev/null || true
+            chmod -R 775 qr/ 2>/dev/null || true
+            chmod -R 775 tmp/ 2>/dev/null || true
+
+            echo "═══════════════════════════════════════"
+            echo "  ✅ Deployment complete!"
+            echo "═══════════════════════════════════════"
+
+      # ── 5. Health Check ────────────────────────────────────
+      - name: 🏥 Health check
+        run: |
+          echo "Running health check..."
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" --max-time 15 "${{ secrets.SITE_URL }}" || echo "000")
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "✅ Site is live! (HTTP $STATUS)"
+          else
+            echo "⚠️ Health check returned HTTP $STATUS — please verify manually."
+            exit 1
+          fi
