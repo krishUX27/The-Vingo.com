@@ -26,16 +26,17 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Setup SSH Key ──────────────────────────────────
-      - name: 🔑 Setup SSH key
-        env:
-          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      # ── 2. Setup SSH Agent ────────────────────────────────
+      - name: 🔑 Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: 🔑 Add host to known_hosts
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-          echo "✅ SSH key configured"
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "✅ SSH configured"
 
       # ── 3. Deploy Files via Rsync ─────────────────────────
       - name: 🚀 Deploy files via rsync
@@ -55,7 +56,7 @@ jobs:
             --exclude='*.log' \
             --exclude='.DS_Store' \
             --exclude='Thumbs.db' \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no" \
+            -e "ssh -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no" \
             ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/
 
       # ── 4. Post-Deploy: Install Dependencies & Permissions ─
