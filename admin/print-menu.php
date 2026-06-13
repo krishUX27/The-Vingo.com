@@ -36,12 +36,19 @@ while ($row = $result->fetch_assoc()) {
       --text:   #111111;
       --muted:  #555555;
       --border: #e0e0e0;
+      /* Dynamic Font Sizes */
+      --base-font-size: 16px;
+      --name-size: 1.05rem;
+      --price-size: 1.05rem;
+      --cat-size: 1.5rem;
+      --title-size: 2.4rem;
     }
 
     body {
       font-family: 'Inter', sans-serif;
       background: #f0f0f0;
       color: var(--text);
+      font-size: var(--base-font-size);
     }
 
     /* ══ Toolbar (screen only) ══ */
@@ -95,7 +102,7 @@ while ($row = $result->fetch_assoc()) {
     }
     .r-name {
       font-family: 'Playfair Display', serif;
-      font-size: 2.4rem;
+      font-size: var(--title-size);
       font-weight: 800;
       color: var(--orange);
       line-height: 1;
@@ -113,7 +120,7 @@ while ($row = $result->fetch_assoc()) {
     /* Bold orange category heading — Johns Kitchen style */
     .cat-heading {
       font-family: 'Playfair Display', serif;
-      font-size: 24px;
+      font-size: var(--cat-size);
       font-weight: 700;
       color: var(--orange);
       margin-bottom: 10px;
@@ -140,8 +147,8 @@ while ($row = $result->fetch_assoc()) {
       border-left: 1px solid var(--border);
     }
 
-    .i-name  { font-size: 15.5px; font-weight: 400; flex: 1; }
-    .i-price { font-size: 15.5px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+    .i-name  { font-size: var(--name-size); font-weight: 400; flex: 1; }
+    .i-price { font-size: var(--price-size); font-weight: 700; white-space: nowrap; flex-shrink: 0; }
 
     /* ── Footer ── */
     .r-footer {
@@ -171,9 +178,10 @@ while ($row = $result->fetch_assoc()) {
         box-shadow: none;
         padding: 16mm 14mm 20mm;
       }
-      .r-name    { font-size: 2rem; }
-      .cat-heading { font-size: 1.25rem; }
-      .i-name, .i-price { font-size: .85rem; }
+      /* Respect dynamic variables during print */
+      .r-name    { font-size: var(--title-size); }
+      .cat-heading { font-size: var(--cat-size); }
+      .i-name, .i-price { font-size: var(--name-size); }
       .cat-block { page-break-inside: avoid; }
     }
 
@@ -189,7 +197,18 @@ while ($row = $result->fetch_assoc()) {
 
 <!-- Toolbar (hidden on print) -->
 <div class="toolbar">
-  <span>🖨️ Print Menu — <?= htmlspecialchars($restaurant_name) ?></span>
+  <div style="display:flex; align-items:center; gap:20px">
+    <span>🖨️ Print Menu — <?= htmlspecialchars($restaurant_name) ?></span>
+    
+    <!-- Font Size Control -->
+    <div style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.1); padding:4px 12px; border-radius:20px">
+      <span style="font-size:12px; opacity:0.8">A</span>
+      <input type="range" id="fontSizeSlider" min="12" max="24" step="0.5" value="16" style="cursor:pointer; width:100px">
+      <span style="font-size:16px">A</span>
+      <span id="fontSizeValue" style="font-size:12px; font-family:monospace; min-width:35px">16px</span>
+    </div>
+  </div>
+
   <div class="t-btns">
     <a href="../menu.php?id=<?= $admin_id ?>" class="t-btn t-btn-back">← Live Menu</a>
     <button class="t-btn t-btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
@@ -246,6 +265,49 @@ const FETCH_URL = '../api/fetch_dishes.php?user_id=' + ADMIN_ID;
 const POLL_MS = 3000;
 let lastHash = '<?= md5(serialize($grouped)) ?>';
 
+// --- Font Size Logic ---
+const slider = document.getElementById('fontSizeSlider');
+const sizeDisplay = document.getElementById('fontSizeValue');
+const root = document.documentElement;
+
+function updateFontSize(size, save = true) {
+    size = parseFloat(size);
+    root.style.setProperty('--base-font-size', size + 'px');
+    
+    // Scale relative sizes
+    // We want the name/price to be approx 1rem of the base
+    // Cat heading to be approx 1.5rem
+    // Restaurant title to be approx 2.4rem
+    root.style.setProperty('--name-size', (size * 0.97) + 'px');
+    root.style.setProperty('--price-size', (size * 0.97) + 'px');
+    root.style.setProperty('--cat-size', (size * 1.5) + 'px');
+    root.style.setProperty('--title-size', (size * 2.4) + 'px');
+
+    sizeDisplay.textContent = size + 'px';
+    if (save) localStorage.setItem('menu_print_fontsize', size);
+}
+
+// Load initial size
+const savedSize = localStorage.getItem('menu_print_fontsize') || 16;
+slider.value = savedSize;
+updateFontSize(savedSize, false);
+
+slider.addEventListener('input', (e) => {
+    updateFontSize(e.target.value);
+});
+
+// --- Print Debugging Logs ---
+window.onbeforeprint = () => {
+    const currentSize = getComputedStyle(document.body).getPropertyValue('--base-font-size').trim();
+    console.log(`[PRINT] Starting print rendering with base-font-size: ${currentSize}`);
+    console.log(`[PRINT] Computed size for dish name: ${getComputedStyle(document.querySelector('.i-name')).fontSize}`);
+};
+
+window.onafterprint = () => {
+    console.log("[PRINT] Print finished or cancelled.");
+};
+
+// --- Sync Logic ---
 async function checkSync() {
   try {
     const r = await fetch(FETCH_URL + '&_=' + Date.now());

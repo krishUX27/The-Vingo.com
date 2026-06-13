@@ -37,18 +37,32 @@ foreach ($dishes as $d) { $grouped[$d['category']][] = $d; }
 <title>Vingo Menu PDF Generation</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
-  :root { --primary: #111; --accent: #6c63ff; }
+  :root { 
+    --primary: #111; 
+    --accent: #6c63ff;
+    --base-font-size: 16px;
+    --name-size: 16px;
+    --price-size: 16px;
+    --cat-size: 20px;
+    --title-size: 36px;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Outfit', sans-serif; background: #fff; padding: 40px; color: #1a1a1a; }
+  body { 
+    font-family: 'Outfit', sans-serif; 
+    background: #fff; 
+    padding: 40px; 
+    color: #1a1a1a; 
+    font-size: var(--base-font-size);
+  }
   
   .header { text-align: center; margin-bottom: 40px; position: relative; }
-  .header h1 { font-size: 36px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 4px; color: var(--primary); }
+  .header h1 { font-size: var(--title-size); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 4px; color: var(--primary); }
   .header p { color: #888; font-size: 13px; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; }
   .header::after { content: ''; display: block; width: 60px; height: 3px; background: var(--accent); margin: 16px auto 0; border-radius: 2px; }
 
   .category-section { margin-bottom: 40px; break-inside: avoid; }
   .category-title { 
-    font-size: 20px; 
+    font-size: var(--cat-size); 
     font-weight: 800; 
     text-transform: uppercase; 
     letter-spacing: 1.5px; 
@@ -76,9 +90,9 @@ foreach ($dishes as $d) { $grouped[$d['category']][] = $d; }
     break-inside: avoid;
   }
   .dish-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-  .dish-name { font-size: 16px; font-weight: 700; color: #111; }
+  .dish-name { font-size: var(--name-size); font-weight: 700; color: #111; }
   .dish-dots { flex: 1; border-bottom: 1px dotted #ccc; height: 3px; }
-  .dish-price { font-weight: 800; color: var(--accent); font-size: 16px; }
+  .dish-price { font-weight: 800; color: var(--accent); font-size: var(--price-size); }
 
   .footer { 
     margin-top: 80px; 
@@ -131,6 +145,19 @@ foreach ($dishes as $d) { $grouped[$d['category']][] = $d; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
   window.onload = () => {
+    // Apply saved font size from localStorage
+    const savedSize = localStorage.getItem('menu_print_fontsize');
+    if (savedSize) {
+        const size = parseFloat(savedSize);
+        const root = document.documentElement;
+        root.style.setProperty('--base-font-size', size + 'px');
+        root.style.setProperty('--name-size', size + 'px');
+        root.style.setProperty('--price-size', size + 'px');
+        root.style.setProperty('--cat-size', (size * 1.25) + 'px');
+        root.style.setProperty('--title-size', (size * 2.25) + 'px');
+        console.log(`[PDF] Applied saved font size: ${size}px`);
+    }
+
     const element = document.body;
     const opt = {
       margin:       [10, 10, 10, 10],
