@@ -1,0 +1,292 @@
+/* ============================================================
+   Header Component — Figma Design Implementation
+   TheVingo.com Admin Panel
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+/* ── Topbar Override ── */
+.topbar {
+  height: auto;
+  min-height: 76px;
+  background: #f6f6f6;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 14px 19px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+/* ── Left Section ── */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Burger Icon (CSS-drawn, matching Figma) ── */
+.burger-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.burger-icon:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.burger-icon-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 31px;
+}
+
+.burger-icon-bars span {
+  display: block;
+  height: 4px;
+  background: #151515;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.burger-icon-bars span:nth-child(2) {
+  width: 28px;
+}
+
+/* ── Brand Text ── */
+.topbar-brand {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 36px;
+  color: #ef5c43;
+  line-height: normal;
+  white-space: nowrap;
+  letter-spacing: -0.5px;
+}
+
+/* ── Right Section ── */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+/* ── Header User Profile ── */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  cursor: pointer;
+  position: relative;
+  padding: 4px 8px;
+  border-radius: 12px;
+  transition: background 0.2s ease;
+}
+
+.header-user:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.header-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  line-height: normal;
+}
+
+.header-user-name {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  color: #000;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.header-user-role {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #000;
+  line-height: 1.2;
+}
+
+.header-user-avatar {
+  width: 49px;
+  height: 49px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef5c43, #e04832);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(239, 92, 67, 0.3);
+}
+
+/* ── User Dropdown (positioned from header-user) ── */
+.header-user .dropdown-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 230px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.15);
+  border: 1px solid #f1f5f9;
+  padding: 10px;
+  z-index: 1000;
+  display: none;
+  transform-origin: top right;
+}
+
+.header-user .dropdown-menu.open {
+  display: block;
+  animation: headerDropIn 0.2s ease-out;
+}
+
+.header-user .dropdown-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.header-user .dropdown-header-name {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.header-user .dropdown-header-email {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.header-user .dropdown-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 8px 10px;
+}
+
+.header-user .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: #0f172a;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.header-user .dropdown-item:hover {
+  background: #f1f5f9;
+  color: #ef5c43;
+}
+
+.header-user .dropdown-item.danger {
+  color: #f43f5e;
+}
+
+.header-user .dropdown-item.danger:hover {
+  background: #fff1f2;
+  color: #f43f5e;
+}
+
+@keyframes headerDropIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ════════════════════════════════
+   RESPONSIVE — Header
+   ════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .topbar {
+    padding: 10px 16px;
+    min-height: 64px;
+  }
+
+  .topbar-brand {
+    font-size: 24px;
+  }
+
+  .header-user-name {
+    font-size: 16px;
+  }
+
+  .header-user-role {
+    font-size: 12px;
+  }
+
+  .header-user-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar-brand {
+    font-size: 20px;
+  }
+
+  .header-user-info {
+    display: none;
+  }
+
+  .header-user-avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 8px 12px;
+    min-height: 56px;
+  }
+
+  .topbar-brand {
+    font-size: 18px;
+  }
+
+  .burger-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .burger-icon-bars {
+    width: 24px;
+    gap: 3px;
+  }
+
+  .burger-icon-bars span {
+    height: 3px;
+  }
+
+  .burger-icon-bars span:nth-child(2) {
+    width: 21px;
+  }
+}

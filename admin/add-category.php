@@ -107,16 +107,9 @@ $categories = $conn->query(
      WHERE c.user_id = $admin_sess_id AND c.is_deleted = 0
      ORDER BY c.name"
 )->fetch_all(MYSQLI_ASSOC);
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Categories — Menu Manager</title>
-  <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
-  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
-  <style>
+
+$page_title = 'Categories — Menu Manager';
+$page_styles = '
     .vingo-modal-overlay {
       display: none;
       position: fixed !important;
@@ -151,29 +144,11 @@ $categories = $conn->query(
     }
     .cat-actions { display: flex; gap: 8px; align-items: center; }
     .btn-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 10px; }
-  </style>
-</head>
-<body>
+';
+?>
 
-<?php include __DIR__ . '/partials/sidebar.php'; ?>
+<?php include __DIR__ . '/partials/header.php'; ?>
 
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
-      <div class="menu-toggle" id="menuToggle">☰</div>
-      <div>
-        <h1>Categories</h1>
-        <p class="meta">Manage your menu sections</p>
-      </div>
-    </div>
-    <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
-      <a href="../menu.php?id=<?= $admin_sess_id ?>" target="_blank" class="btn btn-outline btn-sm">
-        <span class="live-dot"></span> Live Menu View
-      </a>
-      <?php include __DIR__ . '/partials/topbar_user.php'; ?>
-    </div>
-  </div>
-  <div class="content">
 
     <?php if ($flash): ?>
       <div class="flash flash-<?= $flash['type'] ?>">

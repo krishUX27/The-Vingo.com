@@ -94,16 +94,9 @@ $stmt->close();
 
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Trash Bin | Vingo Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
-  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
-  <style>
+
+$page_title = 'Trash Bin | Vingo Admin';
+$page_styles = '
     .content { padding: 40px; max-width: 1400px; width: 100%; margin: 0 auto; transition: padding 0.3s ease; }
     
     @media (max-width: 1024px) {
@@ -116,22 +109,11 @@ unset($_SESSION['flash']);
         .trash-actions { display: flex; flex-direction: column; gap: 5px; }
         .btn-sm { width: 100%; justify-content: center; }
     }
-  </style>
-</head>
-<body>
-<?php include __DIR__ . '/partials/sidebar.php'; ?>
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
-      <div class="menu-toggle" id="menuToggle">☰</div>
-      <h1>🗑️ Trash Bin</h1>
-    </div>
-    <div class="topbar-right">
-       <?php include __DIR__ . '/partials/topbar_user.php'; ?>
-    </div>
-  </div>
+';
+?>
 
-  <div class="content">
+<?php include __DIR__ . '/partials/header.php'; ?>
+
     <?php if ($flash): ?>
       <div class="flash flash-<?= $flash['type'] ?>"><?= $flash['msg'] ?></div>
     <?php endif; ?>

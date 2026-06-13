@@ -77,22 +77,16 @@ if ($force || !file_exists($qr_file) || $cachedUrl !== $qr_url) {
 } else {
     $generated = true;
 }
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>QR Code — Menu Manager</title>
-  <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
-  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+$page_title = 'QR Code — Menu Manager';
+$page_head = '
   <!-- html2canvas for capture -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <!-- QR Code Library for high-res generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- Premium Font -->
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
+';
+$page_styles = '
     body, html { height: 100vh; margin: 0; padding: 0; }
     .main { min-height: 100vh; display: flex; flex-direction: column; }
     .content { flex: 1; display: flex; align-items: start; justify-content: center; padding: 20px; overflow-y: auto; }
@@ -120,7 +114,7 @@ if ($force || !file_exists($qr_file) || $cachedUrl !== $qr_url) {
         flex-direction: column;
         align-items: center;
         text-align: center;
-        font-family: 'Outfit', sans-serif;
+        font-family: \'Outfit\', sans-serif;
     }
 
     #printable-area h1 {
@@ -167,29 +161,13 @@ if ($force || !file_exists($qr_file) || $cachedUrl !== $qr_url) {
         color: #6b7280;
         letter-spacing: 0.5px;
     }
-  </style>
-</head>
-<body>
+';
 
-<?php 
 $cur = 'qr.php';
-include __DIR__ . '/partials/sidebar.php'; 
 ?>
 
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
-      <div class="menu-toggle" id="menuToggle">☰</div>
-      <div>
-        <h1>QR Code</h1>
-        <p class="meta">Download or print your menu QR</p>
-      </div>
-    </div>
-    <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
-      <?php include __DIR__ . '/partials/topbar_user.php'; ?>
-    </div>
-  </div>
-  <div class="content">
+<?php include __DIR__ . '/partials/header.php'; ?>
+
 
     <div class="card qr-card">
       <div class="card-title">Menu QR Code</div>

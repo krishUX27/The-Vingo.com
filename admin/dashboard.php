@@ -345,42 +345,11 @@ if (!$offer_res) {
 }
 
 /* ── UI Rendering ── */
+$page_title = 'Dashboard — Menu Manager';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Dashboard — Menu Manager</title>
-  <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
-  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
-</head>
-<body>
 
-<?php include __DIR__ . '/partials/sidebar.php'; ?>
+<?php include __DIR__ . '/partials/header.php'; ?>
 
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
-      <div class="menu-toggle" id="menuToggle">☰</div>
-      <div>
-        <h1>🍳 Kitchen Menu</h1>
-        <p class="meta"><?= date('l, d F Y') ?></p>
-      </div>
-    </div>
-    <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
-      <select onchange="location.href='?lang='+this.value" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:6px 12px; border-radius:30px; font-size:0.75rem; font-weight:700; cursor:pointer; outline:none;">
-        <option value="en" <?= $preview_lang === 'en' ? 'selected' : '' ?>>🇬🇧 English</option>
-        <option value="ta" <?= $preview_lang === 'ta' ? 'selected' : '' ?>>🇮🇳 Tamil</option>
-      </select>
-      <a href="../menu.php?id=<?= $admin_sess_id ?>" target="_blank" class="btn btn-outline btn-sm">
-        <span class="live-dot"></span> Live Menu View
-      </a>
-      <?php include __DIR__ . '/partials/topbar_user.php'; ?>
-    </div>
-  </div>
-
-  <div class="content">
 
     <?php if ($flash): ?>
       <div class="flash flash-<?= $flash['type'] ?>" style="margin-bottom:20px">

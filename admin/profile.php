@@ -65,36 +65,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$page_title = 'My Profile — Vingo Menu';
 $cur = 'profile.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>My Profile — Vingo Menu</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
-  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
-</head>
-<body>
 
-<?php include __DIR__ . '/partials/sidebar.php'; ?>
+<?php include __DIR__ . '/partials/header.php'; ?>
 
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
-      <div class="menu-toggle" id="menuToggle">☰</div>
-      <div>
-        <h1>👤 My Profile</h1>
-        <p class="meta">Manage your account and credentials</p>
-      </div>
-    </div>
-    <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
-      <?php include __DIR__ . '/partials/topbar_user.php'; ?>
-    </div>
-  </div>
-
-  <div class="content">
     <?php if ($flash): ?>
       <div class="flash flash-<?= $flash['type'] ?>" style="margin-bottom:20px"><?= $flash['msg'] ?></div>
     <?php endif; ?>

@@ -109,16 +109,8 @@ function get_combo_dishes($conn, $oid) {
     while($r = $res->fetch_assoc()) $ids[] = (int)$r['dish_id'];
     return $ids;
 }
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Offer Zone | Vingo Admin</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
-  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
-  <style>
+$page_title = 'Offer Zone | Vingo Admin';
+$page_styles = '
     .offer-type-selection { display: flex; gap: 20px; margin-bottom: 30px; }
     .type-btn { 
       flex: 1; padding: 25px; border-radius: 16px; border: 2px solid var(--border); 
@@ -152,27 +144,11 @@ function get_combo_dishes($conn, $oid) {
     .dish-opt:hover { background: #f1f5f9; }
     .dish-opt.selected { background: #eff6ff; color: #3b82f6; font-weight: 700; }
     .no-match { padding: 15px; text-align: center; color: var(--muted); font-size: 0.85rem; }
-  </style>
-</head>
-<body>
+';
+?>
 
-<?php include __DIR__ . '/partials/sidebar.php'; ?>
+<?php include __DIR__ . '/partials/header.php'; ?>
 
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
-      <div class="menu-toggle" id="menuToggle">☰</div>
-      <div>
-        <h1>🎁 Offer Zone</h1>
-        <p class="meta">Manage Seasonal & Combo Deals</p>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <?php include __DIR__ . '/partials/topbar_user.php'; ?>
-    </div>
-  </div>
-
-  <div class="content">
     <?php if ($flash): ?>
       <div class="flash flash-<?= $flash['type'] ?>">
         <?= $flash['type']==='success'?'✅':'❌' ?> <?= htmlspecialchars($flash['msg']) ?>

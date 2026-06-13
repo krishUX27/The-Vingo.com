@@ -126,37 +126,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $categories = $conn->query("SELECT * FROM categories WHERE user_id = $admin_sess_id AND is_deleted = 0 ORDER BY name")->fetch_all(MYSQLI_ASSOC);
 $offers     = $conn->query("SELECT id, title FROM offers WHERE user_id = $admin_sess_id AND status='active' AND offer_type='seasonal' AND is_deleted=0 ORDER BY title")->fetch_all(MYSQLI_ASSOC);
+
+$page_title = 'Edit Dish — Menu Manager';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Edit Dish — Menu Manager</title>
-  <link rel="stylesheet" href="../assets/css/menu-style.css?v=<?= time() ?>">
-  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
-</head>
-<body>
 
-<?php include __DIR__ . '/partials/sidebar.php'; ?>
+<?php include __DIR__ . '/partials/header.php'; ?>
 
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-left" style="display:flex; align-items:center; gap:16px">
-      <div class="menu-toggle" id="menuToggle">☰</div>
-      <div>
-        <h1>Edit Dish</h1>
-        <p class="meta">Update: <?= htmlspecialchars($dish['name']) ?></p>
-      </div>
-    </div>
-    <div class="topbar-right" style="display:flex; gap:16px; align-items:center">
-      <a href="../menu.php" target="_blank" class="btn btn-outline btn-sm">
-        <span class="live-dot"></span> Live Menu View
-      </a>
-      <?php include __DIR__ . '/partials/topbar_user.php'; ?>
-    </div>
-  </div>
-  <div class="content">
 
     <div class="card" style="max-width:720px">
       <div class="card-title">Edit: <?= htmlspecialchars($dish['name']) ?></div>
