@@ -19,47 +19,49 @@ jobs:
   deploy:
     name: 🔄 Deploy via SSH
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       # ── 1. Checkout Code ──────────────────────────────────
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Setup SSH Agent ────────────────────────────────
-      - name: 🔑 Setup SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+      # ── 2. Deploy Files via SCP ───────────────────────────
+      - name: 🚀 Deploy files via SCP
+        uses: appleboy/scp-action@v0.1.7
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: >-
+            index.php,
+            menu.php,
+            contact.html,
+            contact.php,
+            services.html,
+            signup.html,
+            install.php,
+            setup-password.php,
+            manage-admins.php,
+            settings.php,
+            database.sql,
+            composer.json,
+            composer.lock,
+            admin/,
+            api/,
+            assets/,
+            includes/logger.php,
+            includes/mail_helper.php,
+            superadmin/,
+            vingoProduct/,
+            qr/
+          target: ${{ secrets.DEPLOY_PATH }}
+          overwrite: true
+          timeout: 120s
+          command_timeout: 2m
 
-      - name: 🔑 Add host to known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
-          echo "✅ SSH configured"
-
-      # ── 3. Deploy Files via Rsync ─────────────────────────
-      - name: 🚀 Deploy files via rsync
-        run: |
-          rsync -rlgoDzvc -i --delete \
-            --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='.vscode/' \
-            --exclude='vendor/' \
-            --exclude='node_modules/' \
-            --exclude='uploads/' \
-            --exclude='qr/*.png' \
-            --exclude='qr/qr_url.txt' \
-            --exclude='includes/db.php' \
-            --exclude='includes/config.php' \
-            --exclude='.env' \
-            --exclude='*.log' \
-            --exclude='.DS_Store' \
-            --exclude='Thumbs.db' \
-            -e "ssh -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no" \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/
-
-      # ── 4. Post-Deploy: Install Dependencies & Permissions ─
+      # ── 3. Post-Deploy: Install Dependencies & Permissions ─
       - name: ⚙️ Run post-deploy commands
         uses: appleboy/ssh-action@v1
         with:
@@ -67,6 +69,8 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          timeout: 120s
+          command_timeout: 10m
           script: |
             set -e
             echo "═══════════════════════════════════════"
@@ -93,7 +97,7 @@ jobs:
             echo "  ✅ Deployment complete!"
             echo "═══════════════════════════════════════"
 
-      # ── 5. Health Check ────────────────────────────────────
+      # ── 4. Health Check ────────────────────────────────────
       - name: 🏥 Health check
         run: |
           echo "Running health check..."
