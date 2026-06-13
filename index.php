@@ -25,7 +25,7 @@
   <!-- Navbar -->
   <header class="header" id="header">
     <div class="container header-container">
-      <a href="#" class="logo">VINGO<span class="dot">.</span></a>
+      <a href="#" class="logo">VINGO KAVIN<span class="dot">.</span></a>
 
       <nav class="nav" id="nav-menu">
         <ul class="nav-list">
