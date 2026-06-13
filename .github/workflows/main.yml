@@ -1,0 +1,100 @@
+##############################################################
+# TheVingo.com — CI/CD Pipeline
+# Deploys to Hostinger VPS via SSH on push to main
+##############################################################
+
+name: 🚀 Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+# Prevent overlapping deployments
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: 🔄 Deploy via SSH
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # ── 1. Checkout Code ──────────────────────────────────
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Deploy to Server via SSH ───────────────────────
+      - name: 🚀 Deploy files via rsync over SSH
+        uses: easingthemes/ssh-deploy@v5
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          REMOTE_PORT: ${{ secrets.SSH_PORT }}
+          SOURCE: "./"
+          TARGET: ${{ secrets.DEPLOY_PATH }}
+          ARGS: "-rlgoDzvc -i --delete"
+          EXCLUDE: >-
+            /.git/,
+            /.github/,
+            /.vscode/,
+            /vendor/,
+            /node_modules/,
+            /uploads/,
+            /qr/*.png,
+            /qr/qr_url.txt,
+            /includes/db.php,
+            /includes/config.php,
+            .env,
+            *.log,
+            .DS_Store,
+            Thumbs.db
+
+      # ── 3. Post-Deploy: Install Dependencies & Permissions ─
+      - name: ⚙️ Run post-deploy commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            echo "═══════════════════════════════════════"
+            echo "  🔧 Post-Deploy Setup"
+            echo "═══════════════════════════════════════"
+
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            # Install Composer dependencies
+            echo "📦 Installing Composer dependencies..."
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+
+            # Set proper file permissions
+            echo "🔐 Setting file permissions..."
+            find . -type f -exec chmod 644 {} \;
+            find . -type d -exec chmod 755 {} \;
+
+            # Ensure uploads directory is writable
+            chmod -R 775 uploads/ 2>/dev/null || true
+            chmod -R 775 qr/ 2>/dev/null || true
+            chmod -R 775 tmp/ 2>/dev/null || true
+
+            echo "═══════════════════════════════════════"
+            echo "  ✅ Deployment complete!"
+            echo "═══════════════════════════════════════"
+
+      # ── 4. Health Check ────────────────────────────────────
+      - name: 🏥 Health check
+        run: |
+          echo "Running health check..."
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" --max-time 15 "${{ secrets.SITE_URL }}" || echo "000")
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "✅ Site is live! (HTTP $STATUS)"
+          else
+            echo "⚠️ Health check returned HTTP $STATUS — please verify manually."
+            exit 1
+          fi
